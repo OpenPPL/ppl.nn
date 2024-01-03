@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace utils {
 
 static string GenNodeIdStr(const ir::Node* node) {
     auto& type = node->GetType();
-    return node->GetName() + "[" + type.domain + ":" + type.name + ":" + ToString(type.version) + "]";
+    return node->GetName() + string("[") + type.domain + ":" + type.name + ":" + ToString(type.version) + "]";
 }
 
 static string ToGraphviz(const ir::GraphTopo* topo) {

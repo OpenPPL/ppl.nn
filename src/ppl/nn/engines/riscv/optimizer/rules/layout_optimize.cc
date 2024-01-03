@@ -39,11 +39,11 @@ static ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const 
 
     std::string reorder_node_name = "";
     if (reorder_type == REORDER_INPUT) {
-        reorder_node_name = "ReorderInput_" + edge->GetName() + "_of_" + node->GetName();
+        reorder_node_name = std::string("ReorderInput_") + edge->GetName() + "_of_" + node->GetName();
     } else if (reorder_type == REORDER_OUTPUT) {
-        reorder_node_name = "ReorderOutput_" + edge->GetName() + "_of_" + node->GetName();
+        reorder_node_name = std::string("ReorderOutput_") + edge->GetName() + "_of_" + node->GetName();
     } else if (reorder_type == REORDER_EXTRA_INPUT) {
-        reorder_node_name = "ReorderExtraInput_" + edge->GetName() + "_of_" + node->GetName();
+        reorder_node_name = std::string("ReorderExtraInput_") + edge->GetName() + "_of_" + node->GetName();
     }
 
     auto node_ret_pair = graph_topo->AddNode(reorder_node_name);

@@ -45,16 +45,13 @@ public:
     };
 
 public:
-    Node(nodeid_t id) : id_(id) {}
+    Node(nodeid_t id, const char* name) : id_(id), name_(name) {}
 
     nodeid_t GetId() const {
         return id_;
     }
 
-    void SetName(const std::string& name) {
-        name_ = name;
-    }
-    const std::string& GetName() const {
+    const char* GetName() const {
         return name_;
     }
 
@@ -166,8 +163,10 @@ public:
     uint32_t ReplaceExtraInput(edgeid_t old_value, edgeid_t new_value);
 
 private:
+    friend class GraphTopo; // for GraphTopo::RenameNode()
+
     const nodeid_t id_;
-    std::string name_;
+    const char* name_; // pointer to GraphTopo::name2nid_[idx]::first
     Type type_;
 
     std::vector<edgeid_t> inputs_;

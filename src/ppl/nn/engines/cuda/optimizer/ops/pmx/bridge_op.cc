@@ -70,7 +70,7 @@ KernelImpl* BridgeOp::CreateKernelImpl() const {
 
 RetCode BridgeOp::AddInternalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edge* edge, ir::Graph* graph) {
     auto topo = graph->topo.get();
-    auto ret_pair = topo->AddEdge("Bridge_Edge_" + edge->GetName() + "_" + node->GetName());
+    auto ret_pair = topo->AddEdge(string("Bridge_Edge_") + edge->GetName() + "_" + node->GetName());
     auto new_edge = ret_pair.first;
 
     edge->DelConsumer(node->GetId());
@@ -90,7 +90,7 @@ RetCode BridgeOp::AddInternalBridgeNode(ir::Node* node, ir::Node* new_node, ir::
 
 RetCode BridgeOp::AddFinalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edge* edge, ir::Graph* graph) {
     auto topo = graph->topo.get();
-    auto ret_pair = topo->AddEdge("Bridge_Final_Edge_" + edge->GetName() + "_" + node->GetName());
+    auto ret_pair = topo->AddEdge(string("Bridge_Final_Edge_") + edge->GetName() + "_" + node->GetName());
     auto new_edge = ret_pair.first;
 
     edge->SetProducer(new_node->GetId());

@@ -47,7 +47,7 @@ public:
     }
 
     const char* GetName() const override {
-        return GetEdge()->GetName().c_str();
+        return GetEdge()->GetName();
     }
 
     DeviceContext* GetDeviceContext() const override {

@@ -71,7 +71,7 @@ bool FuseSwish(const OptKernelOptions &options) {
                 // sigmoid_input_edge(last_mul_outer_input_edge) ----> sigmoid_node ----> sigmoid_output_edge(last_mul_inner_input_edge) ----> last_mul_node ----> last_mul_output_edge
                 //                                               |-------------------------------------------------------------------------->|
                 const std::string swish_node_name =
-                    "Fused_Swish_" + sigmoid_node->GetName() + "_" + last_mul_node->GetName();
+                    std::string("Fused_Swish_") + sigmoid_node->GetName() + "_" + last_mul_node->GetName();
                 const ir::Node::Type type("pmx", "Swish", 1);
 
                 // add node to graph topo
@@ -128,4 +128,3 @@ bool FuseSwish(const OptKernelOptions &options) {
 }
 
 }}} // namespace ppl::nn::x86
-

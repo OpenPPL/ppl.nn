@@ -24,18 +24,24 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace ir {
 
-static Node* FindNode(const ir::GraphTopo* topo, const string& name) {
-    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
-        auto node = it->Get();
-        if (node->GetName() == name) {
-            return node;
-        }
+Node* GraphTopo::GetNode(const string& name) const {
+    auto ref = name2nid_.find(name);
+    if (ref == name2nid_.end()) {
+        return nullptr;
     }
-    return nullptr;
+
+    return GetNode(ref->second);
 }
 
-Node* GraphTopo::GetNode(const string& name) const {
-    return FindNode(this, name);
+bool GraphTopo::RenameNode(Node* node, const string& new_name) {
+    auto ret_pair = name2nid_.insert(make_pair(new_name, node->GetId()));
+    if (!ret_pair.second) {
+        return false;
+    }
+
+    name2nid_.erase(node->GetName());
+    node->name_ = ret_pair.first->first.c_str();
+    return true;
 }
 
 static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids, const GraphTopo* topo) {
@@ -61,13 +67,11 @@ static uint32_t FindEdgeIdIdx(const string& name, const vector<edgeid_t>& edge_i
 }
 
 Edge* GraphTopo::GetEdge(const std::string& name) const {
-    for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
-        auto edge = it->Get();
-        if (edge->GetName() == name) {
-            return edge;
-        }
+    auto ref = name2eid_.find(name);
+    if (ref == name2eid_.end()) {
+        return nullptr;
     }
-    return nullptr;
+    return GetEdge(ref->second);
 }
 
 edgeid_t GraphTopo::GetInput(const string& name) const {

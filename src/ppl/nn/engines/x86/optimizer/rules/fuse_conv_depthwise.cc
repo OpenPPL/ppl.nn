@@ -54,7 +54,7 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             }
 
             const std::string pd_conv2d_node_name =
-                    "PostDepthwiseConv_" + conv_node->GetName() + "_" + next_node->GetName();
+                std::string("PostDepthwiseConv_") + conv_node->GetName() + "_" + next_node->GetName();
             const ir::Node::Type type("pmx", "PostDepthwiseConv", 1);
 
             // add node to graph topo
@@ -139,4 +139,3 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
 }
 
 }}} // namespace ppl::nn::x86
-

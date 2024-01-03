@@ -33,7 +33,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         vector<int64_t> starts;
         utils::GetNodeAttr(pb_node, "starts", &starts);
 
-        auto new_edge_name = node->GetName() + "_slice_starts_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        auto new_edge_name = node->GetName() + string("_slice_starts_") + ToString(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, starts, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
@@ -44,7 +44,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         vector<int64_t> ends;
         utils::GetNodeAttr(pb_node, "ends", &ends);
 
-        new_edge_name = node->GetName() + "_slice_ends_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        new_edge_name = node->GetName() + string("_slice_ends_") + ToString(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, ends, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
@@ -55,7 +55,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         vector<int64_t> axes;
         utils::GetNodeAttr(pb_node, "axes", &axes);
 
-        new_edge_name = node->GetName() + "_slice_axes_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        new_edge_name = node->GetName() + string("_slice_axes_") + ToString(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, axes, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";

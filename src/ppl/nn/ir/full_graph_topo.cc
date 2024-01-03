@@ -23,34 +23,13 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace ir {
 
-static Node* FindNode(const string& name, const unique_ptr<Node>* nodes, uint32_t count) {
-    for (uint32_t i = 0; i < count; ++i) {
-        auto node = nodes[i].get();
-        if (node && node->GetName() == name) {
-            return node;
-        }
-    }
-    return nullptr;
-}
-
-static Edge* FindEdge(const string& name, const unique_ptr<Edge>* edges, uint32_t count) {
-    for (uint32_t i = 0; i < count; ++i) {
-        auto edge = edges[i].get();
-        if (edge && edge->GetName() == name) {
-            return edge;
-        }
-    }
-    return nullptr;
-}
-
 pair<Node*, bool> FullGraphTopo::AddNode(const string& name) {
-    auto node = FindNode(name, nodes_.data(), nodes_.size());
-    if (node) {
-        return make_pair(node, false);
+    auto ret_pair = name2nid_.insert(make_pair(name, GetCurrentNodeIdBound()));
+    if (!ret_pair.second) {
+        return make_pair(nodes_[ret_pair.first->second].get(), false);
     }
 
-    node = new Node(nodes_.size());
-    node->SetName(name);
+    auto node = new Node(GetCurrentNodeIdBound(), ret_pair.first->first.c_str());
     nodes_.emplace_back(unique_ptr<Node>(node));
     return make_pair(node, true);
 }
@@ -64,22 +43,20 @@ Node* FullGraphTopo::GetNode(nodeid_t nid) const {
 
 void FullGraphTopo::DelNode(nodeid_t nid) {
     if (nid < nodes_.size() && nodes_[nid]) {
+        name2nid_.erase(nodes_[nid]->GetName());
         nodes_[nid].reset();
     }
 }
 
 class FullGraphEdge final : public Edge {
 public:
-    FullGraphEdge(edgeid_t id) : id_(id), producer_(INVALID_NODEID) {}
+    FullGraphEdge(edgeid_t id, const char* name) : id_(id), name_(name), producer_(INVALID_NODEID) {}
 
     edgeid_t GetId() const override {
         return id_;
     }
 
-    void SetName(const std::string& name) override {
-        name_ = name;
-    }
-    const std::string& GetName() const override {
+    const char* GetName() const override {
         return name_;
     }
 
@@ -116,7 +93,7 @@ public:
 
 private:
     const edgeid_t id_;
-    std::string name_;
+    const char* name_; // pointer to GraphTopo::name2eid_[idx]::first
     nodeid_t producer_;
     std::vector<nodeid_t> consumers_;
 
@@ -126,13 +103,12 @@ private:
 };
 
 pair<Edge*, bool> FullGraphTopo::AddEdge(const string& name) {
-    auto edge = FindEdge(name, edges_.data(), edges_.size());
-    if (edge) {
-        return make_pair(edge, false);
+    auto ret_pair = name2eid_.insert(make_pair(name, GetCurrentEdgeIdBound()));
+    if (!ret_pair.second) {
+        return make_pair(edges_[ret_pair.first->second].get(), false);
     }
 
-    edge = new FullGraphEdge(GetCurrentEdgeIdBound());
-    edge->SetName(name);
+    auto edge = new FullGraphEdge(GetCurrentEdgeIdBound(), ret_pair.first->first.c_str());
     edges_.emplace_back(unique_ptr<Edge>(edge));
     return make_pair(edge, true);
 }
@@ -158,6 +134,7 @@ void FullGraphTopo::DelEdge(edgeid_t eid) {
     utils::VectorRemoveAllIf(outputs_, p);
     utils::VectorRemoveAllIf(constants_, p);
 
+    name2eid_.erase(edges_[eid]->GetName());
     edges_[eid].reset();
 }
 

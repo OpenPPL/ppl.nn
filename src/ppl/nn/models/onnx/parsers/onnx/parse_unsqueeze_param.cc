@@ -36,7 +36,7 @@ RetCode ParseUnsqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserE
         std::vector<int64_t> axes;
         utils::GetNodeAttr(pb_node, "axes", &axes);
 
-        auto new_edge_name = node->GetName() + "_axes_" + ToString(topo->GetCurrentEdgeIdBound());
+        auto new_edge_name = node->GetName() + string("_axes_") + ToString(topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(topo, data, new_edge_name, axes, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";

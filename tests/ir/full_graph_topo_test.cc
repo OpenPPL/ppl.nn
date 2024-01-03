@@ -61,7 +61,7 @@ TEST_F(FullGraphTopoTest, full_grapg_topo_GetNodeById_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
     auto res_node = topo->GetNode(0);
     cout << res_node->GetName() << endl;
-    EXPECT_EQ(res_node->GetName(), "c");
+    EXPECT_EQ(res_node->GetName(), string("c"));
 }
 
 TEST_F(FullGraphTopoTest, full_graph_topo_DelNodeById_Test) {
@@ -98,7 +98,7 @@ TEST_F(FullGraphTopoTest, full_graph_topo_GetMaxEdgeId_Test) {
 TEST_F(FullGraphTopoTest, full_graph_topo_GetEdgeById_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
     auto res_edge = topo->GetEdge(0);
-    EXPECT_EQ(res_edge->GetName(), "output_of_b");
+    EXPECT_EQ(res_edge->GetName(), string("output_of_b"));
 }
 
 TEST_F(FullGraphTopoTest, full_graph_topo_DelEdgeById_Test) {
@@ -116,14 +116,6 @@ TEST_F(FullGraphTopoTest, full_edge_GetId_Test) {
     auto edge = topo->GetEdge(0);
     auto edge_id = edge->GetId();
     EXPECT_EQ(0, edge_id);
-}
-
-TEST_F(FullGraphTopoTest, full_edge_SetNameAndGetName_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdge(0);
-    const string edge_name = "tmp";
-    edge->SetName(edge_name);
-    EXPECT_EQ(edge->GetName(), edge_name);
 }
 
 TEST_F(FullGraphTopoTest, full_edge_SetProducerAndGetProducer_Test) {

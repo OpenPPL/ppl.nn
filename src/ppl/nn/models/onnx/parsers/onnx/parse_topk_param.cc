@@ -36,7 +36,7 @@ RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     if (node_type.version < 10) {
         int64_t k;
         utils::GetNodeAttr(pb_node, "k", &k, -1);
-        auto new_edge_name = node->GetName() + "_topk_k_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        auto new_edge_name = node->GetName() + string("_topk_k_") + ToString(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::AddScalarInitializer(args.topo, args.data, new_edge_name, k, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";

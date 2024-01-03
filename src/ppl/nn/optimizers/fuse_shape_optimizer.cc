@@ -275,8 +275,14 @@ RetCode FuseShapeOptimizer::Optimize(ir::Graph* graph) const {
         if (!node || node->GetType().domain != "" || node->GetType().name != "Shape") {
             continue;
         }
+
+        const string new_name(node->GetName() + string("_Fused"));
+        bool ok = graph->topo->RenameNode(node, new_name);
+        if (!ok) {
+            LOG(ERROR) << "rename node [" << node->GetName() << "] to new name [" << new_name << "] failed.";
+            return RC_EXISTS;
+        }
         node->SetType(ir::Node::Type{"pmx", "Shape", 1});
-        node->SetName(node->GetName() + "_Fused");
 
         ShapeOperationParam shape_param;
         ShapeMatrix temp_matrix;

@@ -25,10 +25,11 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, ir::Attr* arg) {
+RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                        ir::Attr* arg) {
     auto param = static_cast<SplitParam*>(arg);
     utils::GetNodeAttr(pb_node, "axis", &param->axis, 0);
-    
+
     auto& node_type = node->GetType();
 
     if (node_type.version < 13) {
@@ -38,7 +39,7 @@ RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         std::vector<int64_t> split_point;
         utils::GetNodeAttr(pb_node, "split", &split_point);
 
-        auto new_edge_name = node->GetName() + "_split_point_" + ToString(topo->GetCurrentEdgeIdBound());
+        auto new_edge_name = node->GetName() + string("_split_point_") + ToString(topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(topo, data, new_edge_name, split_point, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
@@ -49,7 +50,7 @@ RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
 
         node_type.version = 13;
     }
-    
+
     return RC_SUCCESS;
 }
 

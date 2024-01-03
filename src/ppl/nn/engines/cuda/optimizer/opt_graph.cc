@@ -241,12 +241,12 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 continue;
             }
             auto edge = topo->GetEdge(edge_id);
-            if (edge->GetName().find("Bridge_Edge") != string::npos) {
+            if (string(edge->GetName()).find("Bridge_Edge") != string::npos) {
                 continue;
             }
 
             auto creator = OptKernelCreatorManager::GetInstance()->Find("pmx", "Bridge", 1);
-            auto ret_pair = topo->AddNode("Bridge_Node_" + node->GetName() + "_" + edge->GetName());
+            auto ret_pair = topo->AddNode(string("Bridge_Node_") + node->GetName() + "_" + edge->GetName());
             if (!ret_pair.second) {
                 LOG(ERROR) << "create a new node for [" << edge->GetName() << "] failed.";
                 return RC_OUT_OF_MEMORY;
@@ -280,7 +280,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 edge->CalcConsumerCount() == 0) { // it is an finel node for the graph
                 auto creator = OptKernelCreatorManager::GetInstance()->Find("pmx", "Bridge", 1);
 
-                auto ret_pair = topo->AddNode("Bridge_Final_" + node->GetName() + "_" + edge->GetName());
+                auto ret_pair = topo->AddNode(string("Bridge_Final_") + node->GetName() + "_" + edge->GetName());
                 if (!ret_pair.second) {
                     LOG(ERROR) << "create a new node for [" << edge->GetName() << "] failed.";
                     return RC_OUT_OF_MEMORY;

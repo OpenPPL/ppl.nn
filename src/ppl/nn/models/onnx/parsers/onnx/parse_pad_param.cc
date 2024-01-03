@@ -47,7 +47,7 @@ RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
         vector<int64_t> pads;
         utils::GetNodeAttr(pb_node, "pads", &pads);
 
-        auto new_edge_name = node->GetName() + "_pad_pads_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        auto new_edge_name = node->GetName() + string("_pad_pads_") + ToString(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, pads, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
@@ -58,7 +58,7 @@ RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
         float value;
         utils::GetNodeAttr(pb_node, "value", &value, 0.0);
 
-        new_edge_name = node->GetName() + "_pad_value_" + ToString(args.topo->GetCurrentEdgeIdBound());
+        new_edge_name = node->GetName() + string("_pad_value_") + ToString(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::AddScalarInitializer(args.topo, args.data, new_edge_name, value, DATATYPE_FLOAT32);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";

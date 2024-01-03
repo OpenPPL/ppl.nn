@@ -173,7 +173,7 @@ static RetCode GenConverterNodes(const vector<pair<EngineImpl*, vector<nodeid_t>
             auto eid = x->first;
             auto edge = topo->GetEdge(eid);
 
-            const string output_edge_name("converted_output_of_" + edge->GetName() + "_" +
+            const string output_edge_name("converted_output_of_" + string(edge->GetName()) + "_" +
                                           ToString(topo->GetCurrentEdgeIdBound()));
             auto ret_pair = topo->AddEdge(output_edge_name);
             if (!ret_pair.second) {
@@ -319,7 +319,7 @@ static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nod
         // create copies for other engines
         for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
             auto ret_pair =
-                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + ToString(topo->GetCurrentEdgeIdBound()));
+                topo->AddEdge("__copy_of_" + string(edge->GetName()) + "_" + ToString(topo->GetCurrentEdgeIdBound()));
             auto new_edge = ret_pair.first;
             auto new_edge_id = new_edge->GetId();
 

@@ -290,7 +290,7 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
 
             // fuse conv & add
             if (!conv_bias_edge) { // if conv node has no bias, add bias tensor
-                auto add_bias_edge_name = conv_node->GetName() + "_bias";
+                auto add_bias_edge_name = conv_node->GetName() + string("_bias");
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
                 if (!edge_ret_pair.second) {
                     LOG(ERROR) << "edge[" << add_bias_edge_name << "] already exists.";

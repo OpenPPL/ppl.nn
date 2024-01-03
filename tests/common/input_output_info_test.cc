@@ -52,7 +52,7 @@ TEST_F(InputOutputInfoTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
 
     auto node = topo->GetNode(0);
-    EXPECT_EQ("a", node->GetName());
+    EXPECT_EQ(string("a"), node->GetName());
 
     InputOutputInfo info;
     info.SetNode(node);

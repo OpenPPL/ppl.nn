@@ -42,7 +42,7 @@ public:
     }
 
     /** @brief get kernel's name */
-    const std::string& GetName() const {
+    const char* GetName() const {
         return node_->GetName();
     }
 

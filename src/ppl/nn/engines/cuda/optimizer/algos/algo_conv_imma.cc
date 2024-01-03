@@ -224,7 +224,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         quant_constat_info.SetBuffer(buffer, options.device, true);
     }
 
-    auto ret_pair = topo->AddEdge("Quant_" + node->GetName());
+    auto ret_pair = topo->AddEdge(string("Quant_") + node->GetName());
     auto quant_edge = ret_pair.first;
     auto quant_edge_id = quant_edge->GetId();
     node->AddInput(quant_edge_id);

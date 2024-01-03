@@ -75,7 +75,7 @@ static RetCode CreateFbEdges(FlatBufferBuilder* builder, const SerializationCont
     vector<Offset<pmx::Edge>> edges(seq2eid.size());
     for (uint32_t i = 0; i < seq2eid.size(); ++i) {
         auto edge = topo->GetEdge(seq2eid[i]);
-        edges[i] = pmx::CreateEdgeDirect(*builder, edge->GetName().c_str());
+        edges[i] = pmx::CreateEdgeDirect(*builder, edge->GetName());
     }
 
     *fb_edges = builder->CreateVector<Offset<pmx::Edge>>(edges);
@@ -109,7 +109,7 @@ static RetCode CreateFbNodes(FlatBufferBuilder* builder, const SerializationCont
             extra_inputs[i] = eid2seq[node->GetExtraInput(i)];
         }
 
-        nodes[i] = pmx::CreateNodeDirect(*builder, node->GetName().c_str(), fb_type, &inputs, &outputs, &extra_inputs);
+        nodes[i] = pmx::CreateNodeDirect(*builder, node->GetName(), fb_type, &inputs, &outputs, &extra_inputs);
     }
 
     *fb_nodes = builder->CreateVector<Offset<pmx::Node>>(nodes);

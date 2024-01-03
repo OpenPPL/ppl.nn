@@ -162,7 +162,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
         conv2d_param_->mgr = conv2d_algo_selector::fast_gen_algo(
             *info.GetInput<TensorImpl>(0)->GetShape(), options.engine_options->forward_precision,
-            options.engine_options->dynamic_tuning_level, options.engine_options->winograd_level, 
+            options.engine_options->dynamic_tuning_level, options.engine_options->winograd_level,
             options.device->GetISA(), conv2d_param_->param, options.device->GetAllocator());
 
         if (conv2d_param_->mgr == nullptr) {
@@ -183,7 +183,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         // Note: If the filter is reused, generate a new input edge to hold cvt_filter which may differ due to different algo/sched_param.
         ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
         if (new_filter && new_filter->IsBufferOwner() && new_filter->GetBufferPtr<void>()) {
-            auto edge = options.graph_topo->AddEdge(node->GetName() + "_Input_Cvt_Filter").first;
+            auto edge = options.graph_topo->AddEdge(node->GetName() + std::string("_Input_Cvt_Filter")).first;
             edge->AddConsumer(node->GetId());
 
             TensorImpl* tensor = new TensorImpl(edge, TENSORTYPE_RESERVED);
@@ -210,7 +210,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
                 return normal_cvt_weights_ret;
             }
-            
+
             if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
                 bias_data = nullptr;
             } else if (bias_data && new_bias) {
@@ -350,13 +350,13 @@ ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
                                                               mgr->algo_info().data_type,
                                                               mgr->algo_info().isa,
                                                               conv_builder.CreateVector<int64_t>(algo_sp));
-    auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder, 
-                                                                conv2d_param_->param.num_output, 
-                                                                conv2d_param_->param.channels, 
-                                                                conv2d_param_->mgr->get_param().pad_type, 
+    auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder,
+                                                                conv2d_param_->param.num_output,
+                                                                conv2d_param_->param.channels,
+                                                                conv2d_param_->mgr->get_param().pad_type,
                                                                 conv2d_param_->mgr->get_param().fuse_flag,
                                                                 (!mgr->is_zero_bias()) ? 1 : 0);
-    
+
     auto fb_conv_data = ppl::nn::pmx::arm::CreateConvData(conv_builder, fb_algo_info, fb_param_info);
     auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(conv_builder, ppl::nn::pmx::arm::PrivateDataType_ConvData, fb_conv_data.Union());
     ppl::nn::pmx::arm::FinishOpDataBuffer(conv_builder, fb_op_data);
@@ -415,11 +415,11 @@ ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
                          .isa = algo_info->isa(),
                          .data_type = algo_info->dtype()
                        });
-    
+
     std::vector<int64_t> sp;
     ppl::nn::pmx::utils::Fbvec2Stdvec(algo_info->sched_param(), &sp);
     mgr->set_schedule_param(sp);
-    
+
     const auto & shapes = *ctx.shapes;
     const auto & constants = *ctx.constants;
 

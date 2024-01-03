@@ -264,10 +264,10 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
             /******************** do optimize ***********************/
             /** 1. create & register fused op **/
             std::string channel_shuffle_node_name = "ChannelShuffle_" +
-                (fuse_concat ? (reshape1_prev_node->GetName() + "_") : "") + reshape1_node->GetName() + "_" +
+                (fuse_concat ? (reshape1_prev_node->GetName() + std::string("_")) : "") + reshape1_node->GetName() + "_" +
                 trans_node->GetName() + "_" + reshape2_node->GetName() +
-                (fuse_split ? ("_" + reshape2_next_nodes[0]->GetName()) : "") +
-                (fuse_slice ? ("_" + reshape2_next_nodes[0]->GetName() + "_" + reshape2_next_nodes[1]->GetName()) : "");
+                (fuse_split ? (std::string("_") + reshape2_next_nodes[0]->GetName()) : "") +
+                (fuse_slice ? (std::string("_") + reshape2_next_nodes[0]->GetName() + "_" + reshape2_next_nodes[1]->GetName()) : "");
             auto node_ret_pair = graph_topo->AddNode(channel_shuffle_node_name);
             if (!node_ret_pair.second) {
                 LOG(ERROR) << "node[" << channel_shuffle_node_name << "] already exists.";
