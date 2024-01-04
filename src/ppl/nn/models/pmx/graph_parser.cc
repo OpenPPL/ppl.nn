@@ -264,6 +264,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
         }
 
         deser_ctx.constants = &partition.constants;
+        deser_ctx.engine = engine;
 
         for (auto fb_node = fb_partition->nodes()->begin(); fb_node != fb_partition->nodes()->end(); ++fb_node) {
             auto node = topo->GetNode(fb_node->node_id());

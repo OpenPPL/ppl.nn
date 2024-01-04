@@ -22,11 +22,16 @@
 #include "ppl/nn/common/buffer_info.h"
 #include <map>
 
+namespace ppl { namespace nn {
+class EngineImpl;
+}}
+
 namespace ppl { namespace nn { namespace pmx {
 
 struct DeserializationContext final {
     const std::map<edgeid_t, ppl::common::TensorShape>* shapes;
     const std::map<edgeid_t, BufferInfo>* constants;
+    EngineImpl* engine;
 };
 
 }}} // namespace ppl::nn::pmx
