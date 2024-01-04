@@ -103,6 +103,8 @@ public:
     Edge* GetEdge(edgeid_t id) const override;
     void DelEdge(edgeid_t) override;
 
+    bool RenameEdge(Edge*, const std::string& new_name) override;
+
 private:
     std::vector<std::unique_ptr<Edge>> edges_;
     std::vector<std::unique_ptr<Node>> nodes_;

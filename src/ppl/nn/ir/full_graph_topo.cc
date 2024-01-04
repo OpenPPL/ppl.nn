@@ -50,15 +50,15 @@ void FullGraphTopo::DelNode(nodeid_t nid) {
 
 class FullGraphEdge final : public Edge {
 public:
-    FullGraphEdge(edgeid_t id, const string& shared_name_ref)
-        : id_(id), shared_name_ref_(shared_name_ref), producer_(INVALID_NODEID) {}
+    FullGraphEdge(edgeid_t id, const string* shared_name_str)
+        : id_(id), shared_name_str_(shared_name_str), producer_(INVALID_NODEID) {}
 
     edgeid_t GetId() const override {
         return id_;
     }
 
     const string& GetName() const override {
-        return shared_name_ref_;
+        return *shared_name_str_;
     }
 
     nodeid_t GetProducer() const override {
@@ -93,8 +93,10 @@ public:
     }
 
 private:
+    friend class FullGraphTopo; // for GraphTopo::RenameEdge()
+
     const edgeid_t id_;
-    const string& shared_name_ref_; // reference to GraphTopo::name2eid_[name]::first
+    const string* shared_name_str_; // pointer to GraphTopo::name2eid_[name]::first
     nodeid_t producer_;
     std::vector<nodeid_t> consumers_;
 
@@ -109,7 +111,7 @@ pair<Edge*, bool> FullGraphTopo::AddEdge(const string& name) {
         return make_pair(edges_[ret_pair.first->second].get(), false);
     }
 
-    auto edge = new FullGraphEdge(ret_pair.first->second, ret_pair.first->first);
+    auto edge = new FullGraphEdge(ret_pair.first->second, &ret_pair.first->first);
     edges_.emplace_back(unique_ptr<Edge>(edge));
     return make_pair(edge, true);
 }
@@ -137,6 +139,17 @@ void FullGraphTopo::DelEdge(edgeid_t eid) {
 
     name2eid_.erase(edges_[eid]->GetName());
     edges_[eid].reset();
+}
+
+bool FullGraphTopo::RenameEdge(Edge* edge, const string& new_name) {
+    auto ret_pair = name2eid_.insert(make_pair(new_name, edge->GetId()));
+    if (!ret_pair.second) {
+        return false;
+    }
+
+    name2eid_.erase(edge->GetName());
+    static_cast<FullGraphEdge*>(edge)->shared_name_str_ = &ret_pair.first->first;
+    return true;
 }
 
 }}} // namespace ppl::nn::ir

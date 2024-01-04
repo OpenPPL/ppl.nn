@@ -86,9 +86,9 @@ public:
     virtual Node* GetNode(nodeid_t id) const = 0;
     virtual void DelNode(nodeid_t id) = 0;
 
-    Node* GetNode(const std::string& name) const;
-
     bool RenameNode(Node*, const std::string& new_name);
+
+    Node* GetNode(const std::string& name) const;
 
     // ----- //
 
@@ -108,6 +108,9 @@ public:
 
     virtual Edge* GetEdge(edgeid_t) const = 0;
     virtual void DelEdge(edgeid_t) = 0;
+
+    /** for internal use only */
+    virtual bool RenameEdge(Edge*, const std::string& new_name) = 0;
 
     Edge* GetEdge(const std::string& name) const;
 
