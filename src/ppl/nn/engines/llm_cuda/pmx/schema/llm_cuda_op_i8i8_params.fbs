@@ -1,0 +1,15 @@
+namespace ppl.nn.llm.cuda.pmx.i8i8;
+
+table OnlineDequantizeParam {
+    bias_term: bool;
+}
+
+union OpParamType {
+    OnlineDequantizeParam,
+}
+
+table OpParam {
+    value: OpParamType;
+}
+
+root_type OpParam;

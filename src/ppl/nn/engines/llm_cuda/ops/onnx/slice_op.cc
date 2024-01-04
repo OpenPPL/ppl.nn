@@ -21,6 +21,11 @@
 #include "ppl/nn/oputils/onnx/reshape_slice.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -217,5 +222,33 @@ RetCode SliceOp::DoInit(const OptKernelOptions& options) {
 KernelImpl* SliceOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<SliceKernel>(&constant_slice_param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode SliceOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    
+    auto fb_starts = builder.CreateVector(constant_slice_param_.starts);
+    auto fb_ends   = builder.CreateVector(constant_slice_param_.ends);
+    auto fb_axes   = builder.CreateVector(constant_slice_param_.axes);
+    auto fb_steps  = builder.CreateVector(constant_slice_param_.steps);
+    
+    auto fb_param = pmx::CreateSliceParam(builder, fb_starts, fb_ends, fb_axes, fb_steps);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_SliceParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode SliceOp::DeserializeData(const ppl::nn::pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_SliceParam();
+    
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->starts(), &constant_slice_param_.starts);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->ends(),   &constant_slice_param_.ends);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->axes(),   &constant_slice_param_.axes);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->steps(),  &constant_slice_param_.steps);
+
+    return CommonInit();
+}
+#endif
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

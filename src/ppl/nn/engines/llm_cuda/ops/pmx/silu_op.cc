@@ -20,6 +20,11 @@
 #include "ppl/nn/engines/llm_cuda/kernels/pmx/silu_kernel.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -40,6 +45,14 @@ KernelImpl* SiLUOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<SiLUKernel>();
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode SiLUOp::SerializeData(const ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    return RC_SUCCESS;
+}
 
+ppl::common::RetCode SiLUOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    return CommonInit();
+}
+#endif
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

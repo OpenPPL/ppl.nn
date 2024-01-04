@@ -23,7 +23,13 @@
 #include "opt_kernel_creator_manager.h"
 
 #include "ppl/nn/engines/llm_cuda/engine_factory.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_engine_generated.h"
+#endif
 
 #include <stdarg.h>
 using namespace std;
@@ -96,6 +102,49 @@ RetCode LlmCudaEngine::SetTensorParellelNcclComm(LlmCudaEngine* engine, va_list 
     return RC_INVALID_VALUE;
 #endif
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+RetCode LlmCudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
+    return utils::LoadConstants(visitor, device_.get(), eid2info);
+}
+
+OptKernel* LlmCudaEngine::CreateOptKernel(const ir::Node* node) const {
+    auto& type = node->GetType();
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
+    if (!creator) {
+        LOG(ERROR) << "cannot find creator for node[" << node->GetName() << "] of type[" << type.domain << ":"
+                   << type.name << ":" << type.version << "]";
+        return nullptr;
+    }
+
+    auto opt_kernel = (*creator)(node);
+    if (!opt_kernel) {
+        LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
+        return nullptr;
+    }
+
+    return opt_kernel;
+}
+
+ppl::common::RetCode LlmCudaEngine::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = CreateEngineOptionsParam(builder, options_.cublas_layout_hint);
+    auto fb_engine_param = CreateEngineParam(builder, EngineParamType_EngineOptionsParam, fb_param.Union());
+    FinishEngineParamBuffer(builder, fb_engine_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode LlmCudaEngine::DeserializeData(const void* base, uint64_t size) {
+    auto fb_engine_param = GetEngineParam(base);
+    auto fb_param = fb_engine_param->value_as_EngineOptionsParam();
+    uint32_t cublas_layout_hint = fb_param->cublas_layout_hint();
+    if (cublas_layout_hint != options_.cublas_layout_hint) {
+        LOG(WARNING) << "deserialize cublas_layout_hint[" << cublas_layout_hint << "] diff from user input[" <<  options_.cublas_layout_hint << "]";
+    }
+    options_.cublas_layout_hint = cublas_layout_hint;
+    return ppl::common::RC_SUCCESS;
+}
+#endif
 
 LlmCudaEngine::ConfHandlerFunc LlmCudaEngine::conf_handlers_[] = {
     SetTensorParellelNcclComm,

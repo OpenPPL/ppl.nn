@@ -43,4 +43,14 @@ KernelImpl* SubOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<SubKernel>();
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode SubOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+    return RC_SUCCESS;
+}
+
+ppl::common::RetCode SubOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+    return CommonInit();
+}
+#endif
+
 }}}}} // namespace ppl::nn::llm::cuda::pmx

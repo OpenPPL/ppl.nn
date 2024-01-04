@@ -21,6 +21,11 @@
 #include "ppl/nn/oputils/onnx/reshape_reshape.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -83,4 +88,25 @@ KernelImpl* ReshapeOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<ReshapeKernel>();
 }
 
-}}}}} // namespace ppl::nn::llm::cuda::pmx
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode ReshapeOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_constant_shape_data = builder.CreateVector(constant_shape_data_);
+    auto fb_param = pmx::CreateReshapeParam(builder, param_.get()->allowzero, fb_constant_shape_data);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_ReshapeParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode ReshapeOp::DeserializeData(const ppl::nn::pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_ReshapeParam();
+    param_ = make_shared<ppl::nn::onnx::ReshapeParam>();
+    param_.get()->allowzero = fb_param->allowzero();
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->constant_shape_data(), &constant_shape_data_);
+    
+    return CommonInit();
+}
+#endif
+
+}}}}} // namespace ppl::nn::pmx

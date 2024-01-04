@@ -44,6 +44,12 @@ using namespace ppl::nn;
 #include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #endif
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/load_model_options.h"
+#include "ppl/nn/models/pmx/save_model_options.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 
 #include "simple_flags.h"
@@ -53,6 +59,12 @@ Define_bool_opt("--version", g_flag_version, false, "show version info");
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
 Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
+Define_string_opt("--pmx-external-data-dir", g_flag_pmx_external_data_dir, "", "dir that contains external data");
+Define_string_opt("--export-pmx-model", g_flag_export_pmx_model, "", "dump model to <filename> in pmx format");
 #endif
 
 Define_string_opt(
@@ -910,6 +922,11 @@ static uint32_t CalcModelNum() {
         ++counter;
     }
 #endif
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    if (!g_flag_pmx_model.empty()) {
+        ++counter;
+    }
+#endif
     return counter;
 }
 
@@ -1050,11 +1067,110 @@ int main(int argc, char* argv[]) {
         prepare_diff = std::chrono::duration_cast<std::chrono::microseconds>(prepare_end_ts - prepare_begin_ts);
         LOG(INFO) << "RuntimeBuilder Preprocess costs: " << (float)prepare_diff.count() / 1000 << " ms.";
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+        if (!g_flag_export_pmx_model.empty()) {
+            prepare_begin_ts = std::chrono::high_resolution_clock::now();
+            utils::FileDataStream fds;
+            auto status = fds.Init(g_flag_export_pmx_model.c_str());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+            string external_data_dir_fix;
+            pmx::SaveModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty()) {
+                opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            } else {
+                auto pos = g_flag_export_pmx_model.find_last_of("/\\");
+                if (pos == string::npos) {
+                    external_data_dir_fix = ".";
+                } else {
+                    external_data_dir_fix.assign(g_flag_export_pmx_model, 0, pos);
+                }
+                opt.external_data_dir = external_data_dir_fix.c_str();
+            }
+            status = builder->Serialize("pmx", &opt, &fds);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+            prepare_end_ts = std::chrono::high_resolution_clock::now();
+            prepare_diff = std::chrono::duration_cast<std::chrono::microseconds>(prepare_end_ts - prepare_begin_ts);
+            LOG(INFO) << "RuntimeBuilder Serialize costs: " << (float)prepare_diff.count() / 1000 << " ms.";
+        }
+#endif
+
         prepare_begin_ts = std::chrono::high_resolution_clock::now();
         runtime.reset(builder->CreateRuntime());
         prepare_end_ts = std::chrono::high_resolution_clock::now();
         prepare_diff = std::chrono::duration_cast<std::chrono::microseconds>(prepare_end_ts - prepare_begin_ts);
         LOG(INFO) << "RuntimeBuilder CreateRuntime costs: " << (float)prepare_diff.count() / 1000 << " ms.";
+    }
+#endif
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    else if (!g_flag_pmx_model.empty()) {
+        auto builder = unique_ptr<pmx::RuntimeBuilder>(pmx::RuntimeBuilderFactory::Create());
+        if (!builder) {
+            LOG(ERROR) << "create PmxRuntimeBuilder failed.";
+            return -1;
+        }
+
+        vector<Engine*> engine_ptrs(engines.size());
+        for (uint32_t i = 0; i < engines.size(); ++i) {
+            engine_ptrs[i] = engines[i].get();
+        }
+
+        pmx::RuntimeBuilder::Resources resources;
+        resources.engines = engine_ptrs.data();
+        resources.engine_num = engine_ptrs.size();
+
+        string external_data_dir_fix;
+        pmx::LoadModelOptions opt;
+        if (!g_flag_pmx_external_data_dir.empty()) {
+            opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+        }
+        
+        auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources, opt);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+        
+        status = builder->Preprocess();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "pmx preprocess failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+
+        if (!g_flag_export_pmx_model.empty()) {
+            utils::FileDataStream fds;
+            auto status = fds.Init(g_flag_export_pmx_model.c_str());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+
+            pmx::SaveModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty()) {
+                opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            } else {
+                auto pos = g_flag_export_pmx_model.find_last_of("/\\");
+                if (pos == string::npos) {
+                    external_data_dir_fix = ".";
+                } else {
+                    external_data_dir_fix.assign(g_flag_export_pmx_model, 0, pos);
+                }
+                opt.external_data_dir = external_data_dir_fix.c_str();
+            }
+
+            status = builder->Serialize("pmx", &opt, &fds);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+        }
+
+        runtime.reset(builder->CreateRuntime());
     }
 #endif
 

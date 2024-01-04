@@ -21,6 +21,12 @@
 #include "ppl/nn/oputils/pmx/reshape_parallel_embedding.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/engines/llm_cuda/engine.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
@@ -45,7 +51,7 @@ RetCode ParallelEmbeddingOp::CommonInit() {
 }
 
 RetCode ParallelEmbeddingOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ParallelEmbeddingParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::pmx::ParallelEmbeddingParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -59,6 +65,35 @@ KernelImpl* ParallelEmbeddingOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ParallelEmbeddingKernel>(param_.get());
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode ParallelEmbeddingOp::SerializeData(const ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::CreateParallelEmbeddingParam(builder, 
+        param_.get()->num_embeddings,
+        param_.get()->embedding_dims,
+        param_.get()->padding_idx,
+        param_.get()->max_norm,
+        param_.get()->norm_type);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_ParallelEmbeddingParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode ParallelEmbeddingOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_ParallelEmbeddingParam();
+    param_ = make_shared<ppl::nn::pmx::ParallelEmbeddingParam>();
+    param_.get()->num_embeddings = fb_param->num_embeddings();
+    param_.get()->embedding_dims = fb_param->embedding_dims();
+    param_.get()->padding_idx    = fb_param->padding_idx();
+    param_.get()->max_norm       = fb_param->max_norm();
+    param_.get()->norm_type      = fb_param->norm_type();
+    
+    nccl_param_ = dynamic_cast<LlmCudaEngine*>(ctx.engine)->GetTensorParallelNcclParam();
+
+    return CommonInit();
+}
+#endif
 
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

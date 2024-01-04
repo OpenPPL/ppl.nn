@@ -20,6 +20,11 @@
 #include "ppl/nn/engines/llm_cuda/kernels/pmx/rotary_position_embedding_kernel.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
@@ -34,7 +39,7 @@ RetCode RotaryPositionEmbeddingOp::CommonInit() {
 }
 
 RetCode RotaryPositionEmbeddingOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<RotaryPositionEmbeddingParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::pmx::RotaryPositionEmbeddingParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -47,6 +52,29 @@ KernelImpl* RotaryPositionEmbeddingOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<RotaryPositionEmbeddingKernel>(param_.get());
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode RotaryPositionEmbeddingOp::SerializeData(const ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::CreateRotaryPositionEmbeddingParam(builder, 
+        param_.get()->bypass_key,
+        param_.get()->rotary_dim,
+        param_.get()->theta);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_RotaryPositionEmbeddingParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode RotaryPositionEmbeddingOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_RotaryPositionEmbeddingParam();
+    param_ = make_shared<ppl::nn::pmx::RotaryPositionEmbeddingParam>();
+    param_.get()->bypass_key = fb_param->bypass_key();
+    param_.get()->rotary_dim = fb_param->rotary_dim();
+    param_.get()->theta      = fb_param->theta();
+    
+    return CommonInit();
+}
+#endif
 
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

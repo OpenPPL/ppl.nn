@@ -21,6 +21,11 @@
 #include "ppl/nn/oputils/onnx/reshape_split.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -81,5 +86,31 @@ RetCode SplitOp::DoInit(const OptKernelOptions& options) {
 KernelImpl* SplitOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<SplitKernel>(param_.get());
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode SplitOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_split_point = builder.CreateVector(param_.get()->split_point);
+    auto fb_constant_split_data = builder.CreateVector(constant_split_data_);
+    auto fb_param = pmx::CreateSplitParam(builder, 
+        param_.get()->axis, 
+        fb_split_point, 
+        fb_constant_split_data);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_SplitParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode SplitOp::DeserializeData(const ppl::nn::pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_SplitParam();
+    param_ = make_shared<ppl::nn::onnx::SplitParam>();
+    param_.get()->axis = fb_param->axis();
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->split_point(), &(param_.get()->split_point));
+    ppl::nn::pmx::utils::Fbvec2Stdvec(fb_param->constant_split_data(), &constant_split_data_);
+    
+    return CommonInit();
+}
+#endif
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

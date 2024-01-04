@@ -5,6 +5,7 @@ option(PPLNN_USE_LLM_CUDA "" OFF)
 
 # refer to ppl.nn for more available options
 option(PPLNN_ENABLE_ONNX_MODEL "" ON)
+option(PPLNN_ENABLE_PMX_MODEL "" ON)
 option(PPLNN_INSTALL "" ON)
 
 if(MSVC)
@@ -107,6 +108,10 @@ endif()
 hpcc_get_git_info(
     GIT_HASH_OUTPUT PPLNN_COMMIT_STR
     GIT_TAG_OUTPUT PPLNN_VERSION_STR)
+
+if(NOT PPLNN_VERSION_STR)
+    set(PPLNN_VERSION_STR "v0.0.0")
+endif()
 
 if(NOT PPLNN_COMMIT_STR)
     set(PPLNN_COMMIT_STR "llm-unknown")

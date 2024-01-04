@@ -1,0 +1,16 @@
+namespace ppl.nn.llm.cuda;
+
+table EngineOptionsParam {
+    cublas_layout_hint: uint32;
+    version: int32 = 2147483647;
+}
+
+union EngineParamType {
+    EngineOptionsParam,
+}
+
+table EngineParam {
+    value: EngineParamType;
+}
+
+root_type EngineParam;

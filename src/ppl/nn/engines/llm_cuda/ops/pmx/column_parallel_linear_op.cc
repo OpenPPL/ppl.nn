@@ -21,6 +21,12 @@
 #include "ppl/nn/oputils/pmx/reshape_column_parallel_linear.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/engines/llm_cuda/engine.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
@@ -37,7 +43,7 @@ RetCode ColumnParallelLinearOp::CommonInit() {
 }
 
 RetCode ColumnParallelLinearOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ColumnParallelLinearParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::pmx::ColumnParallelLinearParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -51,6 +57,33 @@ KernelImpl* ColumnParallelLinearOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ColumnParallelLinearKernel>(param_.get());
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode ColumnParallelLinearOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::CreateColumnParallelLinearParam(builder, 
+        param_.get()->in_features, 
+        param_.get()->out_features, 
+        param_.get()->bias_term, 
+        param_.get()->gather_output);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_ColumnParallelLinearParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode ColumnParallelLinearOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_ColumnParallelLinearParam();
+    param_ = make_shared<ppl::nn::pmx::ColumnParallelLinearParam>();
+    param_.get()->in_features   = fb_param->in_features();
+    param_.get()->out_features  = fb_param->out_features();
+    param_.get()->bias_term     = fb_param->bias_term();
+    param_.get()->gather_output = fb_param->gather_output();
+    
+    nccl_param_ = dynamic_cast<LlmCudaEngine*>(ctx.engine)->GetTensorParallelNcclParam();
+    
+    return CommonInit();
+}
+#endif
 
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

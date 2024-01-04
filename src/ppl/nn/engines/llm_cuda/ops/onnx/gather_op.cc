@@ -21,6 +21,11 @@
 #include "ppl/nn/oputils/onnx/reshape_gather.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/gather.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -48,5 +53,24 @@ RetCode GatherOp::DoInit(const OptKernelOptions& options) {
 KernelImpl* GatherOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<GatherKernel>(param_.get());
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode GatherOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::onnx::SerializeGatherParam(*param_, &builder);
+    auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_GatherParam, fb_param.Union());
+    pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode GatherOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::onnx::GetOpParam(base);
+    auto fb_argmax_param = fb_op_param->value_as_GatherParam();
+    param_ = make_shared<ppl::nn::onnx::GatherParam>();
+    pmx::onnx::DeserializeGatherParam(*fb_argmax_param, param_.get());
+    
+    return CommonInit();
+}
+#endif
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

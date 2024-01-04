@@ -21,6 +21,11 @@
 #include "ppl/nn/oputils/onnx/reshape_cast.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/cast.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -52,5 +57,24 @@ RetCode CastOp::DoInit(const OptKernelOptions& options) {
 KernelImpl* CastOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<CastKernel>(param_.get());
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode CastOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::onnx::SerializeCastParam(*param_, &builder);
+    auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_CastParam, fb_param.Union());
+    pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode CastOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::onnx::GetOpParam(base);
+    auto fb_argmax_param = fb_op_param->value_as_CastParam();
+    param_ = make_shared<ppl::nn::onnx::CastParam>();
+    pmx::onnx::DeserializeCastParam(*fb_argmax_param, param_.get());
+    
+    return CommonInit();
+}
+#endif
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

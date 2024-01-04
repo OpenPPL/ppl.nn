@@ -47,6 +47,12 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_position_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_2d_position_embedding_op.h"
 
+#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_dequantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_rms_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/row_parallel_linear_op.h"
+
 using namespace std;
 using namespace ppl::common;
 
@@ -184,6 +190,41 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<pmx::DynamicBatchingRotaryPositionEmbeddingOp>("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1);
     RegisterOptKernelCreator<pmx::DynamicBatchingRotary2DPositionEmbeddingOp>("pmx.dynamic_batching", "Rotary2DPositionEmbedding", 1, 1);
 
+    // S
+    // T
+    // U
+    // V
+    // W
+    // X
+    // Y
+    // Z
+
+    /*                                                                        */
+    /*                        PMX.I8I8                                        */
+    /*                                                                        */
+    // A
+    // B
+    // C
+    RegisterOptKernelCreator<pmx::I8I8ColumnParallelLinearOp>("pmx.i8i8", "ColumnParallelLinear", 1, 1);
+    // D
+    // E
+    // F
+    // G
+    // H
+    // I
+    // J
+    // K
+    // L
+    // M
+    // N
+    // O
+    RegisterOptKernelCreator<pmx::I8I8OnlineDequantizeOp>("pmx.i8i8", "OnlineDequantize", 1, 1);
+    RegisterOptKernelCreator<pmx::I8I8OnlineQuantizeOp>("pmx.i8i8", "OnlineQuantize", 1, 1);
+    RegisterOptKernelCreator<pmx::I8I8OnlineQuantizeRMSNormOp>("pmx.i8i8", "OnlineQuantizeRMSNorm", 1, 1);
+    // P
+    // Q
+    // R
+    RegisterOptKernelCreator<pmx::I8I8RowParallelLinearOp>("pmx.i8i8", "RowParallelLinear", 1, 1);
     // S
     // T
     // U

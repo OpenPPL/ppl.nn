@@ -20,6 +20,11 @@
 #include "ppl/nn/engines/llm_cuda/kernels/pmx/layer_norm_kernel.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/llm_cuda/pmx/generated/llm_cuda_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
@@ -33,7 +38,7 @@ RetCode LayerNormOp::CommonInit() {
 }
 
 RetCode LayerNormOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<LayerNormParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::pmx::LayerNormParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -46,6 +51,31 @@ KernelImpl* LayerNormOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<LayerNormKernel>(param_.get());
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+ppl::common::RetCode LayerNormOp::SerializeData(const ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::CreateLayerNormParam(builder, 
+        param_.get()->elementwise_affine,
+        param_.get()->axis,
+        param_.get()->eps,
+        param_.get()->skip_term);
+    auto fb_op_param = pmx::CreateOpParam(builder, pmx::OpParamType_LayerNormParam, fb_param.Union());
+    pmx::FinishOpParamBuffer(builder, fb_op_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode LayerNormOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::GetOpParam(base);
+    auto fb_param = fb_op_param->value_as_LayerNormParam();
+    param_ = make_shared<ppl::nn::pmx::LayerNormParam>();
+    param_.get()->elementwise_affine = fb_param->elementwise_affine();
+    param_.get()->axis               = fb_param->axis();
+    param_.get()->eps                = fb_param->eps();
+    param_.get()->skip_term          = fb_param->skip_term();
+    
+    return CommonInit();
+}
+#endif
 
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
