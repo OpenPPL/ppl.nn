@@ -24,15 +24,10 @@ namespace ppl { namespace nn { namespace ir {
 
 class PartialGraphEdge final : public Edge {
 public:
-    PartialGraphEdge(Edge* orig_edge, const vector<Node*>* node_ptrs)
-        : orig_edge_(orig_edge), node_ptrs_(node_ptrs) {}
+    PartialGraphEdge(Edge* orig_edge, const vector<Node*>* node_ptrs) : orig_edge_(orig_edge), node_ptrs_(node_ptrs) {}
 
     edgeid_t GetId() const override {
         return orig_edge_->GetId();
-    }
-
-    void SetName(const string& name) override {
-        orig_edge_->SetName(name);
     }
 
     const string& GetName() const override {

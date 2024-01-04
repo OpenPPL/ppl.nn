@@ -26,6 +26,7 @@
 #include <set>
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 namespace ppl { namespace nn { namespace ir {
 
@@ -86,6 +87,8 @@ public:
     virtual void DelNode(nodeid_t id) = 0;
 
     Node* GetNode(const std::string& name) const;
+
+    bool RenameNode(Node*, const std::string& new_name);
 
     // ----- //
 
@@ -206,6 +209,12 @@ protected:
 
     /** output edge ids */
     std::vector<edgeid_t> outputs_;
+
+    /** node name => node id */
+    std::unordered_map<std::string, nodeid_t> name2nid_;
+
+    /** edge name => edge id */
+    std::unordered_map<std::string, edgeid_t> name2eid_;
 
 private:
     GraphTopo(const GraphTopo&) = delete;

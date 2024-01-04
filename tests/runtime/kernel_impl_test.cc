@@ -42,11 +42,11 @@ protected:
 TEST_F(KernelImplTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
     auto node = topo->GetNode(0);
-    EXPECT_EQ("a", node->GetName());
+    EXPECT_EQ(string("a"), node->GetName());
 
     TestKernel kernels(node);
     EXPECT_EQ(node, kernels.GetNode());
-    EXPECT_EQ("a", kernels.GetName());
+    EXPECT_EQ(string("a"), kernels.GetName());
     EXPECT_EQ(ir::Node::Type("test", "op1", 1), kernels.GetType());
 
     TmpEngineContext ctx;
