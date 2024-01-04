@@ -27,17 +27,20 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
+RetCode DynamicBatchingMultiHeadCacheAttentionOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = GenericInferDims;
+    return RC_SUCCESS;
+}
+
 RetCode DynamicBatchingMultiHeadCacheAttentionOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<MultiHeadCacheAttentionParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
     }
-
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
-
-    return RC_SUCCESS;
+    
+    return CommonInit();
 }
 
 KernelImpl* DynamicBatchingMultiHeadCacheAttentionOp::CreateKernelImpl() const {

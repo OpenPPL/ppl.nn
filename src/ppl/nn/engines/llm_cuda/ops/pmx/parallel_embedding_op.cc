@@ -28,15 +28,7 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode ParallelEmbeddingOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ParallelEmbeddingParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    nccl_param_ = options.device->GetTensorParallelNcclParam();
-
+RetCode ParallelEmbeddingOp::CommonInit() {
     infer_type_and_format_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto weight_shape = info->GetInput<TensorImpl>(1)->GetShape();
         auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
@@ -49,8 +41,18 @@ RetCode ParallelEmbeddingOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return nn::pmx::ReshapeParallelEmbedding(info, param_.get(), nccl_param_->size);
     };
-
     return RC_SUCCESS;
+}
+
+RetCode ParallelEmbeddingOp::DoInit(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ParallelEmbeddingParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
+        return status;
+    }
+    nccl_param_ = options.device->GetTensorParallelNcclParam();
+
+    return CommonInit();
 }
 
 KernelImpl* ParallelEmbeddingOp::CreateKernelImpl() const {

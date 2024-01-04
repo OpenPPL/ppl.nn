@@ -27,6 +27,12 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
+RetCode RMSNormOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = GenericInferDims;
+    return RC_SUCCESS;
+}
+
 RetCode RMSNormOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<RMSNormParam>(options, &param_);
     if (status != RC_SUCCESS) {
@@ -34,10 +40,7 @@ RetCode RMSNormOp::DoInit(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
-
-    return RC_SUCCESS;
+    return CommonInit();
 }
 
 KernelImpl* RMSNormOp::CreateKernelImpl() const {

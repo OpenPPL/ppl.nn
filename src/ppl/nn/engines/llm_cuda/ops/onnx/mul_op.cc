@@ -26,13 +26,16 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace onnx {
 
-RetCode MulOp::DoInit(const OptKernelOptions& options) {
+RetCode MulOp::CommonInit() {
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
     infer_dims_func_ =  [](InputOutputInfo* info) -> RetCode {
         return ppl::nn::onnx::ReshapeAdd(info, nullptr);
     };
-
     return RC_SUCCESS;
+}
+
+RetCode MulOp::DoInit(const OptKernelOptions& options) {
+    return CommonInit();
 }
 
 KernelImpl* MulOp::CreateKernelImpl() const {

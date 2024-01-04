@@ -27,13 +27,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace onnx {
 
-RetCode CastOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::onnx::CastParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+RetCode CastOp::CommonInit() {
     infer_type_and_format_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto input_shape = info->GetInput<TensorImpl>(0)->GetShape();
         auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
@@ -42,8 +36,17 @@ RetCode CastOp::DoInit(const OptKernelOptions& options) {
         return ppl::common::RC_SUCCESS;
     };
     infer_dims_func_ = GenericInferDims;
-
     return RC_SUCCESS;
+}
+
+RetCode CastOp::DoInit(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::onnx::CastParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return CommonInit();
 }
 
 KernelImpl* CastOp::CreateKernelImpl() const {

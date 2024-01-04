@@ -28,6 +28,9 @@ public:
 
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode DoInit(const OptKernelOptions&) override;
+
+private:
+    ppl::common::RetCode CommonInit();
 };
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

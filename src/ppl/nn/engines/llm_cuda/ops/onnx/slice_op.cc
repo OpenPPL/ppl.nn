@@ -27,89 +27,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace onnx {
 
-RetCode SliceOp::DoInit(const OptKernelOptions& options) {
-    auto node = GetNode();
-    auto graph_data = options.graph->data;
-
-    {
-        auto starts_data_it = graph_data->constants.find(node->GetInput(1));
-        const int64_t* starts_data = nullptr;
-        if (starts_data_it != graph_data->constants.end()) {
-            starts_data = (const int64_t*)starts_data_it->second.data.GetData();
-        }
-
-        if (starts_data != nullptr) {
-            auto starts_shape_it = graph_data->shapes.find(node->GetInput(1));
-            if (starts_shape_it != graph_data->shapes.end()) {
-                auto& starts_shape = starts_shape_it->second;
-                constant_slice_param_.starts.assign(starts_data, starts_data + starts_shape.dims[0]);
-            }
-        } else {
-            LOG(WARNING) << "non-constant slice starts will cause performance downgrade.";
-        }
-    }
-
-    {
-        auto ends_data_it = graph_data->constants.find(node->GetInput(2));
-        const int64_t* ends_data = nullptr;
-        if (ends_data_it != graph_data->constants.end()) {
-            ends_data = (const int64_t*)ends_data_it->second.data.GetData();
-        }
-
-        if (ends_data != nullptr) {
-            auto ends_shape_it = graph_data->shapes.find(node->GetInput(2));
-            if (ends_shape_it != graph_data->shapes.end()) {
-                auto& ends_shape = ends_shape_it->second;
-                constant_slice_param_.ends.assign(ends_data, ends_data + ends_shape.dims[0]);
-            }
-        } else {
-            LOG(WARNING) << "non-constant slice ends will cause performance downgrade.";
-        }
-    }
-
-    if (node->GetInputCount() > 3) {
-        auto axes_data_it = graph_data->constants.find(node->GetInput(3));
-        const int64_t* axes_data = nullptr;
-        if (axes_data_it != graph_data->constants.end()) {
-            axes_data = (const int64_t*)axes_data_it->second.data.GetData();
-        }
-
-        if (axes_data != nullptr) {
-            auto axes_shape_it = graph_data->shapes.find(node->GetInput(3));
-            if (axes_shape_it != graph_data->shapes.end()) {
-                auto& axes_shape = axes_shape_it->second;
-                constant_slice_param_.axes.assign(axes_data, axes_data + axes_shape.dims[0]);
-            }
-        } else {
-            LOG(WARNING) << "non-constant slice axes will cause performance downgrade.";
-        }
-    } else {
-        constant_slice_param_.axes.resize(constant_slice_param_.starts.size());
-        for (uint64_t i = 0; i < constant_slice_param_.axes.size(); ++i) {
-            constant_slice_param_.axes[i] = i;
-        }
-    }
-
-    if (node->GetInputCount() > 4) {
-        auto steps_data_it = graph_data->constants.find(node->GetInput(4));
-        const int64_t* steps_data = nullptr;
-        if (steps_data_it != graph_data->constants.end()) {
-            steps_data = (const int64_t*)steps_data_it->second.data.GetData();
-        }
-
-        if (steps_data != nullptr) {
-            auto steps_shape_it = graph_data->shapes.find(node->GetInput(4));
-            if (steps_shape_it != graph_data->shapes.end()) {
-                auto& steps_shape = steps_shape_it->second;
-                constant_slice_param_.steps.assign(steps_data, steps_data + steps_shape.dims[0]);
-            }
-        } else {
-            LOG(WARNING) << "non-constant slice steps will cause performance downgrade.";
-        }
-    } else {
-        constant_slice_param_.steps.assign(constant_slice_param_.starts.size(), 1);
-    }
-
+RetCode SliceOp::CommonInit() {
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         std::vector<int64_t> local_starts;
@@ -208,6 +126,92 @@ RetCode SliceOp::DoInit(const OptKernelOptions& options) {
     };
 
     return RC_SUCCESS;
+}
+
+RetCode SliceOp::DoInit(const OptKernelOptions& options) {
+    auto node = GetNode();
+    auto graph_data = options.graph->data;
+
+    {
+        auto starts_data_it = graph_data->constants.find(node->GetInput(1));
+        const int64_t* starts_data = nullptr;
+        if (starts_data_it != graph_data->constants.end()) {
+            starts_data = (const int64_t*)starts_data_it->second.data.GetData();
+        }
+
+        if (starts_data != nullptr) {
+            auto starts_shape_it = graph_data->shapes.find(node->GetInput(1));
+            if (starts_shape_it != graph_data->shapes.end()) {
+                auto& starts_shape = starts_shape_it->second;
+                constant_slice_param_.starts.assign(starts_data, starts_data + starts_shape.dims[0]);
+            }
+        } else {
+            LOG(WARNING) << "non-constant slice starts will cause performance downgrade.";
+        }
+    }
+
+    {
+        auto ends_data_it = graph_data->constants.find(node->GetInput(2));
+        const int64_t* ends_data = nullptr;
+        if (ends_data_it != graph_data->constants.end()) {
+            ends_data = (const int64_t*)ends_data_it->second.data.GetData();
+        }
+
+        if (ends_data != nullptr) {
+            auto ends_shape_it = graph_data->shapes.find(node->GetInput(2));
+            if (ends_shape_it != graph_data->shapes.end()) {
+                auto& ends_shape = ends_shape_it->second;
+                constant_slice_param_.ends.assign(ends_data, ends_data + ends_shape.dims[0]);
+            }
+        } else {
+            LOG(WARNING) << "non-constant slice ends will cause performance downgrade.";
+        }
+    }
+
+    if (node->GetInputCount() > 3) {
+        auto axes_data_it = graph_data->constants.find(node->GetInput(3));
+        const int64_t* axes_data = nullptr;
+        if (axes_data_it != graph_data->constants.end()) {
+            axes_data = (const int64_t*)axes_data_it->second.data.GetData();
+        }
+
+        if (axes_data != nullptr) {
+            auto axes_shape_it = graph_data->shapes.find(node->GetInput(3));
+            if (axes_shape_it != graph_data->shapes.end()) {
+                auto& axes_shape = axes_shape_it->second;
+                constant_slice_param_.axes.assign(axes_data, axes_data + axes_shape.dims[0]);
+            }
+        } else {
+            LOG(WARNING) << "non-constant slice axes will cause performance downgrade.";
+        }
+    } else {
+        constant_slice_param_.axes.resize(constant_slice_param_.starts.size());
+        for (uint64_t i = 0; i < constant_slice_param_.axes.size(); ++i) {
+            constant_slice_param_.axes[i] = i;
+        }
+    }
+
+    if (node->GetInputCount() > 4) {
+        auto steps_data_it = graph_data->constants.find(node->GetInput(4));
+        const int64_t* steps_data = nullptr;
+        if (steps_data_it != graph_data->constants.end()) {
+            steps_data = (const int64_t*)steps_data_it->second.data.GetData();
+        }
+
+        if (steps_data != nullptr) {
+            auto steps_shape_it = graph_data->shapes.find(node->GetInput(4));
+            if (steps_shape_it != graph_data->shapes.end()) {
+                auto& steps_shape = steps_shape_it->second;
+                constant_slice_param_.steps.assign(steps_data, steps_data + steps_shape.dims[0]);
+            }
+        } else {
+            LOG(WARNING) << "non-constant slice steps will cause performance downgrade.";
+        }
+    } else {
+        constant_slice_param_.steps.assign(constant_slice_param_.starts.size(), 1);
+    }
+
+    return CommonInit();
 }
 
 KernelImpl* SliceOp::CreateKernelImpl() const {

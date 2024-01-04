@@ -31,6 +31,8 @@ public:
     ppl::common::RetCode DoInit(const OptKernelOptions&) override;
 
 private:
+    ppl::common::RetCode CommonInit();
+    
     std::shared_ptr<ppl::nn::pmx::MultiHeadAttentionParam> param_;
 };
 

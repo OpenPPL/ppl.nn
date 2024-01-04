@@ -28,16 +28,7 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode KeyValueCacheOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<KeyValueCacheParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
-
+RetCode KeyValueCacheOp::CommonInit() {
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto start_pos = info->GetInput<TensorImpl>(2);
@@ -56,8 +47,20 @@ RetCode KeyValueCacheOp::DoInit(const OptKernelOptions& options) {
 
         return nn::pmx::ReshapeKeyValueCache(info, param_.get(), &start_pos_val);
     };
-
     return RC_SUCCESS;
+}
+
+RetCode KeyValueCacheOp::DoInit(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<KeyValueCacheParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
+
+    return CommonInit();
 }
 
 KernelImpl* KeyValueCacheOp::CreateKernelImpl() const {

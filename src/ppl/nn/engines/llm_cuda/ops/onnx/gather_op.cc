@@ -27,6 +27,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace onnx {
 
+RetCode GatherOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return ppl::nn::onnx::ReshapeGather(info, param_.get());
+    };
+    return RC_SUCCESS;
+}
+
 RetCode GatherOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<ppl::nn::onnx::GatherParam>(options, &param_);
     if (status != RC_SUCCESS) {
@@ -34,12 +42,7 @@ RetCode GatherOp::DoInit(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return ppl::nn::onnx::ReshapeGather(info, param_.get());
-    };
-
-    return RC_SUCCESS;
+    return CommonInit();
 }
 
 KernelImpl* GatherOp::CreateKernelImpl() const {

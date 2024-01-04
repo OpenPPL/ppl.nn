@@ -32,6 +32,8 @@ public:
     ppl::common::RetCode DoInit(const OptKernelOptions&) override;
 
 private:
+    ppl::common::RetCode CommonInit();
+
     std::shared_ptr<ppl::nn::onnx::CastParam> param_;
 };
 

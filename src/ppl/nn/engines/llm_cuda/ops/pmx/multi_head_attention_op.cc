@@ -27,6 +27,12 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
+RetCode MultiHeadAttentionOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = GenericInferDims;
+    return RC_SUCCESS;
+}
+
 RetCode MultiHeadAttentionOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<MultiHeadAttentionParam>(options, &param_);
     if (status != RC_SUCCESS) {
@@ -37,10 +43,7 @@ RetCode MultiHeadAttentionOp::DoInit(const OptKernelOptions& options) {
     LOG(ERROR) << "currently do not support this op";
     return ppl::common::RC_UNSUPPORTED;
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
-
-    return RC_SUCCESS;
+    return CommonInit();
 }
 
 KernelImpl* MultiHeadAttentionOp::CreateKernelImpl() const {

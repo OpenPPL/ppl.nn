@@ -32,6 +32,8 @@ public:
     ppl::common::RetCode DoInit(const OptKernelOptions&) override;
 
 private:
+    ppl::common::RetCode CommonInit();
+
     std::shared_ptr<ppl::nn::onnx::ReshapeParam> param_;
     std::vector<int64_t> constant_shape_data_;
 };

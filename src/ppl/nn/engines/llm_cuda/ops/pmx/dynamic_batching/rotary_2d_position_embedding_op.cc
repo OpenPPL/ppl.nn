@@ -26,6 +26,12 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
+RetCode DynamicBatchingRotary2DPositionEmbeddingOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = GenericInferDims;
+    return RC_SUCCESS;
+}
+
 RetCode DynamicBatchingRotary2DPositionEmbeddingOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<RotaryPositionEmbeddingParam>(options, &param_);
     if (status != RC_SUCCESS) {
@@ -33,10 +39,7 @@ RetCode DynamicBatchingRotary2DPositionEmbeddingOp::DoInit(const OptKernelOption
         return status;
     }
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
-
-    return RC_SUCCESS;
+    return CommonInit();
 }
 
 KernelImpl* DynamicBatchingRotary2DPositionEmbeddingOp::CreateKernelImpl() const {

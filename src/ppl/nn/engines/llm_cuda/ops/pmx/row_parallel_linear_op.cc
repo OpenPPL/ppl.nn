@@ -28,21 +28,23 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
+RetCode RowParallelLinearOp::CommonInit() {
+    infer_type_and_format_func_ = GenericInferTypeAndFormat;
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return nn::pmx::ReshapeRowParallelLinear(info, param_.get(), nccl_param_->size);
+    };
+    return RC_SUCCESS;
+}
+
 RetCode RowParallelLinearOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<RowParallelLinearParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
     }
-
     nccl_param_ = options.device->GetTensorParallelNcclParam();
-
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return nn::pmx::ReshapeRowParallelLinear(info, param_.get(), nccl_param_->size);
-    };
-
-    return RC_SUCCESS;
+    
+    return CommonInit();
 }
 
 KernelImpl* RowParallelLinearOp::CreateKernelImpl() const {

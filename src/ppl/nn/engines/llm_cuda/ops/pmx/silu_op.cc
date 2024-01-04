@@ -26,12 +26,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode SiLUOp::DoInit(const OptKernelOptions& options) {
-
+RetCode SiLUOp::CommonInit() {
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
     infer_dims_func_ = GenericInferDims;
-
     return RC_SUCCESS;
+}
+
+RetCode SiLUOp::DoInit(const OptKernelOptions& options) {
+    return CommonInit();
 }
 
 KernelImpl* SiLUOp::CreateKernelImpl() const {

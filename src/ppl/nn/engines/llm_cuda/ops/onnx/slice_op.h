@@ -39,6 +39,8 @@ public:
     };
 
 private:
+    ppl::common::RetCode CommonInit();
+
     SliceParam constant_slice_param_;
 };
 
