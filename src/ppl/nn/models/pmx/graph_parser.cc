@@ -246,19 +246,14 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
     DeserializationContext deser_ctx;
     deser_ctx.shapes = &info->shapes;
 
-    const string external_data_dir(opt.external_data_dir);
+    const string external_data_dir =
+        (opt.external_data_dir && opt.external_data_dir[0] != '\0') ? opt.external_data_dir : ".";
+
     for (auto fb_partition = fb_partitions->begin(); fb_partition != fb_partitions->end(); ++fb_partition) {
         auto engine = seq2engine[fb_partition->engine_id()];
 
         RuntimeGraphInfo::Partition partition;
         partition.engine = engine;
-
-        string external_data_dir;
-        if (opt.external_data_dir) {
-            external_data_dir = opt.external_data_dir;
-        } else {
-            external_data_dir = ".";
-        }
 
         PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants(),
                                    external_data_dir);
