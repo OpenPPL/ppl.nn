@@ -114,6 +114,10 @@ public:
     Edge* GetEdge(edgeid_t id) const override;
     void DelEdge(edgeid_t) override;
 
+    bool RenameEdge(Edge*, const std::string&) override {
+        return false;
+    }
+
 private:
     GraphTopo* parent_;
 
