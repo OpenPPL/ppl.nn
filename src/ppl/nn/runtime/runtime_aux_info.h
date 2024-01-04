@@ -22,7 +22,6 @@
 #include "ppl/nn/common/types.h"
 #include "ppl/nn/ir/graph_topo.h"
 #include <set>
-#include <map>
 #include <vector>
 
 namespace ppl { namespace nn {
@@ -39,9 +38,6 @@ struct RuntimeAuxInfo final {
 
     /** an `EdgeObject` can be released right after the last consumer finish executing in `sorted_nodes` */
     std::vector<nodeid_t> edge_last_consumer;
-
-    /** node name => id mapping */
-    std::map<std::string, nodeid_t> name2nodeid;
 };
 
 }} // namespace ppl::nn

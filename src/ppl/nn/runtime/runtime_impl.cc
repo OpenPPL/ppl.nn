@@ -79,7 +79,6 @@ static RetCode GenGraphKernels(const RuntimeGraphInfo& info, vector<unique_ptr<E
 }
 
 static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                              const map<string, nodeid_t>& name2nodeid,
                               const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
                               map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
@@ -96,14 +95,8 @@ static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo&
                     continue;
                 }
 
-                auto nid_ref = name2nodeid.find(consumer->GetName());
-                if (nid_ref == name2nodeid.end()) {
-                    LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
-                    return RC_NOT_FOUND;
-                }
-
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
-                auto kernel = nodeid2kernel[nid_ref->second].get();
+                auto kernel = nodeid2kernel[consumer->GetId()].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
@@ -120,7 +113,6 @@ static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo&
 }
 
 static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                   const map<string, nodeid_t>& name2nodeid,
                                    const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
                                    map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
@@ -137,14 +129,8 @@ static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraph
                     continue;
                 }
 
-                auto nid_ref = name2nodeid.find(consumer->GetName());
-                if (nid_ref == name2nodeid.end()) {
-                    LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
-                    return RC_NOT_FOUND;
-                }
-
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
-                auto kernel = nodeid2kernel[nid_ref->second].get();
+                auto kernel = nodeid2kernel[consumer->GetId()].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
@@ -160,7 +146,7 @@ static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraph
 }
 
 RetCode GenGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                        const map<string, nodeid_t>& name2nodeid, const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
+                        const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
                         map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
         auto eid = topo->GetOutput(i);
@@ -172,15 +158,7 @@ RetCode GenGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
         if (ret_pair.second) {
             auto producer_id = edge->GetProducer();
             if (producer_id != INVALID_NODEID) {
-                auto producer = topo->GetNode(producer_id);
-
-                auto nid_ref = name2nodeid.find(producer->GetName());
-                if (nid_ref == name2nodeid.end()) {
-                    LOG(ERROR) << "cannot find producer[" << producer->GetName() << "] of [" << edge->GetName() << "]";
-                    return RC_NOT_FOUND;
-                }
-
-                auto kernel = nodeid2kernel[nid_ref->second].get();
+                auto kernel = nodeid2kernel[producer_id].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
             }
 
@@ -260,19 +238,19 @@ static RetCode InitGraphResources(const ir::GraphTopo* topo, const RuntimeGraphI
         return status;
     }
 
-    status = GenGraphInputs(topo, info, aux_info.name2nodeid, *nodeid2kernel, reserved_tensors);
+    status = GenGraphInputs(topo, info, *nodeid2kernel, reserved_tensors);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenGraphInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = GenGraphExtraInputs(topo, info, aux_info.name2nodeid, *nodeid2kernel, reserved_tensors);
+    status = GenGraphExtraInputs(topo, info, *nodeid2kernel, reserved_tensors);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenGraphExtraInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = GenGraphOutputs(topo, info, aux_info.name2nodeid, *nodeid2kernel, reserved_tensors);
+    status = GenGraphOutputs(topo, info, *nodeid2kernel, reserved_tensors);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenGraphOutputs failed: " << GetRetCodeStr(status);
         return status;
