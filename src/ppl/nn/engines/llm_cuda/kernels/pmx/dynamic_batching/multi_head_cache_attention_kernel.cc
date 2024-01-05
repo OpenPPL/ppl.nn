@@ -87,6 +87,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_mode: %d\n", param_->cache_mode);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_layout: %d\n", param_->cache_layout);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
 
     if (param_->quant_bit != 8 && param_->quant_group != 8) {
         LOG(ERROR) << "currently only support quant_bit == quant_group == 8";

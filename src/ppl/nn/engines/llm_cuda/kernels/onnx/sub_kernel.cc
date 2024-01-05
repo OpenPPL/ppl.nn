@@ -33,6 +33,8 @@ ppl::common::RetCode SubKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input1]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input1);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     bool can_trans_input0 = ctx->IsLastConsumerOfInput(0)
         && input0->GetType() == TENSORTYPE_NORMAL
         && input0->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding();

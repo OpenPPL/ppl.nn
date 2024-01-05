@@ -61,6 +61,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionKernel::DoExecute(KernelEx
     PPLNN_LLM_CUDA_DEBUG_TRACE("head_dim: %d\n", param_->head_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("is_causal: %d\n", param_->is_causal);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     if (param_->is_causal == false) {
         LOG(ERROR) << "currently only support is_causal == true";
         return ppl::common::RC_UNSUPPORTED;

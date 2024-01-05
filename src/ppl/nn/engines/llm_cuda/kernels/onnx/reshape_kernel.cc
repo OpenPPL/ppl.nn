@@ -34,6 +34,8 @@ ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [shape]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(shape);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     bool can_trans = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
 
     if (can_trans) {

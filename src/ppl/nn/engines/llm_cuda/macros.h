@@ -109,4 +109,13 @@
         }\
     } while (0)
 
-#endif
+#define PPLNN_LLM_CUDA_RESHAPE_OUTPUTS() \
+    do {\
+        auto rc = Reshape(ctx);\
+        if (ppl::common::RC_SUCCESS != rc) {\
+            LOG(ERROR) << "Reshape kernel[" << GetName() << "] failed: " << ppl::common::GetRetCodeStr(rc);\
+            return rc;\
+        }\
+    } while (0)
+
+#endif // _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_MACROS_H_

@@ -48,6 +48,8 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("rotary_dim: %d\n", param_->rotary_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bypass_key: %d\n", param_->bypass_key);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     bool can_trans_query = ctx->IsLastConsumerOfInput(0) && query->GetType() == TENSORTYPE_NORMAL;
     bool can_trans_key = ctx->IsLastConsumerOfInput(1) && key->GetType() == TENSORTYPE_NORMAL;
 

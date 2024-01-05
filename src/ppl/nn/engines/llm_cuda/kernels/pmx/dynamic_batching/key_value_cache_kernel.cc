@@ -68,6 +68,8 @@ ppl::common::RetCode DynamicBatchingKeyValueCacheKernel::DoExecute(KernelExecCon
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_mode: %d\n", param_->cache_mode);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_layout: %d\n", param_->cache_layout);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     if (!scale) {
         LOG(ERROR) << "currently only support qunatized cache but scale not found";
         return ppl::common::RC_UNSUPPORTED;

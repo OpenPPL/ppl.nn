@@ -47,6 +47,8 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(steps);
     }
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     SliceKernelParam kernel_param;
     kernel_param.axes_num = starts->GetShape()->CalcElementsIncludingPadding();
 

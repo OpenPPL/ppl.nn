@@ -19,8 +19,6 @@
 
 #include "ppl/kernel/llm/cuda/pmx/gelu.h"
 
-#include <iostream>
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 ppl::common::RetCode GELUKernel::DoExecute(KernelExecContext* ctx) {
@@ -42,6 +40,8 @@ ppl::common::RetCode GELUKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("approximate: %d\n", param_->approximate);
+
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
     bool can_trans_input = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
     bool can_trans_gate = gate && ctx->IsLastConsumerOfInput(1) && gate->GetType() == TENSORTYPE_NORMAL;

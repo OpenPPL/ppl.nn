@@ -36,6 +36,8 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("axis: %d\n", param_->axis);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     const int32_t axis = param_->axis < 0 ? param_->axis + input->GetShape()->GetDimCount() : param_->axis;
     bool can_trans = ctx->IsLastConsumerOfInput(0)
         && input->GetType() == TENSORTYPE_NORMAL

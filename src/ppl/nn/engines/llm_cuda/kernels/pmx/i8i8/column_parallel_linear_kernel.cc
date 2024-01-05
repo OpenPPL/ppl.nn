@@ -53,6 +53,8 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
     PPLNN_LLM_CUDA_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
     PPLNN_LLM_CUDA_DEBUG_TRACE("gather_output: %d\n", param_->gather_output);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);

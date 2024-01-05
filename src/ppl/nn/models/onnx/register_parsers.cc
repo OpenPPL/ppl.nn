@@ -1,12 +1,14 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/param_parser_manager.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_column_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_gelu_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_key_value_cache_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_cache_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_parallel_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_rotary_position_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_swish_param.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -59,6 +61,8 @@ void RegisterParsers() {
 
     PPL_REGISTER_OP_WITH_PARAM("pmx", "ColumnParallelLinear", 1, 1, ppl::nn::pmx::ColumnParallelLinearParam,
                                ppl::nn::pmx::ParseColumnParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "GeGLU", 1, 1, ppl::nn::pmx::GELUParam,
+                               ppl::nn::pmx::ParseGELUParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "KeyValueCache", 1, 1, ppl::nn::pmx::KeyValueCacheParam,
                                ppl::nn::pmx::ParseKeyValueCacheParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "MultiHeadAttention", 1, 1, ppl::nn::pmx::MultiHeadAttentionParam,
@@ -71,6 +75,8 @@ void RegisterParsers() {
                                ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "RowParallelLinear", 1, 1, ppl::nn::pmx::RowParallelLinearParam,
                                ppl::nn::pmx::ParseRowParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "SwiGLU", 1, 1, ppl::nn::pmx::SwishParam,
+                               ppl::nn::pmx::ParseSwishParam, nullptr);
 
     // dynamic batching
     PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "KeyValueCache", 1, 1, ppl::nn::pmx::KeyValueCacheParam,

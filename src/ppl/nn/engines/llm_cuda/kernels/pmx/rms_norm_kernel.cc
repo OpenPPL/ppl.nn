@@ -48,6 +48,8 @@ ppl::common::RetCode RMSNormKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_LLM_CUDA_DEBUG_TRACE("skip_term: %d\n", param_->skip_term);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     auto input_shape = input->GetShape();
 
     if (param_->skip_term == false) {

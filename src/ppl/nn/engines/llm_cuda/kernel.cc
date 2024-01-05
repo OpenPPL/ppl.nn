@@ -164,18 +164,21 @@ RetCode LlmCudaKernel::Execute(KernelExecContext* ctx) {
 #endif
     RetCode rc = RC_SUCCESS;
 
-    rc = Reshape(ctx);
-    if (RC_SUCCESS != rc) {
-        LOG(ERROR) << "Reshape kernel[" << GetName() << "] failed: " << GetRetCodeStr(rc);
-        return rc;
-    }
-
-
     rc = DoExecute(ctx);
     if (RC_SUCCESS != rc) {
         LOG(ERROR) << "DoExecute kernel [" << GetName() << "] failed: " << GetRetCodeStr(rc);
         return rc;
     }
+
+#if !defined(NDEBUG) || defined(DEBUG)
+    {
+        auto err = cudaDeviceSynchronize();
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaDeviceSynchronize failed: " << (int)err << ", " <<  cudaGetErrorString(err);
+            return ppl::common::RC_DEVICE_RUNTIME_ERROR;
+        }
+    }
+#endif
 
 #ifdef PPLNN_LLM_CUDA_DUMP_OUTPUT_TENSORS
     std::string dump_dir = "./rank_" + std::to_string(GetCudaDevice()->GetTensorParallelNcclParam()->rank);

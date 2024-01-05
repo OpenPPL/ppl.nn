@@ -42,6 +42,8 @@ ppl::common::RetCode ParallelEmbeddingKernel::DoExecute(KernelExecContext* ctx) 
     PPLNN_LLM_CUDA_DEBUG_TRACE("norm_type: %f\n", param_->norm_type);
     PPLNN_LLM_CUDA_DEBUG_TRACE("padding_idx: %d\n", param_->padding_idx);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);

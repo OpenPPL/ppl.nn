@@ -19,8 +19,6 @@
 
 #include "ppl/kernel/llm/cuda/pmx/layer_norm.h"
 
-#include <iostream>
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
@@ -56,6 +54,8 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("eps: %f\n", param_->eps);
     PPLNN_LLM_CUDA_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_LLM_CUDA_DEBUG_TRACE("skip_term: %d\n", param_->skip_term);
+
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
     auto input_shape = input->GetShape();
 

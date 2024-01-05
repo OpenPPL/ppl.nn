@@ -32,6 +32,8 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("to: %s\n", ppl::common::GetDataTypeStr(param_->to));
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     bool can_trans = ctx->IsLastConsumerOfInput(0)
         && input->GetType() == TENSORTYPE_NORMAL
         && input->GetShape()->GetDataType() == output->GetShape()->GetDataType();

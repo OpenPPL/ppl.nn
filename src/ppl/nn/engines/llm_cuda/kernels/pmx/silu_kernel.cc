@@ -40,6 +40,8 @@ ppl::common::RetCode SiLUKernel::DoExecute(KernelExecContext* ctx) {
         gate_data = gate->GetBufferPtr();
     }
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     bool can_trans_input = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
     bool can_trans_gate = gate && ctx->IsLastConsumerOfInput(1) && gate->GetType() == TENSORTYPE_NORMAL;
 

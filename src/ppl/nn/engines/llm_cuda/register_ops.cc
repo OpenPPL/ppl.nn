@@ -28,6 +28,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/onnx/sub_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/pmx/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/geglu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/gelu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/layer_norm_op.h"
@@ -38,6 +39,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/rotary_2d_position_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/row_parallel_linear_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/silu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/swiglu_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
@@ -123,6 +125,7 @@ void RegisterBuiltinOpImpls() {
     // E
     // F
     // G
+    RegisterOptKernelCreator<pmx::GeGLUOp>("pmx", "GeGLU", 1, 1);
     RegisterOptKernelCreator<pmx::GELUOp>("pmx", "GELU", 1, 1);
     // H
     // I
@@ -145,6 +148,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<pmx::RowParallelLinearOp>("pmx", "RowParallelLinear", 1, 1);
     // S
     RegisterOptKernelCreator<pmx::SiLUOp>("pmx", "SiLU", 1, 1);
+    RegisterOptKernelCreator<pmx::SwiGLUOp>("pmx", "SwiGLU", 1, 1);
     // T
     // U
     // V

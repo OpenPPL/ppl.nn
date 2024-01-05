@@ -44,6 +44,8 @@ ppl::common::RetCode I8I8OnlineDequantizeKernel::DoExecute(KernelExecContext* ct
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
 
+    PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
+
     if (scale_outer->GetShape()->GetDataType() != scale_inner->GetShape()->GetDataType()) {
         LOG(ERROR) << "datatype of scale_outer must be equal to datatype of scale_inner: "
             << ppl::common::GetDataTypeStr(scale_outer->GetShape()->GetDataType()) << " vs. "
