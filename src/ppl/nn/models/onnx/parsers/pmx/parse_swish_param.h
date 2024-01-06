@@ -15,22 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_PMX_SWISH_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_PMX_SWISH_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_SWISH_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_SWISH_PARAM_H_
 
-#include "ppl/nn/ir/attr.h"
-#include <stdint.h>
-#include <cmath>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/params/pmx/swish_param.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
+#include "onnx.pb.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
-struct SwishParam final : public ir::TypedAttr<SwishParam> {
-    float beta;
-
-    bool operator==(const SwishParam& p) const {
-        return fabs(beta - p.beta) <= 1e-05;
-    }
-};
+ppl::common::RetCode ParseSwishParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*, ir::Attr*);
 
 }}} // namespace ppl::nn::pmx
 
