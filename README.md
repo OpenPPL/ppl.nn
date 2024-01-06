@@ -27,7 +27,7 @@
 
 - [LLaMA 1&2](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama)
 - [ChatGLM 1](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm)
-- [ChatGLM 2](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm2)
+- [ChatGLM 2&3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm2)
 - [Baichuan-7b](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/baichuan/huggingface)
 - [InternLM](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/internlm/huggingface)
 
