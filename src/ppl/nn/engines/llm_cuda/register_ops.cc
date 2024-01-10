@@ -32,6 +32,8 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/gelu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/layer_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_row_parallel_linear_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/multi_head_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/parallel_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/rms_norm_op.h"
@@ -141,6 +143,8 @@ void RegisterBuiltinOpImpls() {
     // L
     RegisterOptKernelCreator<pmx::LayerNormOp>("pmx", "LayerNorm", 1, 1);
     // M
+    RegisterOptKernelCreator<pmx::MoeColumnParallelLinearOp>("pmx", "MoeColumnParallelLinear", 1, 1);
+    RegisterOptKernelCreator<pmx::MoeRowParallelLinearOp>("pmx", "MoeRowParallelLinear", 1, 1);
     // N
     RegisterOptKernelCreator<pmx::MultiHeadAttentionOp>("pmx", "MultiHeadAttention", 1, 1);
     // O
