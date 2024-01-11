@@ -26,8 +26,8 @@ RetCode ReshapeMoeColumnParallelLinear(InputOutputInfo* info, const ir::Attr* ar
                                        int64_t in_features_pack_size, int64_t out_features_pack_size) {
     auto param = static_cast<const MoeColumnParallelLinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-    const TensorShape& weight_shape = *info->GetInput<TensorImpl>(1)->GetShape();
-    const TensorShape& offset_shape = *info->GetInput<TensorImpl>(2)->GetShape();
+    const TensorShape& offset_shape = *info->GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& weight_shape = *info->GetInput<TensorImpl>(2)->GetShape();
     const uint32_t out_dim_count = input_shape.GetDimCount();
 
     if (input_shape.GetDim(out_dim_count - 1) != param->in_features) {

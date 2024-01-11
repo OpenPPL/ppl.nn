@@ -15,28 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "moe_row_parallel_linear_kernel.h"
+#include "linear_kernel.h"
 
-#include "ppl/common/cuda/nccl_utils.h"
-#include "ppl/common/destructor.h"
+#include "ppl/kernel/llm/cuda/pmx/linear.h"
 
-#include "ppl/kernel/llm/cuda/pmx/moe_row_parallel_linear.h"
+#include <iostream>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode LinearKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
+    // get input, output tensor
     PPLNN_LLM_CUDA_REQUIRED_INPUT(input, 0);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(expert_offset, 1);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 2);
-    PPLNN_LLM_CUDA_OPTIONAL_INPUT(bias, 3);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 1);
+    PPLNN_LLM_CUDA_OPTIONAL_INPUT(bias, 2);
+
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(output, 0);
 
+    // trace info
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [expert_offset]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(expert_offset);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [weight]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(weight);
 
@@ -45,11 +44,9 @@ ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ct
         PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(bias);
     }
 
-    PPLNN_LLM_CUDA_DEBUG_TRACE("num_experts: %d\n", param_->num_experts);
     PPLNN_LLM_CUDA_DEBUG_TRACE("in_features: %d\n", param_->in_features);
     PPLNN_LLM_CUDA_DEBUG_TRACE("out_features: %d\n", param_->out_features);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("input_is_parallel: %d\n", param_->input_is_parallel);
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
@@ -58,7 +55,6 @@ ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ct
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
     auto input_shape = input->GetShape();
-    auto offset_shape = expert_offset->GetShape();
     auto weight_shape = weight->GetShape();
     auto output_shape = output->GetShape();
 
@@ -79,39 +75,16 @@ ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ct
     }
 
     auto cublas_handle = GetCublasHandle();
-    auto nccl_param = GetTensorParallelNcclParam();
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
+
     const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
-    std::vector<int64_t> expert_offset_val(param_->num_experts + 1);
-    
-    auto status = expert_offset->CopyToHost(expert_offset_val.data());
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "CopyToHost failed";
-    }
-
-    return ppl::kernel::llm::cuda::pmx::moe_row_parallel_linear(
-        GetStream(), 
-        cublas_handle, 
-        nullptr, 
-        input_shape, 
-        input->GetBufferPtr(), 
-        offset_shape, 
-        expert_offset_val.data(),
-        weight_shape,
-        weight->GetBufferPtr(),
-        bias_shape, 
-        bias_data, 
-        param_->in_features, 
-        param_->out_features,
-        nccl_param, 
-        param_->input_is_parallel, 
-        nullptr, 
+    return ppl::kernel::llm::cuda::pmx::linear(
+        GetStream(), cublas_handle, nullptr, input_shape, input->GetBufferPtr(), weight_shape, weight->GetBufferPtr(),
+        bias_shape, bias_data, param_->in_features, param_->out_features,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr, 
-        output_shape, 
-        output->GetBufferPtr());
+        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr, output_shape, output->GetBufferPtr());
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

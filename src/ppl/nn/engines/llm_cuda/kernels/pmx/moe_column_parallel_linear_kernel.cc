@@ -28,22 +28,24 @@ ppl::common::RetCode MoeColumnParallelLinearKernel::DoExecute(KernelExecContext*
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(input, 0);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 1);
-    PPLNN_LLM_CUDA_OPTIONAL_INPUT(bias, 2);
-    PPLNN_LLM_CUDA_OPTIONAL_INPUT(expert_offset, 3);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(expert_offset, 1);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 2);
+    PPLNN_LLM_CUDA_OPTIONAL_INPUT(bias, 3);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [weight]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(weight);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [expert_offset]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(expert_offset);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [weight]:\n");
+    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(weight);
+
     if (bias) {
         PPLNN_LLM_CUDA_DEBUG_TRACE("Input [bias]:\n");
         PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(bias);
     }
 
+    PPLNN_LLM_CUDA_DEBUG_TRACE("num_experts: %d\n", param_->num_experts);
     PPLNN_LLM_CUDA_DEBUG_TRACE("in_features: %d\n", param_->in_features);
     PPLNN_LLM_CUDA_DEBUG_TRACE("out_features: %d\n", param_->out_features);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
@@ -56,9 +58,9 @@ ppl::common::RetCode MoeColumnParallelLinearKernel::DoExecute(KernelExecContext*
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
     auto input_shape = input->GetShape();
+    auto offset_shape = expert_offset->GetShape();
     auto weight_shape = weight->GetShape();
     auto output_shape = output->GetShape();
-    auto offset_shape = expert_offset->GetShape();
 
     TensorShape* bias_shape = nullptr;
     void* bias_data = nullptr;
@@ -100,11 +102,37 @@ ppl::common::RetCode MoeColumnParallelLinearKernel::DoExecute(KernelExecContext*
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
+
+    std::vector<int64_t> expert_offset_val(param_->num_experts + 1);
+    
+    status = expert_offset->CopyToHost(expert_offset_val.data());
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "CopyToHost failed";
+        return ppl::common::RC_OTHER_ERROR;
+    }
+
     return ppl::kernel::llm::cuda::pmx::moe_column_parallel_linear(
-        GetStream(), cublas_handle, nullptr, input_shape, input->GetBufferPtr(), weight_shape, weight->GetBufferPtr(),
-        bias_shape, bias_data, offset_shape, expert_offset->GetBufferPtr(), param_->in_features, param_->out_features,
-        nccl_param, param_->gather_output, gather_buffer, use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr, output_shape, output->GetBufferPtr());
+        GetStream(),
+        cublas_handle,
+        nullptr,
+        input_shape,
+        input->GetBufferPtr(),
+        offset_shape, 
+        expert_offset_val.data(),
+        weight_shape,
+        weight->GetBufferPtr(),
+        bias_shape,
+        bias_data,
+        param_->in_features,
+        param_->out_features,
+        nccl_param,
+        param_->gather_output,
+        gather_buffer,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr,
+        output_shape,
+        output->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

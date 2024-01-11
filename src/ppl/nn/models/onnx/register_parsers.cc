@@ -3,8 +3,11 @@
 #include "ppl/nn/models/onnx/parsers/pmx/parse_column_parallel_linear_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_gelu_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_key_value_cache_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_linear_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_moe_column_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_reduce_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_moe_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_select_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_cache_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_parallel_embedding_param.h"
@@ -67,10 +70,16 @@ void RegisterParsers() {
                                ppl::nn::pmx::ParseGELUParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "KeyValueCache", 1, 1, ppl::nn::pmx::KeyValueCacheParam,
                                ppl::nn::pmx::ParseKeyValueCacheParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Linear", 1, 1, ppl::nn::pmx::LinearParam,
+                               ppl::nn::pmx::ParseLinearParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeColumnParallelLinear", 1, 1, ppl::nn::pmx::MoeColumnParallelLinearParam,
                                ppl::nn::pmx::ParseMoeColumnParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeReduce", 1, 1, ppl::nn::pmx::MoeReduceParam,
+                               ppl::nn::pmx::ParseMoeReduceParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeRowParallelLinear", 1, 1, ppl::nn::pmx::MoeRowParallelLinearParam,
                                ppl::nn::pmx::ParseMoeRowParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeSelect", 1, 1, ppl::nn::pmx::MoeSelectParam,
+                               ppl::nn::pmx::ParseMoeSelectParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "MultiHeadAttention", 1, 1, ppl::nn::pmx::MultiHeadAttentionParam,
                                ppl::nn::pmx::ParseMultiHeadAttentionParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "ParallelEmbedding", 1, 1, ppl::nn::pmx::ParallelEmbeddingParam,

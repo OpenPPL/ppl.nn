@@ -26,8 +26,8 @@ RetCode ReshapeMoeRowParallelLinear(InputOutputInfo* info, const ir::Attr* arg, 
                                        int64_t in_features_pack_size, int64_t out_features_pack_size) {
     auto param = static_cast<const MoeRowParallelLinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-    const TensorShape& weight_shape = *info->GetInput<TensorImpl>(1)->GetShape();
-    const TensorShape& offset_shape = *info->GetInput<TensorImpl>(2)->GetShape();
+    const TensorShape& offset_shape = *info->GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& weight_shape = *info->GetInput<TensorImpl>(2)->GetShape();
     const uint32_t out_dim_count = input_shape.GetDimCount();
     const uint32_t weight_dim_count = weight_shape.GetDimCount();
 

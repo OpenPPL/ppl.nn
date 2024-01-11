@@ -28,6 +28,11 @@ RetCode ParseMoeRowParallelLinearParam(const ::onnx::NodeProto& pb_node, const o
                                           ir::Node* node, ir::Attr* arg) {
     auto param = static_cast<MoeRowParallelLinearParam*>(arg);
 
+    if (!onnx::utils::GetNodeAttr(pb_node, "num_experts", &param->num_experts, -1)) {
+        LOG(ERROR) << node->GetName() << ": missing num_experts";
+        return RC_INVALID_VALUE;
+    }
+
     if (!onnx::utils::GetNodeAttr(pb_node, "in_features", &param->in_features, -1)) {
         LOG(ERROR) << node->GetName() << ": missing in_features";
         return RC_INVALID_VALUE;
