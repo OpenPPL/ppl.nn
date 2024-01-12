@@ -117,7 +117,26 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& r
         return status;
     }
 
-    return LoadModel(fm.GetData(), fm.GetSize(), resources, opt);
+    string model_dir;
+    LoadModelOptions new_opt;
+
+    const LoadModelOptions* opt_ptr;
+    if (opt.external_data_dir && opt.external_data_dir[0] != '\0') {
+        opt_ptr = &opt;
+    } else {
+        new_opt = opt;
+        opt_ptr = &new_opt;
+
+        auto pos = string(model_file).find_last_of("/\\");
+        if (pos == string::npos) {
+            model_dir = ".";
+        } else {
+            model_dir.assign(model_file, pos);
+        }
+        new_opt.external_data_dir = model_dir.c_str();
+    }
+
+    return LoadModel(fm.GetData(), fm.GetSize(), resources, *opt_ptr);
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {
