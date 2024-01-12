@@ -241,7 +241,7 @@ static RetCode SaveData(const vector<uint8_t>& data, const string& path) {
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbConstants(FlatBufferBuilder* builder, const ModelOptions& options,
+static RetCode CreateFbConstants(FlatBufferBuilder* builder, const SaveModelOptions& options,
                                  const SerializationContext& ctx, const ir::GraphTopo* topo,
                                  const map<edgeid_t, BufferInfo>& constants, const map<edgeid_t, TensorShape>& shapes,
                                  Offset<Vector<Offset<pmx::Constant>>>* fb_constants, vector<uint8_t>* shared_data,
@@ -337,7 +337,7 @@ static RetCode CreateFbPartitionNodes(FlatBufferBuilder* builder, const Serializ
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbPartition(FlatBufferBuilder* builder, const ModelOptions& options,
+static RetCode CreateFbPartition(FlatBufferBuilder* builder, const SaveModelOptions& options,
                                  const SerializationContext& ctx, const RuntimeGraphInfo::Partition& partition,
                                  const map<edgeid_t, TensorShape>& shapes, const ir::GraphTopo* topo,
                                  const map<EngineImpl*, uint32_t>& engine2seq, Offset<pmx::Partition>* fb_partition,
@@ -367,7 +367,7 @@ static RetCode CreateFbPartition(FlatBufferBuilder* builder, const ModelOptions&
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const ModelOptions& options,
+static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const SaveModelOptions& options,
                                   const SerializationContext& ctx,
                                   const vector<RuntimeGraphInfo::Partition>& partitions,
                                   const map<edgeid_t, TensorShape>& shapes, const ir::GraphTopo* topo,
@@ -399,7 +399,7 @@ static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const ModelOptions
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const ModelOptions& options,
+static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const SaveModelOptions& options,
                                  const SerializationContext& ctx, const ir::GraphTopo* topo,
                                  const RuntimeGraphInfo& info, const map<EngineImpl*, uint32_t>& engine2seq,
                                  Offset<pmx::GraphData>* fb_data) {
@@ -420,13 +420,18 @@ static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const ModelOptions&
         return status;
     }
 
-    auto fb_shared_data = builder->CreateVector<uint8_t>(shared_data);
+    if (shared_data.size() > INT32_MAX) {
+        LOG(ERROR) << "not supported: size of constant data is larger than 2 GB.";
+        return RC_UNSUPPORTED;
+    }
+
+    auto fb_shared_data = builder->CreateVector(shared_data);
     *fb_data = CreateGraphData(*builder, fb_shapes, fb_partitions, fb_shared_data);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbGraph(FlatBufferBuilder* builder, const ModelOptions& options, const SerializationContext& ctx,
-                             const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+static RetCode CreateFbGraph(FlatBufferBuilder* builder, const SaveModelOptions& options,
+                             const SerializationContext& ctx, const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                              const map<EngineImpl*, uint32_t>& engine2seq, Offset<pmx::Graph>* fb_graph) {
     Offset<pmx::GraphTopo> fb_topo;
     auto status = CreateFbGraphTopo(builder, ctx, topo, &fb_topo);
@@ -464,7 +469,7 @@ static void InitSerializationContext(const ir::GraphTopo* topo, SerializationCon
     }
 }
 
-static RetCode CreateFbModel(FlatBufferBuilder* builder, const ModelOptions& options, const ir::GraphTopo* topo,
+static RetCode CreateFbModel(FlatBufferBuilder* builder, const SaveModelOptions& options, const ir::GraphTopo* topo,
                              const vector<EngineImpl*>& engines, const RuntimeGraphInfo& info) {
     SerializationContext ctx;
     InitSerializationContext(topo, &ctx);
@@ -489,7 +494,7 @@ static RetCode CreateFbModel(FlatBufferBuilder* builder, const ModelOptions& opt
     return RC_SUCCESS;
 }
 
-RetCode Serializer::Serialize(const ModelOptions& options, const ir::GraphTopo* topo,
+RetCode Serializer::Serialize(const SaveModelOptions& options, const ir::GraphTopo* topo,
                               const vector<EngineImpl*>& engines, const RuntimeGraphInfo& info,
                               ppl::nn::utils::DataStream* ds) {
     flatbuffers::FlatBufferBuilder builder;

@@ -27,8 +27,8 @@ using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/model_options.h"
-#include "../pmx/py_model_options.h"
+#include "ppl/nn/models/pmx/save_model_options.h"
+#include "../pmx/py_save_model_options.h"
 #endif
 
 namespace ppl { namespace nn { namespace python { namespace onnx {
@@ -79,8 +79,8 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  }
 #ifdef PPLNN_ENABLE_PMX_MODEL
                  if (string(fmt) == string("pmx")) {
-                     auto& opt_arg = static_cast<const pmx::PyModelOptions&>(opt_base);
-                     ppl::nn::pmx::ModelOptions opt;
+                     auto& opt_arg = static_cast<const pmx::PySaveModelOptions&>(opt_base);
+                     ppl::nn::pmx::SaveModelOptions opt;
                      opt.external_data_dir = opt_arg.external_data_dir.c_str();
                      return builder.ptr->Serialize(fmt, &opt, &fds);
                  }

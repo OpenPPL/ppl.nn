@@ -21,14 +21,14 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/ir/graph_topo.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/models/pmx/model_options.h"
+#include "ppl/nn/models/pmx/load_model_options.h"
 #include "ppl/nn/models/pmx/generated/pmx_generated.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
 class GraphParser final {
 public:
-    static ppl::common::RetCode Parse(const Graph*, const std::vector<EngineImpl*>&, const ModelOptions&,
+    static ppl::common::RetCode Parse(const Graph*, const std::vector<EngineImpl*>&, const LoadModelOptions&,
                                       ir::GraphTopo*, RuntimeGraphInfo*);
 };
 

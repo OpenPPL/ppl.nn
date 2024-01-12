@@ -612,7 +612,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            options = pplnn.pmx.ModelOptions()
+            options = pplnn.pmx.SaveModelOptions()
             options.external_data_dir = args.pmx_external_data_dir
             status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
             if status != pplcommon.RC_SUCCESS:
@@ -627,7 +627,7 @@ if __name__ == "__main__":
         resources = pplnn.pmx.RuntimeBuilderResources()
         resources.engines = engines
 
-        options = pplnn.pmx.ModelOptions()
+        options = pplnn.pmx.LoadModelOptions()
         options.external_data_dir = args.pmx_external_data_dir
         status = runtime_builder.LoadModelFromFile(args.pmx_model, resources, options)
         if status != pplcommon.RC_SUCCESS:
@@ -645,7 +645,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            options = pplnn.pmx.ModelOptions()
+            options = pplnn.pmx.SaveModelOptions()
             options.external_data_dir = args.pmx_external_data_dir
             status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
             if status != pplcommon.RC_SUCCESS:

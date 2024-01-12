@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_MODEL_OPTIONS_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_MODEL_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PMX_PY_SAVE_MODEL_OPTIONS_H_
+#define _ST_HPC_PPL_NN_PYTHON_PMX_PY_SAVE_MODEL_OPTIONS_H_
 
-namespace ppl { namespace nn { namespace pmx {
+#include "../py_model_options_base.h"
+#include <string>
 
-#include "ppl/nn/common/common.h"
+namespace ppl { namespace nn { namespace python { namespace pmx {
 
-struct PPLNN_PUBLIC ModelOptions final {
-    /** save constants to external files if not null. one file per constant. */
-    const char* external_data_dir = nullptr;
+struct PySaveModelOptions final : public PyModelOptionsBase {
+    std::string external_data_dir;
 };
 
-}}} // namespace ppl::nn::pmx
+}}}} // namespace ppl::nn::python::pmx
 
 #endif

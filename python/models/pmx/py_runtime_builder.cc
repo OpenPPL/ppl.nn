@@ -19,7 +19,9 @@
 #include "../../runtime/py_runtime.h"
 #include "py_runtime_builder.h"
 #include "py_runtime_builder_resources.h"
-#include "py_model_options.h"
+#include "py_load_model_options.h"
+#include "py_save_model_options.h"
+#include "ppl/nn/models/pmx/save_model_options.h"
 #include "ppl/nn/utils/file_data_stream.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -37,7 +39,7 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
              })
         .def("LoadModelFromFile",
              [](PyRuntimeBuilder& builder, const char* model_file, const PyRuntimeBuilderResources& resources,
-                const PyModelOptions& py_opt) -> RetCode {
+                const PyLoadModelOptions& py_opt) -> RetCode {
                  vector<shared_ptr<Engine>> engines;
                  for (auto e = resources.engines.begin(); e != resources.engines.end(); ++e) {
                      engines.push_back(e->ptr);
@@ -53,7 +55,7 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
 
                  builder.engines = std::move(engines); // retain engines
 
-                 ModelOptions opt;
+                 LoadModelOptions opt;
                  opt.external_data_dir = py_opt.external_data_dir.c_str();
                  return builder.ptr->LoadModel(model_file, r, opt);
              })
@@ -67,14 +69,14 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
              })
         .def("Serialize",
              [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt,
-                const PyModelOptions& py_opt) -> RetCode {
+                const PySaveModelOptions& py_opt) -> RetCode {
                  utils::FileDataStream fds;
                  auto rc = fds.Init(output_file);
                  if (rc != RC_SUCCESS) {
                      return rc;
                  }
 
-                 ModelOptions opt;
+                 SaveModelOptions opt;
                  opt.external_data_dir = py_opt.external_data_dir.c_str();
                  return builder.ptr->Serialize(fmt, &opt, &fds);
              });

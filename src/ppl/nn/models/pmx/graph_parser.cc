@@ -238,7 +238,7 @@ private:
 };
 
 static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::GraphTopo* topo,
-                                        const vector<EngineImpl*>& seq2engine, const ModelOptions& opt,
+                                        const vector<EngineImpl*>& seq2engine, const LoadModelOptions& opt,
                                         RuntimeGraphInfo* info) {
     auto fb_partitions = fb_data->partitions();
     info->partitions.reserve(fb_partitions->size());
@@ -296,7 +296,8 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
 }
 
 static RetCode ParseGraphData(const GraphData* fb_data, const ir::GraphTopo* topo,
-                              const vector<EngineImpl*>& seq2engine, const ModelOptions& opt, RuntimeGraphInfo* info) {
+                              const vector<EngineImpl*>& seq2engine, const LoadModelOptions& opt,
+                              RuntimeGraphInfo* info) {
     auto status = ParseGraphDataShapes(fb_data, &info->shapes);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphDataShapes failed: " << GetRetCodeStr(status);
@@ -312,7 +313,7 @@ static RetCode ParseGraphData(const GraphData* fb_data, const ir::GraphTopo* top
     return RC_SUCCESS;
 }
 
-RetCode GraphParser::Parse(const Graph* fb_graph, const vector<EngineImpl*>& seq2engine, const ModelOptions& opt,
+RetCode GraphParser::Parse(const Graph* fb_graph, const vector<EngineImpl*>& seq2engine, const LoadModelOptions& opt,
                            ir::GraphTopo* topo, RuntimeGraphInfo* info) {
     auto status = ParseGraphTopo(fb_graph->topo(), topo);
     if (status != RC_SUCCESS) {

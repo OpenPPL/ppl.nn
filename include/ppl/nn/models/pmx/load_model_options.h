@@ -15,22 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph_topo.h"
-#include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/utils/data_stream.h"
-#include "ppl/nn/models/pmx/save_model_options.h"
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_LOAD_MODEL_OPTIONS_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_LOAD_MODEL_OPTIONS_H_
 
 namespace ppl { namespace nn { namespace pmx {
 
-class Serializer final {
-public:
-    ppl::common::RetCode Serialize(const SaveModelOptions&, const ir::GraphTopo*, const std::vector<EngineImpl*>&,
-                                   const RuntimeGraphInfo&, ppl::nn::utils::DataStream*);
+#include "ppl/nn/common/common.h"
+
+struct PPLNN_PUBLIC LoadModelOptions final {
+    /** load constant from external data files in `external_data_dir` if `EXTERNAL_DATA` is enabled. */
+    const char* external_data_dir = nullptr;
 };
 
 }}} // namespace ppl::nn::pmx

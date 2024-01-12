@@ -45,7 +45,8 @@ using namespace ppl::nn;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/runtime_builder_factory.h"
-#include "ppl/nn/models/pmx/model_options.h"
+#include "ppl/nn/models/pmx/load_model_options.h"
+#include "ppl/nn/models/pmx/save_model_options.h"
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -1242,7 +1243,7 @@ int main(int argc, char* argv[]) {
                 LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
                 return -1;
             }
-            pmx::ModelOptions opt;
+            pmx::SaveModelOptions opt;
             if (!g_flag_pmx_external_data_dir.empty()) {
                 opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
             }
@@ -1274,7 +1275,7 @@ int main(int argc, char* argv[]) {
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();
 
-        pmx::ModelOptions opt;
+        pmx::LoadModelOptions opt;
         if (!g_flag_pmx_external_data_dir.empty()) {
             opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
         }
@@ -1299,7 +1300,7 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
 
-            pmx::ModelOptions opt;
+            pmx::SaveModelOptions opt;
             if (!g_flag_pmx_external_data_dir.empty()) {
                 opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
             }
