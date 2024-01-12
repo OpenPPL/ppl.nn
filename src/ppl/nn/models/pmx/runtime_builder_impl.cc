@@ -79,7 +79,7 @@ static void SetResources(const RuntimeBuilder::Resources& src, utils::SharedReso
 }
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const Resources& resources,
-                                      const ModelOptions& opt) {
+                                      const LoadModelOptions& opt) {
     RetCode status;
 
     auto fb_model = pmx::GetModel(model_buf);
@@ -109,7 +109,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources, const ModelOptions& opt) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources, const LoadModelOptions& opt) {
     Mmap fm;
     auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
@@ -148,10 +148,10 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() const {
 
 RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, utils::DataStream* ds) const {
     if (fmt == string("pmx")) {
-        const pmx::ModelOptions default_opt;
-        const pmx::ModelOptions* opt;
+        const pmx::SaveModelOptions default_opt;
+        const pmx::SaveModelOptions* opt;
         if (options) {
-            opt = (const pmx::ModelOptions*)options;
+            opt = (const pmx::SaveModelOptions*)options;
         } else {
             opt = &default_opt;
         }

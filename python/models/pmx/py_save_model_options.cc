@@ -15,24 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
+#include "py_save_model_options.h"
+#include "pybind11/pybind11.h"
+using namespace std;
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph_topo.h"
-#include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/utils/data_stream.h"
-#include "ppl/nn/models/pmx/save_model_options.h"
+namespace ppl { namespace nn { namespace python { namespace pmx {
 
-namespace ppl { namespace nn { namespace pmx {
+void RegisterSaveModelOptions(pybind11::module* m) {
+    pybind11::class_<PySaveModelOptions, PyModelOptionsBase>(*m, "SaveModelOptions")
+        .def(pybind11::init<>())
+        .def_readwrite("external_data_dir", &PySaveModelOptions::external_data_dir);
+}
 
-class Serializer final {
-public:
-    ppl::common::RetCode Serialize(const SaveModelOptions&, const ir::GraphTopo*, const std::vector<EngineImpl*>&,
-                                   const RuntimeGraphInfo&, ppl::nn::utils::DataStream*);
-};
-
-}}} // namespace ppl::nn::pmx
-
-#endif
+}}}} // namespace ppl::nn::python::pmx

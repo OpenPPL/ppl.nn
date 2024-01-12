@@ -116,10 +116,10 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() const {
 RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, utils::DataStream* ds) const {
 #ifdef PPLNN_ENABLE_PMX_MODEL
     if (fmt == string("pmx")) {
-        const pmx::ModelOptions default_opt;
-        const pmx::ModelOptions* opt;
+        const pmx::SaveModelOptions default_opt;
+        const pmx::SaveModelOptions* opt;
         if (options) {
-            opt = (const pmx::ModelOptions*)options;
+            opt = (const pmx::SaveModelOptions*)options;
         } else {
             opt = &default_opt;
         }

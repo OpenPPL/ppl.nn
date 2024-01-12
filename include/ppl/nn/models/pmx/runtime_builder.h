@@ -22,7 +22,7 @@
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/runtime/runtime.h"
 #include "ppl/nn/utils/data_stream.h"
-#include "ppl/nn/models/pmx/model_options.h"
+#include "ppl/nn/models/pmx/load_model_options.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
@@ -38,11 +38,11 @@ public:
     virtual ~RuntimeBuilder() {}
 
     /** @brief load model from a file */
-    virtual ppl::common::RetCode LoadModel(const char* model_file, const Resources&, const ModelOptions&) = 0;
+    virtual ppl::common::RetCode LoadModel(const char* model_file, const Resources&, const LoadModelOptions&) = 0;
 
     /** @brief load model from a buffer */
     virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const Resources&,
-                                           const ModelOptions&) = 0;
+                                           const LoadModelOptions&) = 0;
 
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 

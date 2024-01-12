@@ -15,16 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "py_model_options.h"
-#include "pybind11/pybind11.h"
-using namespace std;
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_SAVE_MODEL_OPTIONS_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_SAVE_MODEL_OPTIONS_H_
 
-namespace ppl { namespace nn { namespace python { namespace pmx {
+namespace ppl { namespace nn { namespace pmx {
 
-void RegisterModelOptions(pybind11::module* m) {
-    pybind11::class_<PyModelOptions, PyModelOptionsBase>(*m, "ModelOptions")
-        .def(pybind11::init<>())
-        .def_readwrite("external_data_dir", &PyModelOptions::external_data_dir);
-}
+#include "ppl/nn/common/common.h"
 
-}}}} // namespace ppl::nn::python::pmx
+struct PPLNN_PUBLIC SaveModelOptions final {
+    /** save constants to external files if not null. one file per constant. */
+    const char* external_data_dir = nullptr;
+};
+
+}}} // namespace ppl::nn::pmx
+
+#endif
