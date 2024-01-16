@@ -76,15 +76,19 @@ private:
     cudaEvent_t exec_begin_event_ = nullptr, exec_end_event_ = nullptr;
 #endif
 
-protected:
     LlmCudaDevice* GetCudaDevice() const {
-        return dynamic_cast<LlmCudaDevice*>(GetEngineContext()->GetDevice());
+        return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetCudaDevice();
+    }
+
+    LlmHostDevice* GetHostDevice() const {
+        return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetHostDevice();
     }
 
     const EngineOptions& GetEngineOptions() const {
         return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetEngineOptions();
     }
 
+protected:
     virtual ppl::common::RetCode DoExecute(KernelExecContext*) = 0;
 
 private:

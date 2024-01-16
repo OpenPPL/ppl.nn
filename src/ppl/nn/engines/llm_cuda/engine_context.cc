@@ -30,6 +30,15 @@ static void DummyDeleter(LlmCudaDevice*) {}
 RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
     engine_options_ = options;
 
+    auto host_device = new LlmHostDevice();
+    auto rc = host_device->Init(options.mm_policy);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init LlmHostDevice failed: " << GetRetCodeStr(rc);
+        delete host_device;
+        return rc;
+    }
+    host_device_.reset(host_device);
+
     if (options.runtime_device) {
         device_ = shared_ptr<LlmCudaDevice>((LlmCudaDevice*)options.runtime_device, DummyDeleter);
         return RC_SUCCESS;

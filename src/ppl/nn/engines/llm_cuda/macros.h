@@ -51,6 +51,7 @@
                                       X->GetShape()->GetPadding0(__idx), X->GetShape()->GetPadding1(__idx));               \
             }                                                                                                    \
         }                                                                                                        \
+        PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DeviceType: %s\n", X->GetDevice()->GetType().str);                                \
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DataType: %s\n", ppl::common::GetDataTypeStr(X->GetShape()->GetDataType()));       \
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape()->GetDataFormat())); \
         const uint64_t __num_elem = X->GetShape()->CalcElementsIncludingPadding();                                          \
@@ -102,6 +103,16 @@
 #define PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(X) \
     do {\
         X->SetDevice(GetCudaDevice());\
+        auto __status = X->ReallocBuffer();\
+        if (__status != ppl::common::RC_SUCCESS) {\
+            LOG(ERROR) << "ReallocBuffer for tensor[" << X->GetName() << "] failed: " << ppl::common::GetRetCodeStr(__status);\
+            return __status;\
+        }\
+    } while (0)
+
+#define PPLNN_LLM_CUDA_REALLOC_TENSOR_HOST_BUFFER(X) \
+    do {\
+        X->SetDevice(GetHostDevice());\
         auto __status = X->ReallocBuffer();\
         if (__status != ppl::common::RC_SUCCESS) {\
             LOG(ERROR) << "ReallocBuffer for tensor[" << X->GetName() << "] failed: " << ppl::common::GetRetCodeStr(__status);\

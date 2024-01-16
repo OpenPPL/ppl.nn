@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_ENGINE_CONTEXT_H_
 
 #include "llm_cuda_device.h"
+#include "llm_host_device.h"
 
 #include "ppl/nn/engines/llm_cuda/engine_options.h"
 #include "ppl/nn/engines/engine_context.h"
@@ -34,6 +35,12 @@ public:
     Device* GetDevice() const override {
         return device_.get();
     }
+    LlmCudaDevice* GetCudaDevice() const {
+        return device_.get();
+    }
+    LlmHostDevice* GetHostDevice() const {
+        return host_device_.get();
+    }
     const char* GetName() const override {
         return "llm_cuda";
     }
@@ -43,6 +50,7 @@ public:
 
 private:
     std::shared_ptr<LlmCudaDevice> device_;
+    std::shared_ptr<LlmHostDevice> host_device_;
     EngineOptions engine_options_;
 
 private:
