@@ -27,6 +27,9 @@ class ModelParser final {
 public:
     static ppl::common::RetCode Parse(const char* model_buf, uint64_t buf_len, const char* model_file_dir,
                                       Model* model);
+    static ppl::common::RetCode Parse(const char* model_buf, uint64_t buf_len, const char* model_file_dir,
+                                      const char** inputs, uint32_t nr_input, const char** outputs, uint32_t nr_output,
+                                      Model* model);
 };
 
 }}} // namespace ppl::nn::onnx

@@ -29,6 +29,10 @@ public:
     ppl::common::RetCode Parse(const ::onnx::GraphProto& pb_graph, const std::map<std::string, uint64_t>& op_sets,
                                const char* model_file_dir, ir::Graph* graph,
                                std::map<std::pair<edgeid_t, uint32_t>, std::string>* axis_symbols = nullptr);
+    ppl::common::RetCode Parse(const ::onnx::GraphProto& pb_graph, const std::map<std::string, uint64_t>& op_set,
+                               const char* model_file_dir, const char** inputs, uint32_t nr_input, const char** outputs,
+                               uint32_t nr_output, ir::Graph* graph,
+                               std::map<std::pair<edgeid_t, uint32_t>, std::string>* axis_symbols = nullptr);
 
 private:
     uint32_t anonymous_node_count_ = 0; // used to generate anonymous node name
