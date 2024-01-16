@@ -29,13 +29,10 @@ using namespace std;
 
 class GraphParserTest : public testing::Test {};
 
-TEST_F(GraphParserTest, Parse_Test) {
-    const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
+static void LoadModel(const string& onnx_file, ::onnx::ModelProto* pb_model) {
     FILE* fp = fopen(onnx_file.c_str(), "r");
-    if (!fp) {
-        cout << "open onnx model file [" << onnx_file << "] failed!" << endl;
-        return;
-    }
+    EXPECT_NE(nullptr, fp);
+
     int fd = fileno(fp);
     google::protobuf::io::FileInputStream fis(fd);
     google::protobuf::io::CodedInputStream cis(&fis);
@@ -44,14 +41,55 @@ TEST_F(GraphParserTest, Parse_Test) {
 #else
     cis.SetTotalBytesLimit(INT_MAX);
 #endif
-    ::onnx::ModelProto pb_model;
-    if (!pb_model.ParseFromCodedStream(&cis)) {
-        return;
-    }
+    EXPECT_TRUE(pb_model->ParseFromCodedStream(&cis));
     fclose(fp);
+}
+
+TEST_F(GraphParserTest, Parse_Test) {
+    const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
+    ::onnx::ModelProto pb_model;
+    LoadModel(onnx_file, &pb_model);
+
     ppl::nn::onnx::GraphParser graph_parser;
     ppl::nn::ir::Graph graph;
     map<string, uint64_t> op_sets = {{"", 11}};
     auto status = graph_parser.Parse(pb_model.graph(), op_sets, nullptr, &graph);
     EXPECT_EQ(status, ppl::common::RC_SUCCESS);
+}
+
+TEST_F(GraphParserTest, partial_parse_test) {
+    const string onnx_file = PPLNN_TESTDATA_DIR + string("/mnasnet0_5.onnx");
+    ::onnx::ModelProto pb_model;
+    LoadModel(onnx_file, &pb_model);
+
+    ppl::nn::onnx::GraphParser graph_parser;
+    ppl::nn::ir::Graph graph;
+    map<string, uint64_t> op_sets = {{"", 11}};
+
+    const char* inputs[] = {"325", "479", "480"};
+    const uint32_t nr_input = 3;
+    const char* outputs[] = {"481", "490"};
+    const uint32_t nr_output = 2;
+    auto status = graph_parser.Parse(pb_model.graph(), op_sets, nullptr, inputs, nr_input, outputs, nr_output, &graph);
+    EXPECT_EQ(status, ppl::common::RC_SUCCESS);
+
+    auto topo = graph.topo.get();
+    EXPECT_EQ(1, topo->GetInputCount());
+
+    const char* expected_nodes[] = {"Conv_9", "Conv_10", "Relu_11", "Conv_12", "Relu_13", "Conv_14"};
+    const uint32_t nr_node = 6;
+    for (uint32_t i = 0; i < nr_node; ++i) {
+        auto node_name = expected_nodes[i];
+        auto node = topo->GetNode(node_name);
+        EXPECT_NE(nullptr, node);
+    }
+
+    const char* expected_edges[] = {"328", "482", "483", "481", "484", "485", "486", "333",
+                                    "487", "488", "489", "336", "490", "491", "492"};
+    const uint32_t nr_edge = 15;
+    for (uint32_t i = 0; i < nr_edge; ++i) {
+        auto edge_name = expected_edges[i];
+        auto edge = topo->GetEdge(edge_name);
+        EXPECT_NE(nullptr, edge);
+    }
 }

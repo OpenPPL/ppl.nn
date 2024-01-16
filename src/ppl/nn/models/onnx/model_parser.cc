@@ -61,7 +61,10 @@ static void ParseOpSets(const ::onnx::ModelProto& pb_model, map<string, uint64_t
     }
 }
 
-RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_file_dir, Model* model) {
+static RetCode CommonParse(
+    const char* buf, uint64_t buf_len, const char* model_file_dir, Model* model,
+    const function<RetCode(const ::onnx::GraphProto&, const map<string, uint64_t>& op_set, const char* model_file_dir,
+                           ir::Graph* graph, map<pair<edgeid_t, uint32_t>, string>* axis_symbols)>& parse_graph_func) {
     ::onnx::ModelProto pb_model;
     if (!ParseFromBinaryBuffer(buf, buf_len, &pb_model)) {
         LOG(ERROR) << "load onnx model from model buffer failed.";
@@ -75,12 +78,10 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_
 
     ParseOpSets(pb_model, &model->opset);
 
-    GraphParser graph_parser;
-    auto status =
-        graph_parser.Parse(pb_model.graph(), model->opset, model_file_dir, &model->graph, &model->axis_symbols);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
-        return status;
+    auto rc = parse_graph_func(pb_model.graph(), model->opset, model_file_dir, &model->graph, &model->axis_symbols);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(rc);
+        return rc;
     }
 
     auto topo = model->graph.topo.get();
@@ -95,4 +96,26 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_
     return RC_SUCCESS;
 }
 
+RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_file_dir, Model* model) {
+    return CommonParse(
+        buf, buf_len, model_file_dir, model,
+        [](const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set, const char* model_file_dir,
+           ir::Graph* graph, map<pair<edgeid_t, uint32_t>, string>* axis_symbols) -> RetCode {
+            GraphParser graph_parser;
+            return graph_parser.Parse(pb_graph, op_set, model_file_dir, graph, axis_symbols);
+        });
+}
+
+RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_file_dir, const char** inputs,
+                           uint32_t nr_input, const char** outputs, uint32_t nr_output, Model* model) {
+    return CommonParse(
+        buf, buf_len, model_file_dir, model,
+        [inputs, nr_input, outputs, nr_output](const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set,
+                                               const char* model_file_dir, ir::Graph* graph,
+                                               map<pair<edgeid_t, uint32_t>, string>* axis_symbols) -> RetCode {
+            GraphParser graph_parser;
+            return graph_parser.Parse(pb_graph, op_set, model_file_dir, inputs, nr_input, outputs, nr_output, graph,
+                                      axis_symbols);
+        });
+}
 }}} // namespace ppl::nn::onnx
