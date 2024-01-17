@@ -94,9 +94,11 @@ void LlmHostDevice::Free(BufferDesc* buffer) {
 }
 
 LlmHostDevice::~LlmHostDevice() {
-    LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
-               << buffer_manager_->GetBufferedBytes() << "] bytes.";
-    buffer_manager_.reset();
+    if (mm_policy_ != MM_PLAIN) {
+        LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
+                << buffer_manager_->GetBufferedBytes() << "] bytes.";
+        buffer_manager_.reset();
+    }
 }
 
 RetCode LlmHostDevice::CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const {
