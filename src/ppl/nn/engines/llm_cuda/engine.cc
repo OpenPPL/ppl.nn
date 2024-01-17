@@ -128,7 +128,7 @@ OptKernel* LlmCudaEngine::CreateOptKernel(const ir::Node* node) const {
 
 ppl::common::RetCode LlmCudaEngine::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
     flatbuffers::FlatBufferBuilder builder;
-    auto fb_param = CreateEngineOptionsParam(builder, options_.cublas_layout_hint);
+    auto fb_param = CreateEngineOptionsParam(builder, options_.cublas_layout_hint, GetVersion());
     auto fb_engine_param = CreateEngineParam(builder, EngineParamType_EngineOptionsParam, fb_param.Union());
     FinishEngineParamBuffer(builder, fb_engine_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -137,11 +137,17 @@ ppl::common::RetCode LlmCudaEngine::SerializeData(const pmx::SerializationContex
 ppl::common::RetCode LlmCudaEngine::DeserializeData(const void* base, uint64_t size) {
     auto fb_engine_param = GetEngineParam(base);
     auto fb_param = fb_engine_param->value_as_EngineOptionsParam();
+    
     uint32_t cublas_layout_hint = fb_param->cublas_layout_hint();
     if (cublas_layout_hint != options_.cublas_layout_hint) {
         LOG(WARNING) << "deserialize cublas_layout_hint[" << cublas_layout_hint << "] diff from user input[" <<  options_.cublas_layout_hint << "]";
     }
     options_.cublas_layout_hint = cublas_layout_hint;
+    
+    if (fb_param->version() != GetVersion()) {
+        LOG(WARNING) << "engine version[" << GetVersion() << "] diff from pmx version[" <<  fb_param->version() << "]";
+    }
+
     return ppl::common::RC_SUCCESS;
 }
 #endif

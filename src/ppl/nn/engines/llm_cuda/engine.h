@@ -38,6 +38,7 @@ public:
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
     ppl::common::NcclParam* GetTensorParallelNcclParam() { return &tensor_parallel_nccl_param_; };
+    int32_t GetVersion() const { return 1; }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
