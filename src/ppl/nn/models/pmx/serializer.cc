@@ -170,7 +170,7 @@ static const pmx::DataType g_type_ppl2fb[] = {
     pmx::DataType_UINT64,     pmx::DataType_FLOAT16, pmx::DataType_FLOAT32, pmx::DataType_FLOAT64,
     pmx::DataType_BFLOAT16,   pmx::DataType_INT4B,   pmx::DataType_INT8,    pmx::DataType_INT16,
     pmx::DataType_INT32,      pmx::DataType_INT64,   pmx::DataType_BOOL,    pmx::DataType_COMPLEX64,
-    pmx::DataType_COMPLEX128,
+    pmx::DataType_COMPLEX128, pmx::DataType_INT4X8,  pmx::DataType_INT4X4,
 };
 
 static const pmx::DataFormat g_format_ppl2fb[] = {

@@ -18,6 +18,8 @@ enum DataType : uint32 {
     INT4B,
     COMPLEX64,
     COMPLEX128,
+    INT4X4,
+    INT4X8,
 }
 
 enum DataFormat : uint32 {

@@ -35,11 +35,13 @@ enum DataType : uint32_t {
   DataType_INT4B = 14,
   DataType_COMPLEX64 = 15,
   DataType_COMPLEX128 = 16,
+  DataType_INT4X4 = 17,
+  DataType_INT4X8 = 18,
   DataType_MIN = DataType_UNKNOWN,
-  DataType_MAX = DataType_COMPLEX128
+  DataType_MAX = DataType_INT4X8
 };
 
-inline const DataType (&EnumValuesDataType())[17] {
+inline const DataType (&EnumValuesDataType())[19] {
   static const DataType values[] = {
     DataType_UNKNOWN,
     DataType_BOOL,
@@ -57,13 +59,15 @@ inline const DataType (&EnumValuesDataType())[17] {
     DataType_BFLOAT16,
     DataType_INT4B,
     DataType_COMPLEX64,
-    DataType_COMPLEX128
+    DataType_COMPLEX128,
+    DataType_INT4X4,
+    DataType_INT4X8
   };
   return values;
 }
 
 inline const char * const *EnumNamesDataType() {
-  static const char * const names[18] = {
+  static const char * const names[20] = {
     "UNKNOWN",
     "BOOL",
     "INT8",
@@ -81,13 +85,15 @@ inline const char * const *EnumNamesDataType() {
     "INT4B",
     "COMPLEX64",
     "COMPLEX128",
+    "INT4X4",
+    "INT4X8",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameDataType(DataType e) {
-  if (flatbuffers::IsOutRange(e, DataType_UNKNOWN, DataType_COMPLEX128)) return "";
+  if (flatbuffers::IsOutRange(e, DataType_UNKNOWN, DataType_INT4X8)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesDataType()[index];
 }
