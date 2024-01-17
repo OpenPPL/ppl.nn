@@ -26,6 +26,8 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#include "../py_model_options_base.h"
+
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/save_model_options.h"
 #include "../pmx/py_save_model_options.h"
