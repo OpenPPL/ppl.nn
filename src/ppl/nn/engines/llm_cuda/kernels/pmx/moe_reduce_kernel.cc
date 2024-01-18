@@ -46,6 +46,11 @@ ppl::common::RetCode MoeReduceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [y_reduced]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(y_reduced);
 
+    if (ppl::common::DATATYPE_FLOAT16 != y_permute_expand->GetShape()->GetDataType()) {
+        LOG(ERROR) << "currently only support fp16";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
     return ppl::kernel::llm::cuda::pmx::moe_reduce(
         GetStream(), y_permute_expand->GetShape(), y_permute_expand->GetBufferPtr(), expert_weights->GetBufferPtr(),
         invert_permutation->GetBufferPtr(), param_->num_experts_per_token, y_reduced->GetBufferPtr());

@@ -40,7 +40,7 @@ RetCode ParseRowParallelLinearParam(const ::onnx::NodeProto& pb_node, const onnx
 
     int32_t bias_term, input_is_parallel;
     onnx::utils::GetNodeAttr(pb_node, "bias_term", &bias_term, 1);
-    onnx::utils::GetNodeAttr(pb_node, "gather_output", &input_is_parallel, 1);
+    onnx::utils::GetNodeAttr(pb_node, "input_is_parallel", &input_is_parallel, 0);
     param->bias_term = bias_term;
     param->input_is_parallel = input_is_parallel;
 

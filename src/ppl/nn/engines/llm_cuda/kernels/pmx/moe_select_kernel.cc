@@ -67,7 +67,11 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     auto x_shape = x->GetShape();
     auto scores_shape = scores->GetShape();
     
-    // prepare size
+    if (ppl::common::DATATYPE_FLOAT16 != x_shape->GetDataType()) {
+        LOG(ERROR) << "currently only support fp16";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
     void* temp_buffer = nullptr;
     auto config = ppl::kernel::llm::cuda::pmx::moe_select_prepare(invert_permutation->GetShape(), param_->num_experts);
     config.temp_buffer_size = (config.temp_buffer_size +  8 - 1) / 8 * 8;   // padding to 8 bytes

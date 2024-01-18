@@ -30,7 +30,7 @@ RetCode ParseMoeReduceParam(const ::onnx::NodeProto& pb_node, const onnx::ParamP
     auto param = static_cast<MoeReduceParam*>(arg);
 
     if (!onnx::utils::GetNodeAttr(pb_node, "num_experts_per_token", &param->num_experts_per_token, -1)) {
-        LOG(ERROR) << node->GetName() << ": missing in_features";
+        LOG(ERROR) << node->GetName() << ": missing num_experts_per_token";
         return RC_INVALID_VALUE;
     }
 
