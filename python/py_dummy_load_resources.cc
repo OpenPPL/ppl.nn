@@ -15,13 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <map>
-#include <string>
 #include "pybind11/pybind11.h"
-using namespace std;
 
 namespace ppl { namespace nn { namespace python {
 
-void LoadResources(const map<string, pybind11::module*>&) {}
+void LoadResources(pybind11::module*) {}
 
 }}} // namespace ppl::nn::python
