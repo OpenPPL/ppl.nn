@@ -19,9 +19,6 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-#include <map>
-using namespace std;
-
 namespace ppl { namespace nn { namespace python {
 
 #ifdef PPLNN_USE_CUDA
@@ -85,8 +82,7 @@ void RegisterSaveModelOptions(pybind11::module*);
 } // namespace pmx
 #endif
 
-// this function's implementation is in PPLNN_PYTHON_API_EXTERNAL_SOURCES
-void LoadResources(const map<string, pybind11::module*>&);
+void LoadResources(pybind11::module*);
 
 PYBIND11_MODULE(nn, m) {
     RegisterLogger(&m);
@@ -99,14 +95,8 @@ PYBIND11_MODULE(nn, m) {
     RegisterVersion(&m);
     RegisterModelOptionsBase(&m);
 
-    map<string, pybind11::module*> name2module;
-
-    // root module's name is an empty string
-    name2module.insert(make_pair("", &m));
-
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     pybind11::module onnx_module = m.def_submodule("onnx");
-    name2module.insert(make_pair("onnx", &onnx_module));
     onnx::RegisterRuntimeBuilderResources(&onnx_module);
     onnx::RegisterRuntimeBuilderFactory(&onnx_module);
     onnx::RegisterRuntimeBuilder(&onnx_module);
@@ -114,7 +104,6 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     pybind11::module pmx_module = m.def_submodule("pmx");
-    name2module.insert(make_pair("pmx", &pmx_module));
     pmx::RegisterRuntimeBuilderResources(&pmx_module);
     pmx::RegisterRuntimeBuilderFactory(&pmx_module);
     pmx::RegisterRuntimeBuilder(&pmx_module);
@@ -124,7 +113,6 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_USE_CUDA
     pybind11::module cuda_module = m.def_submodule("cuda");
-    name2module.insert(make_pair("cuda", &cuda_module));
     cuda::RegisterEngineFactory(&cuda_module);
     cuda::RegisterEngineOptions(&cuda_module);
     cuda::RegisterEngine(&cuda_module);
@@ -132,7 +120,6 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_USE_X86
     pybind11::module x86_module = m.def_submodule("x86");
-    name2module.insert(make_pair("x86", &x86_module));
     x86::RegisterEngineFactory(&x86_module);
     x86::RegisterEngineOptions(&x86_module);
     x86::RegisterEngine(&x86_module);
@@ -140,7 +127,6 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_USE_RISCV
     pybind11::module riscv_module = m.def_submodule("riscv");
-    name2module.insert(make_pair("riscv", &riscv_module));
     riscv::RegisterEngineFactory(&riscv_module);
     riscv::RegisterEngineOptions(&riscv_module);
     riscv::RegisterEngine(&riscv_module);
@@ -148,13 +134,12 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_USE_ARM
     pybind11::module arm_module = m.def_submodule("arm");
-    name2module.insert(make_pair("arm", &arm_module));
     arm::RegisterEngineFactory(&arm_module);
     arm::RegisterEngineOptions(&arm_module);
     arm::RegisterEngine(&arm_module);
 #endif
 
-    LoadResources(name2module);
+    LoadResources(&m);
 }
 
 }}} // namespace ppl::nn::python
