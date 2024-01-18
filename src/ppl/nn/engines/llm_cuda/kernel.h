@@ -76,6 +76,7 @@ private:
     cudaEvent_t exec_begin_event_ = nullptr, exec_end_event_ = nullptr;
 #endif
 
+public:
     LlmCudaDevice* GetCudaDevice() const {
         return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetCudaDevice();
     }
