@@ -60,7 +60,7 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [invert_permutation]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(invert_permutation);
 
-    PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(expert_offset);
+    PPLNN_LLM_CUDA_REALLOC_TENSOR_HOST_BUFFER(expert_offset);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [expert_offset]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(expert_offset);
 
@@ -70,12 +70,14 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     // prepare size
     void* temp_buffer = nullptr;
     auto config = ppl::kernel::llm::cuda::pmx::moe_select_prepare(invert_permutation->GetShape(), param_->num_experts);
+    config.temp_buffer_size = (config.temp_buffer_size +  8 - 1) / 8 * 8;   // padding to 8 bytes
 
-    int64_t total_size = config.expert_ids_size + config.permute_token_idx_size + config.sort_buffer_size;
     BufferDesc tmp_buffer_desc;
-    auto status = GetCudaDevice()->AllocTmpBuffer(total_size, &tmp_buffer_desc);
+    int64_t temp_buffer_size = config.temp_buffer_size + expert_offset->GetShape()->CalcBytesExcludingPadding();
+
+    auto status = GetCudaDevice()->AllocTmpBuffer(temp_buffer_size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << total_size << "] for kernel[" << GetName()
+        LOG(ERROR) << "alloc tmp buffer size[" << temp_buffer_size << "] for kernel[" << GetName()
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
@@ -85,7 +87,9 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
 
     temp_buffer = tmp_buffer_desc.addr;
 
-    return ppl::kernel::llm::cuda::pmx::moe_select(
+    void* expert_offset_device_ptr = (void*)((char*)temp_buffer + config.temp_buffer_size);
+
+    status = ppl::kernel::llm::cuda::pmx::moe_select(
         GetStream(),
         x_shape,
         x->GetBufferPtr(),
@@ -98,8 +102,23 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
         x_expand_permute->GetBufferPtr(),
         expert_weights->GetBufferPtr(),
         invert_permutation->GetBufferPtr(),
-        expert_offset->GetBufferPtr()
+        expert_offset_device_ptr
     );
+
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "kernel[" << GetName() << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+
+    const BufferDesc expert_offset_desc(expert_offset_device_ptr);
+    status = GetCudaDevice()->CopyToHost(expert_offset->GetBufferPtr(), expert_offset_desc, *expert_offset->GetShape());
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "copy expert offset to host failed for kernel[" << GetName()
+                << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;    
+    }
+
+    return ppl::common::RC_SUCCESS;
 
 }
 

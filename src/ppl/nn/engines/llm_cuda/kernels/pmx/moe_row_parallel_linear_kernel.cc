@@ -84,13 +84,6 @@ ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ct
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
-    std::vector<int64_t> expert_offset_val(param_->num_experts + 1);
-    
-    auto status = expert_offset->CopyToHost(expert_offset_val.data());
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "CopyToHost failed";
-    }
-
     return ppl::kernel::llm::cuda::pmx::moe_row_parallel_linear(
         GetStream(), 
         cublas_handle, 
@@ -98,7 +91,7 @@ ppl::common::RetCode MoeRowParallelLinearKernel::DoExecute(KernelExecContext* ct
         input_shape, 
         input->GetBufferPtr(), 
         offset_shape, 
-        expert_offset_val.data(),
+        expert_offset->GetBufferPtr(),
         weight_shape,
         weight->GetBufferPtr(),
         bias_shape, 
