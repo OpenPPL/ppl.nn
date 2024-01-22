@@ -94,6 +94,7 @@ target_link_libraries(pypplnn_shared
     PUBLIC ${PYTHON3_LIBRARIES}
     PRIVATE pplnn_static ${PPLNN_SOURCE_EXTERNAL_PYTHON_LINK_LIBRARIES})
 target_include_directories(pypplnn_shared PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
     ${PROJECT_SOURCE_DIR}/include
     ${pybind11_SOURCE_DIR}/include
     ${PPLNN_SOURCE_EXTERNAL_PYTHON_INCLUDE_DIRECTORIES}
