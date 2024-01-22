@@ -84,7 +84,11 @@ Define_bool_opt("--help", g_flag_help, false, "show these help information");
 Define_string_opt("--model-type", g_flag_model_type, "", "model type");
 Define_string_opt("--model-dir", g_flag_model_dir, "", "model directory");
 Define_string_opt("--model-param-path", g_flag_model_param_path, "", "path of model params");
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
 Define_bool_opt("--use-pmx", g_flag_use_pmx, false, "use pmx model");
+#endif
+
 Define_uint32_opt("--tensor-parallel-size", g_flag_tensor_parallel_size, 1, "tensor parallel size");
 Define_float_opt("--top-p", g_flag_top_p, 0.0, "top p");
 Define_uint32_opt("--top-k", g_flag_top_k, 1, "top k");
@@ -590,16 +594,21 @@ public:
             }
             LOG(INFO) << "Create cuda engine [" << tid << "] success";
 
-            if (!g_flag_use_pmx) {
-                const std::string model_path = model_dir + "/model_slice_" + std::to_string(tid) + "/model.onnx";
-                worker_thread_args_[tid].host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
-                                                            ppl::nn::llm::cuda::HostDeviceOptions()));
-                worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePPLRuntime(engine_list_[tid].get(), model_path));
-            } else {
+#ifdef PPLNN_ENABLE_PMX_MODEL
+            if (g_flag_use_pmx) 
+            {
                 const std::string model_path = model_dir + "/model_slice_" + std::to_string(tid) + "/model.pmx";
                 worker_thread_args_[tid].host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
                                                             ppl::nn::llm::cuda::HostDeviceOptions()));
                 worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePMXPPLRuntime(engine_list_[tid].get(), model_path));
+            } 
+            else
+#endif
+            {
+                const std::string model_path = model_dir + "/model_slice_" + std::to_string(tid) + "/model.onnx";
+                worker_thread_args_[tid].host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
+                                                            ppl::nn::llm::cuda::HostDeviceOptions()));
+                worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePPLRuntime(engine_list_[tid].get(), model_path));
             }
             if (!worker_thread_args_[tid].runtime) {
                 LOG(ERROR) << "create runtime [" << tid << "] failed.";
