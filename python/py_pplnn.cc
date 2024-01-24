@@ -19,39 +19,31 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace python {
-
 #ifdef PPLNN_USE_CUDA
-namespace cuda {
-void RegisterEngineFactory(pybind11::module*);
-void RegisterEngineOptions(pybind11::module*);
-void RegisterEngine(pybind11::module*);
-} // namespace cuda
+#include "engines/cuda/py_cuda.h"
 #endif
 
 #ifdef PPLNN_USE_X86
-namespace x86 {
-void RegisterEngineFactory(pybind11::module*);
-void RegisterEngineOptions(pybind11::module*);
-void RegisterEngine(pybind11::module*);
-} // namespace x86
+#include "engines/x86/py_x86.h"
 #endif
 
 #ifdef PPLNN_USE_RISCV
-namespace riscv {
-void RegisterEngineFactory(pybind11::module*);
-void RegisterEngineOptions(pybind11::module*);
-void RegisterEngine(pybind11::module*);
-} // namespace riscv
+#include "engines/riscv/py_riscv.h"
 #endif
 
 #ifdef PPLNN_USE_ARM
-namespace arm {
-void RegisterEngineFactory(pybind11::module*);
-void RegisterEngineOptions(pybind11::module*);
-void RegisterEngine(pybind11::module*);
-} // namespace arm
+#include "engines/arm/py_arm.h"
 #endif
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+#include "models/onnx/py_onnx.h"
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "models/pmx/py_pmx.h"
+#endif
+
+namespace ppl { namespace nn { namespace python {
 
 void RegisterLogger(pybind11::module*);
 void RegisterTensorShape(pybind11::module*);
@@ -61,27 +53,7 @@ void RegisterEngine(pybind11::module*);
 void RegisterDeviceContext(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterVersion(pybind11::module*);
-
 void RegisterModelOptionsBase(pybind11::module*);
-
-#ifdef PPLNN_ENABLE_ONNX_MODEL
-namespace onnx {
-void RegisterRuntimeBuilderResources(pybind11::module*);
-void RegisterRuntimeBuilder(pybind11::module*);
-void RegisterRuntimeBuilderFactory(pybind11::module*);
-} // namespace onnx
-#endif
-
-#ifdef PPLNN_ENABLE_PMX_MODEL
-namespace pmx {
-void RegisterRuntimeBuilderResources(pybind11::module*);
-void RegisterRuntimeBuilder(pybind11::module*);
-void RegisterRuntimeBuilderFactory(pybind11::module*);
-void RegisterLoadModelOptions(pybind11::module*);
-void RegisterSaveModelOptions(pybind11::module*);
-} // namespace pmx
-#endif
-
 void LoadResources(pybind11::module*);
 
 PYBIND11_MODULE(nn, m) {
