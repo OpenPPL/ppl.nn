@@ -30,7 +30,6 @@ ppl::common::RetCode MoeReduceKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(y_reduced, 0);
 
-    // trace info
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [y_permute_expand]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(y_permute_expand);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [expert_weights]:\n");
@@ -52,8 +51,13 @@ ppl::common::RetCode MoeReduceKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     return ppl::kernel::llm::cuda::pmx::moe_reduce(
-        GetStream(), y_permute_expand->GetShape(), y_permute_expand->GetBufferPtr(), expert_weights->GetBufferPtr(),
-        invert_permutation->GetBufferPtr(), param_->num_experts_per_token, y_reduced->GetBufferPtr());
+        GetStream(),
+        y_permute_expand->GetShape(),
+        y_permute_expand->GetBufferPtr(),
+        expert_weights->GetBufferPtr(),
+        invert_permutation->GetBufferPtr(),
+        param_->num_experts_per_token,
+        y_reduced->GetBufferPtr());
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

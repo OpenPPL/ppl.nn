@@ -28,13 +28,12 @@ ppl::common::RetCode ReshapeMoeReduce(InputOutputInfo* info, const ir::Attr* arg
     auto param = static_cast<const MoeReduceParam*>(arg);
 
     const TensorShape& y_expand_permute_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+    const int64_t out_dim_count = (int64_t)y_expand_permute_shape.GetDimCount() - 1;
 
-    const uint32_t out_dim_count = y_expand_permute_shape.GetDimCount() - 1;
-
-    if (y_expand_permute_shape.GetDim(y_expand_permute_shape.GetDimCount() - 2) != param->num_experts_per_token) {
+    if (y_expand_permute_shape.GetDim(out_dim_count - 1) != param->num_experts_per_token) {
         LOG(ERROR) << info->GetNode()->GetName() << " num_experts(" << param->num_experts_per_token
-                   << ") not equal to scores's last dim("
-                   << y_expand_permute_shape.GetDim(y_expand_permute_shape.GetDimCount() - 1) << ")";
+                   << ") not equal to scores's expert dim("
+                   << y_expand_permute_shape.GetDim(out_dim_count - 1) << ")";
         return RC_INVALID_VALUE;
     }
 
@@ -42,7 +41,7 @@ ppl::common::RetCode ReshapeMoeReduce(InputOutputInfo* info, const ir::Attr* arg
     for (uint32_t i = 0; i < out_dim_count - 1; ++i) {
         out_dims[i] = y_expand_permute_shape.GetDim(i);
     }
-    out_dims[out_dim_count - 1] = y_expand_permute_shape.GetDim(y_expand_permute_shape.GetDimCount() - 1);
+    out_dims[out_dim_count - 1] = y_expand_permute_shape.GetDim(out_dim_count);
 
     info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(out_dims);
 

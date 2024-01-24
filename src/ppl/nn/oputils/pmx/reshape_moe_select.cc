@@ -39,26 +39,26 @@ ppl::common::RetCode ReshapeMoeSelect(InputOutputInfo* info, const ir::Attr* arg
         return RC_INVALID_VALUE;
     }
 
-    std::vector<int64_t> out_dims0(out_dim_count0);
+    std::vector<int64_t> x_expand_permute_dims(out_dim_count0);
     for (uint32_t i = 0; i < out_dim_count0 - 2; ++i) {
-        out_dims0[i] = x_shape.GetDim(i);
+        x_expand_permute_dims[i] = x_shape.GetDim(i);
     }
-    out_dims0[out_dim_count0 - 2] = param->num_experts_per_token;
-    out_dims0[out_dim_count0 - 1] = x_shape.GetDim(x_shape.GetDimCount() - 1);
+    x_expand_permute_dims[out_dim_count0 - 2] = param->num_experts_per_token;
+    x_expand_permute_dims[out_dim_count0 - 1] = x_shape.GetDim(x_shape.GetDimCount() - 1);
 
-    std::vector<int64_t> out_dims1(out_dim_count1);
+    std::vector<int64_t> expert_weight_dims(out_dim_count1);
     for (uint32_t i = 0; i < out_dim_count1 - 1; ++i) {
-        out_dims1[i] = x_shape.GetDim(i);
+        expert_weight_dims[i] = x_shape.GetDim(i);
     }
-    out_dims1[out_dim_count1 - 1] = param->num_experts_per_token;
+    expert_weight_dims[out_dim_count1 - 1] = param->num_experts_per_token;
 
-    std::vector<int64_t> out_dims2(1);
-    out_dims2[0] = param->num_experts + 1;
+    std::vector<int64_t> expert_offset_dims(1);
+    expert_offset_dims[0] = param->num_experts + 1;
 
-    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(out_dims0);
-    info->GetOutput<TensorImpl>(1)->GetShape()->Reshape(out_dims1);
-    info->GetOutput<TensorImpl>(2)->GetShape()->Reshape(out_dims1);
-    info->GetOutput<TensorImpl>(3)->GetShape()->Reshape(out_dims2);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(x_expand_permute_dims);
+    info->GetOutput<TensorImpl>(1)->GetShape()->Reshape(expert_weight_dims);
+    info->GetOutput<TensorImpl>(2)->GetShape()->Reshape(expert_weight_dims);
+    info->GetOutput<TensorImpl>(3)->GetShape()->Reshape(expert_offset_dims);
 
     return RC_SUCCESS;
 }

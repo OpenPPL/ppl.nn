@@ -31,21 +31,22 @@ namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 RetCode MoeSelectOp::CommonInit() {
     infer_type_and_format_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto input_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-        auto output_shape0 = info->GetOutput<TensorImpl>(0)->GetShape();
-        auto output_shape1 = info->GetOutput<TensorImpl>(1)->GetShape();
-        auto output_shape2 = info->GetOutput<TensorImpl>(2)->GetShape();
-        auto output_shape3 = info->GetOutput<TensorImpl>(3)->GetShape();
+        auto x_expand_permute_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        auto expert_weight_shape = info->GetOutput<TensorImpl>(1)->GetShape();
+        auto invert_permutation = info->GetOutput<TensorImpl>(2)->GetShape();
+        auto expert_offset = info->GetOutput<TensorImpl>(3)->GetShape();
 
-        output_shape0->SetDataType(input_shape0->GetDataType());
-        output_shape0->SetDataFormat(input_shape0->GetDataFormat());
-        output_shape1->SetDataType(input_shape0->GetDataType());
-        output_shape1->SetDataFormat(input_shape0->GetDataFormat());
+        x_expand_permute_shape->SetDataType(input_shape0->GetDataType());
+        x_expand_permute_shape->SetDataFormat(input_shape0->GetDataFormat());
 
-        output_shape2->SetDataType(DATATYPE_INT64);
-        output_shape2->SetDataFormat(input_shape0->GetDataFormat());
+        expert_weight_shape->SetDataType(input_shape0->GetDataType());
+        expert_weight_shape->SetDataFormat(input_shape0->GetDataFormat());
 
-        output_shape3->SetDataType(DATATYPE_INT64);
-        output_shape3->SetDataFormat(input_shape0->GetDataFormat());
+        invert_permutation->SetDataType(DATATYPE_INT64);
+        invert_permutation->SetDataFormat(input_shape0->GetDataFormat());
+
+        expert_offset->SetDataType(DATATYPE_INT64);
+        expert_offset->SetDataFormat(input_shape0->GetDataFormat());
 
         return ppl::common::RC_SUCCESS;
     };

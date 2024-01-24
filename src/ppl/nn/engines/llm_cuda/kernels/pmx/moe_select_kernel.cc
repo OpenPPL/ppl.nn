@@ -28,7 +28,6 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
-    // get input, output tensor
     PPLNN_LLM_CUDA_REQUIRED_INPUT(x, 0);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(scores, 1);
 
@@ -37,7 +36,6 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(invert_permutation, 2);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(expert_offset, 3);
 
-    // trace info
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [x]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(x);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [scores]:\n");
@@ -73,7 +71,8 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     void* temp_buffer = nullptr;
-    auto config = ppl::kernel::llm::cuda::pmx::moe_select_prepare(invert_permutation->GetShape(), param_->num_experts);
+    auto config = ppl::kernel::llm::cuda::pmx::moe_select_prepare(
+        invert_permutation->GetShape(), param_->num_experts);
     config.temp_buffer_size = (config.temp_buffer_size +  8 - 1) / 8 * 8;   // padding to 8 bytes
 
     BufferDesc tmp_buffer_desc;
@@ -115,11 +114,12 @@ ppl::common::RetCode MoeSelectKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     const BufferDesc expert_offset_desc(expert_offset_device_ptr);
-    status = GetCudaDevice()->CopyToHost(expert_offset->GetBufferPtr(), expert_offset_desc, *expert_offset->GetShape());
+    status = GetCudaDevice()->CopyToHost(
+        expert_offset->GetBufferPtr(), expert_offset_desc, *expert_offset->GetShape());
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "copy expert offset to host failed for kernel[" << GetName()
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;    
+        return status;
     }
 
     return ppl::common::RC_SUCCESS;
