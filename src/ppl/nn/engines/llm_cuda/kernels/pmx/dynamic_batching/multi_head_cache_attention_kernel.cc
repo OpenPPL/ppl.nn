@@ -161,7 +161,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    auto p_ret = ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention_prepare(
+    auto p_ret = ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention_prepare(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
         query->GetShape(),
@@ -215,7 +215,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     });
     cfg.temp_buffer = tmpbuffer_desc.addr;
 
-    return ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention(
+    return ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention(
         GetStream(),
         cfg
     );
