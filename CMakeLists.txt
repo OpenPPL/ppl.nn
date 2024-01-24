@@ -6,6 +6,7 @@ option(PPLNN_USE_LLM_CUDA "" OFF)
 # refer to ppl.nn for more available options
 option(PPLNN_ENABLE_ONNX_MODEL "" ON)
 option(PPLNN_ENABLE_PMX_MODEL "" ON)
+option(PPLNN_ENABLE_PYTHON_API "" OFF)
 option(PPLNN_INSTALL "" ON)
 
 if(MSVC)
@@ -101,9 +102,14 @@ if(NOT PPLNN_ONNX_GENERATED_LIBS)
     unset(__LLM_GENERATED_DIR__)
 endif()
 
-if(NOT PPLNN_VERSION_STR)
-    set(PPLNN_VERSION_STR "v0.0.1")
+# --------------------------------------------------------------------------- #
+
+# python config before pplnn
+if(PPLNN_ENABLE_PYTHON_API)
+    include(python/CMakeLists.txt)
 endif()
+
+# --------------------------------------------------------------------------- #
 
 hpcc_get_git_info(
     GIT_HASH_OUTPUT PPLNN_COMMIT_STR

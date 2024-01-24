@@ -20,6 +20,7 @@
 
 #include "options.h"
 #include "ppl/nn/common/common.h"
+#include "ppl/nn/common/device_context.h"
 #include <stdint.h>
 #include <cuda_runtime.h>
 
