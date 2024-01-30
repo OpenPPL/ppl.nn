@@ -17,7 +17,7 @@
 
 #include "rms_norm_kernel.h"
 
-#include "cudakernel/nn/rms_norm.h"
+#include "ppl/kernel/llm/cuda/pmx/rms_norm.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -94,15 +94,18 @@ ppl::common::RetCode RMSNormKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    return PPLCUDARmsNormForwardImp(
+    return ppl::kernel::llm::cuda::pmx::rms_norm(
         GetStream(),
-        input_data,
-        skip_in_data,
-        weight->GetBufferPtr(),
-        param_->eps,
         input_shape,
+        input_data,
+        weight->GetBufferPtr(),
+        skip_in_data,
+        param_->axis,
+        param_->eps,
+        param_->skip_term,
         output->GetBufferPtr(),
-        skip_out->GetBufferPtr());
+        skip_out->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
