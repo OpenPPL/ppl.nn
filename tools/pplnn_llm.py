@@ -1,0 +1,526 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+import os
+import sys
+import logging
+import argparse
+import random
+import numpy as np
+from pyppl import nn as pplnn
+from pyppl import common as pplcommon
+
+# ---------------------------------------------------------------------------- #
+
+g_supported_devices = ["llm-cuda"]
+
+g_pplnntype2numpytype = {
+    pplcommon.DATATYPE_INT8 : np.int8,
+    pplcommon.DATATYPE_INT16 : np.int16,
+    pplcommon.DATATYPE_INT32 : np.int32,
+    pplcommon.DATATYPE_INT64 : np.int64,
+    pplcommon.DATATYPE_UINT8 : np.uint8,
+    pplcommon.DATATYPE_UINT16 : np.uint16,
+    pplcommon.DATATYPE_UINT32 : np.uint32,
+    pplcommon.DATATYPE_UINT64 : np.uint64,
+    pplcommon.DATATYPE_FLOAT16 : np.float16,
+    pplcommon.DATATYPE_FLOAT32 : np.float32,
+    pplcommon.DATATYPE_FLOAT64 : np.float64,
+    pplcommon.DATATYPE_BOOL : bool,
+}
+
+g_data_type_str = {
+    pplcommon.DATATYPE_INT8 : "int8",
+    pplcommon.DATATYPE_INT16 : "int16",
+    pplcommon.DATATYPE_INT32 : "int32",
+    pplcommon.DATATYPE_INT64 : "int64",
+    pplcommon.DATATYPE_UINT8 : "uint8",
+    pplcommon.DATATYPE_UINT16 : "uint16",
+    pplcommon.DATATYPE_UINT32 : "uint32",
+    pplcommon.DATATYPE_UINT64 : "uint64",
+    pplcommon.DATATYPE_FLOAT16 : "fp16",
+    pplcommon.DATATYPE_FLOAT32 : "fp32",
+    pplcommon.DATATYPE_FLOAT64 : "fp64",
+    pplcommon.DATATYPE_BOOL : "bool",
+    pplcommon.DATATYPE_UNKNOWN : "unknown",
+}
+
+# ---------------------------------------------------------------------------- #
+
+def ParseCommandLineArgs():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--version", dest = "display_version", action = "store_true",
+                        default = False, required = False)
+
+    parser.add_argument("--use-llm-cuda", dest = "use_llm_cuda", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--device-id", type = int, dest = "device_id",
+                        default = 0, required = False, help = "specify which device is used.")
+
+    parser.add_argument("--no-run", dest = "no_run", action = "store_true", default = False, required = False,
+                        help = "do not run")
+
+    parser.add_argument("--onnx-model", type = str, default = "", required = False,
+                        help = "onnx model file")
+
+    parser.add_argument("--pmx-model", type = str, default = "", required = False,
+                        help = "pmx model file")
+    parser.add_argument("--export-pmx-model", type = str, default = "", required = False,
+                        help = "dump model to <filename> in pmx format")
+    parser.add_argument("--save-pmx-model", type = str, default = "", required = False,
+                        help = "deprecated. use `--export-pmx-model` instead.")
+    parser.add_argument("--pmx-external-data-dir", type = str, default = "", required = False,
+                        help = "dir that contains external data")
+
+    parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
+                        help = "\"perf\" => better performance, \"mem\" => less memory usage, \"plain\" => no optimize")
+
+    parser.add_argument("--in-shapes", type = str, dest = "in_shapes",
+                        default = "", required = False, help = "shapes of input tensors."
+                        " dims are separated by underline, inputs are separated by comma. example:"
+                        " 1_3_128_128,2_3_400_640,3_3_768_1024. empty fields between commas are scalars.")
+    parser.add_argument("--inputs", type = str, dest = "inputs",
+                        default = "", required = False, help = "input files separated by comma.")
+    parser.add_argument("--reshaped-inputs", type = str, dest = "reshaped_inputs",
+                        default = "", required = False, help = "binary input files separated by comma."
+                        " file name format: 'name-dims-datatype.dat'. for example:"
+                        " input1-1_1_1_1-fp32.dat,input2-1_1_1_1-fp16.dat,input3-1_1-int8.dat")
+
+    parser.add_argument("--save-input", dest = "save_input", action = "store_true",
+                        default = False, required = False,
+                        help = "save all input tensors in NDARRAY format in one file named 'pplnn_inputs.dat'")
+    parser.add_argument("--save-inputs", dest = "save_inputs", action = "store_true",
+                        default = False, required = False,
+                        help = "save separated input tensors in NDARRAY format")
+    parser.add_argument("--save-outputs", dest = "save_outputs", action = "store_true",
+                        default = False, required = False,
+                        help = "save separated output tensors in NDARRAY format")
+    parser.add_argument("--save-data-dir", type = str, dest = "save_data_dir",
+                        default = ".", required = False,
+                        help = "directory to save input/output data if '--save-*' options are enabled.")
+
+    return parser.parse_args()
+
+# ---------------------------------------------------------------------------- #
+
+def ParseInShapes(in_shapes_str):
+    if not in_shapes_str:
+        return []
+
+    ret = []
+    shape_strs = in_shapes_str.split(",")
+    for s in shape_strs:
+        if len(s) > 0:
+            dims = [int(d) for d in s.split("_")]
+        else:
+            dims = []
+        ret.append(dims)
+    return ret
+
+# ---------------------------------------------------------------------------- #
+
+def CreateLlmCudaEngine(args):
+    cuda_options = pplnn.llm_cuda.EngineOptions()
+    cuda_options.device_id = args.device_id
+    if args.mm_policy == "bestfit":
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_BEST_FIT
+    elif args.mm_policy == "compact":
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_COMPACT
+    else:
+        logging.info("use native alloc/free by default.")
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_PLAIN
+
+    cuda_engine = pplnn.llm_cuda.EngineFactory.Create(cuda_options)
+    if not cuda_engine:
+        logging.error("create cuda engine failed.")
+        sys.exit(-1)
+
+    return cuda_engine
+
+def RegisterEngines(args):
+    engines = []
+    if args.use_llm_cuda:
+        cuda_engine = CreateLlmCudaEngine(args)
+        engines.append(cuda_engine)
+
+    return engines
+
+# ---------------------------------------------------------------------------- #
+
+def SetInputsOneByOne(inputs, in_shapes, runtime):
+    input_files = list(filter(None, inputs.split(",")))
+    file_num = len(input_files)
+    if file_num != runtime.GetInputCount():
+        logging.error("input file num[" + str(file_num) + "] != graph input num[" +
+                      runtime.GetInputCount() + "]")
+        sys.exit(-1)
+
+    for i in range(file_num):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        np_data_type = g_pplnntype2numpytype[shape.GetDataType()]
+
+        dims = []
+        if in_shapes:
+            dims = in_shapes[i]
+        else:
+            dims = shape.GetDims()
+
+        in_data = np.fromfile(input_files[i], dtype=np_data_type).reshape(dims)
+        status = tensor.ConvertFromHost(in_data)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
+                          pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+# ---------------------------------------------------------------------------- #
+
+def SetReshapedInputsOneByOne(reshaped_inputs, runtime):
+    input_files = list(filter(None, reshaped_inputs.split(",")))
+    file_num = len(input_files)
+    if file_num != runtime.GetInputCount():
+        logging.error("input file num[" + str(file_num) + "] != graph input num[" +
+                      runtime.GetInputCount() + "]")
+        sys.exit(-1)
+
+    for i in range(file_num):
+        input_file_name = os.path.basename(input_files[i])
+        file_name_components = input_file_name.split("-")
+        if len(file_name_components) != 3:
+            logging.error("invalid input filename[" + input_files[i] + "] in '--reshaped-inputs'.")
+            sys.exit(-1)
+
+        input_shape_str_list = file_name_components[1].split("_")
+        input_shape = [int(s) for s in input_shape_str_list]
+
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        np_data_type = g_pplnntype2numpytype[shape.GetDataType()]
+        in_data = np.fromfile(input_files[i], dtype=np_data_type).reshape(input_shape)
+        status = tensor.ConvertFromHost(in_data)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
+                          pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+# ---------------------------------------------------------------------------- #
+
+def SetRandomInputs(in_shapes, runtime):
+    def GenerateRandomDims(shape):
+        dims = shape.GetDims()
+        dim_count = len(dims)
+        if dim_count > 0:
+            if dims[0] == pplnn.INVALID_DIM_VALUE:
+                dims[0] = 1
+            for i in range(1, dim_count):
+                if dims[i] == pplnn.INVALID_DIM_VALUE:
+                    dims[i] = random.randint(128, 641)
+                    if dims[i] % 2 != 0:
+                        dims[i] = dims[i] + 1
+        return dims
+
+    rng = np.random.default_rng()
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        data_type = shape.GetDataType()
+
+        np_data_type = g_pplnntype2numpytype[data_type]
+        if data_type in (pplcommon.DATATYPE_FLOAT16, pplcommon.DATATYPE_FLOAT32, pplcommon.DATATYPE_FLOAT64):
+            lower_bound = -1.0
+            upper_bound = 1.0
+        else:
+            info = np.iinfo(np_data_type)
+            lower_bound = info.min
+            upper_bound = info.max
+
+        dims = []
+        if in_shapes:
+            dims = in_shapes[i]
+        else:
+            dims = GenerateRandomDims(shape)
+
+        in_data = (upper_bound - lower_bound) * rng.random(dims, dtype = np_data_type) * lower_bound
+        status = tensor.ConvertFromHost(in_data)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
+                          pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+# ---------------------------------------------------------------------------- #
+
+def GenDimsStr(dims):
+    if not dims:
+        return ""
+
+    s = str(dims[0])
+    for i in range(1, len(dims)):
+        s = s + "_" + str(dims[i])
+    return s
+
+# ---------------------------------------------------------------------------- #
+
+def CalcElementCount(dims):
+    count = 1
+    for d in dims:
+        count = count * d
+    return count
+
+def SaveInputsOneByOne(save_data_dir, runtime):
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        dims = shape.GetDims()
+        out_file_name = save_data_dir + "/pplnn_input_" + str(i) + "_" + tensor.GetName() + "-" + GenDimsStr(dims) + "-" + g_data_type_str[shape.GetDataType()] + ".dat"
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            tensor_data = tensor.ConvertToHost()
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
+
+            in_data = np.array(tensor_data, copy=False)
+            in_data.tofile(out_file_name)
+        else:
+            open(out_file_name, 'a').close()
+
+# ---------------------------------------------------------------------------- #
+
+def SaveInputsAllInOne(save_data_dir, runtime):
+    out_file_name = save_data_dir + "/pplnn_inputs.dat"
+    fd = open(out_file_name, mode="wb+")
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        dims = tensor.GetShape().GetDims()
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            tensor_data = tensor.ConvertToHost()
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
+
+            in_data = np.array(tensor_data, copy=False)
+            fd.write(in_data.tobytes())
+    fd.close()
+
+# ---------------------------------------------------------------------------- #
+
+def SaveOutputsOneByOne(save_data_dir, runtime):
+    for i in range(runtime.GetOutputCount()):
+        tensor = runtime.GetOutputTensor(i)
+        out_file_name = save_data_dir + "/pplnn_output-" + tensor.GetName() + ".dat"
+        shape = tensor.GetShape()
+        dims = shape.GetDims()
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            dst_data_type = shape.GetDataType()
+            if dst_data_type == pplcommon.DATATYPE_FLOAT16: # convert fp16 to fp32 when saving to file
+                dst_data_type = pplcommon.DATATYPE_FLOAT32
+            tensor_data = tensor.ConvertToHost(dst_data_type)
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
+
+            out_data = np.array(tensor_data, copy=False)
+            out_data.tofile(out_file_name)
+        else:
+            open(out_file_name, 'a').close()
+
+# ---------------------------------------------------------------------------- #
+
+def CalcBytes(dims, item_size):
+    return item_size * CalcElementCount(dims)
+
+def Dims2Str(dims):
+    ret = ""
+    for i in range(0, len(dims)):
+        ret += " " + str(dims[i])
+    return ret
+
+def PrintInputOutputInfo(runtime):
+    print("----- input info -----")
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        dims = shape.GetDims()
+        print("input[" + str(i) + "]:")
+        print("    name: " + tensor.GetName())
+        print("    dim(s):" + Dims2Str(dims))
+        print("    data type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
+        print("    data format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
+        print("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
+
+    print("----- output info -----")
+    for i in range(runtime.GetOutputCount()):
+        tensor = runtime.GetOutputTensor(i)
+        shape = tensor.GetShape()
+        dims = shape.GetDims()
+        print("output[" + str(i) + "]:")
+        print("    name: " + tensor.GetName())
+        print("    dim(s):" + Dims2Str(dims))
+        print("    data type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
+        print("    data format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
+        print("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
+
+        saved_data_type = shape.GetDataType()
+        if saved_data_type == pplcommon.DATATYPE_FLOAT16: # convert fp16 to fp32 when saving to file
+            saved_data_type = pplcommon.DATATYPE_FLOAT32
+        print("    saved data type: " + pplcommon.GetDataTypeStr(saved_data_type))
+
+    print("----------------------")
+
+# ---------------------------------------------------------------------------- #
+
+def HasMultipleModelOptions(args):
+    return args.onnx_model and args.pmx_model
+
+if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+    logging.info("PPLNN version: [" + str(pplnn.PPLNN_VERSION_MAJOR) + "." + str(pplnn.PPLNN_VERSION_MINOR) + "." +
+                 str(pplnn.PPLNN_VERSION_PATCH) + "], commit: [" + pplnn.PPLNN_COMMIT_STR + "]")
+
+    args = ParseCommandLineArgs()
+
+    if args.display_version:
+        sys.exit(0)
+
+    if args.save_pmx_model:
+        logging.error("`--save-pmx-model` is deprecated. use `--export-pmx-model` instead.")
+        sys.exit(-1)
+
+    if HasMultipleModelOptions(args):
+        logging.error("multiple --*-model options are specified.")
+        sys.exit(-1)
+
+    engines = RegisterEngines(args)
+    if not engines:
+        logging.error("no engine is specified. run '" + sys.argv[0] + " -h' to see supported device types marked with '--use-*'.")
+        sys.exit(-1)
+
+    if args.onnx_model:
+        runtime_builder = pplnn.onnx.RuntimeBuilderFactory.Create()
+        if not runtime_builder:
+            logging.error("create onnx RuntimeBuilder failed.")
+            sys.exit(-1)
+
+        status = runtime_builder.LoadModelFromFile(args.onnx_model)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("init onnx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        resources = pplnn.onnx.RuntimeBuilderResources()
+        resources.engines = engines
+        status = runtime_builder.SetResources(resources)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("onnx RuntimeBuilder set resources failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        status = runtime_builder.Preprocess()
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("onnx RuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        runtime = runtime_builder.CreateRuntime()
+        if not runtime:
+            logging.error("create Runtime instance failed.")
+            sys.exit(-1)
+
+        if args.export_pmx_model:
+            options = pplnn.pmx.SaveModelOptions()
+            options.external_data_dir = args.pmx_external_data_dir
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+    elif args.pmx_model:
+        runtime_builder = pplnn.pmx.RuntimeBuilderFactory.Create()
+        if not runtime_builder:
+            logging.error("create RuntimeBuilder failed.")
+            sys.exit(-1)
+
+        resources = pplnn.pmx.RuntimeBuilderResources()
+        resources.engines = engines
+
+        options = pplnn.pmx.LoadModelOptions()
+        options.external_data_dir = args.pmx_external_data_dir
+        status = runtime_builder.LoadModelFromFile(args.pmx_model, resources, options)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("init pmx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        status = runtime_builder.Preprocess()
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("pmx RuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        runtime = runtime_builder.CreateRuntime()
+        if not runtime:
+            logging.error("create Runtime instance failed.")
+            sys.exit(-1)
+
+        if args.export_pmx_model:
+            options = pplnn.pmx.SaveModelOptions()
+            options.external_data_dir = args.pmx_external_data_dir
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+    else:
+        logging.error("no model is specified.")
+        sys.exit(-1)
+
+    in_shapes = ParseInShapes(args.in_shapes)
+
+    if args.inputs:
+        SetInputsOneByOne(args.inputs, in_shapes, runtime)
+    elif args.reshaped_inputs:
+        SetReshapedInputsOneByOne(args.reshaped_inputs, runtime)
+    else:
+        SetRandomInputs(in_shapes, runtime)
+
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        if CalcElementCount(shape.GetDims()) == 0:
+            logging.error("input tensor[" + tensor.GetName() + "] is empty.")
+            sys.exit(-1)
+
+    if args.save_input:
+        SaveInputsAllInOne(args.save_data_dir, runtime)
+    if args.save_inputs:
+        SaveInputsOneByOne(args.save_data_dir, runtime)
+
+    if args.no_run:
+        sys.exit(0)
+
+    status = runtime.Run()
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("Run() failed: " + pplcommon.GetRetCodeStr(status))
+        sys.exit(-1)
+
+    PrintInputOutputInfo(runtime)
+
+    if args.save_outputs:
+        SaveOutputsOneByOne(args.save_data_dir, runtime)
+
+    logging.info("Run ok")

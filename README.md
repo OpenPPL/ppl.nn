@@ -46,7 +46,7 @@
 
 ## Quick Start
 
-* Installing prerequisites(on Debian 12 or Ubuntu 20.04 for example): 
+* Installing prerequisites(on Debian 12 or Ubuntu 20.04 for example):
 
 Cuda toolkit and mpich are recommended installing manually:
 
@@ -131,6 +131,21 @@ mpirun -np <MP> benchmark.sh <STEP>
 
 The `MP` value for LLaMA can be found [Here](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama/facebook#export).
 
+## Python Support
+
+
+build with `-DPPLNN_ENABLE_PYTHON_API=ON` (use sm80, sm86 and sm87 in this example):
+
+```bash
+cd ppl.nn.llm
+./build.sh -DPPLNN_USE_LLM_CUDA=ON -DPPLNN_CUDA_ENABLE_NCCL=ON -DPPLNN_ENABLE_CUDA_JIT=OFF -DPPLNN_CUDA_ARCHITECTURES="'80;86;87'" -DPPLCOMMON_CUDA_ARCHITECTURES="'80;86;87'" -DPPLNN_ENABLE_PYTHON_API=ON
+```
+
+and test:
+
+```bash
+PYTHONPATH=./pplnn-build/install/lib python3 tools/pplnn_llm.py --use-llm-cuda --onnx-model </path/to/model.onnx>
+```
 
 ## Benchmark LLaMA
 
