@@ -32,10 +32,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 RetCode LlmHostDevice::Init(uint32_t mm_policy) {
-    mm_policy_ = mm_policy;  
+    mm_policy_ = mm_policy;
     if (mm_policy_ == MM_PLAIN) {
         allocator_ = std::shared_ptr<Allocator>(new GenericCpuAllocator(alignment_));
-    } else if (mm_policy_ == MM_BESTFIT) {
+    } else if (mm_policy_ == MM_BEST_FIT) {
         allocator_ = std::shared_ptr<Allocator>(new GenericCpuAllocator(alignment_));
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get()));
     } else if (mm_policy_ == MM_COMPACT) {
@@ -61,7 +61,7 @@ RetCode LlmHostDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
     if (mm_policy_ == MM_PLAIN) {
         if (buffer->addr && buffer->desc == bytes)
             return RC_SUCCESS;
-        
+
         if (buffer->addr)
             allocator_->Free(buffer->addr);
 

@@ -44,7 +44,7 @@ enum {
     MM_COMPACT,
 
     /** bestfit among free chunks */
-    MM_BESTFIT,
+    MM_BEST_FIT,
 };
 
 /** @brief quantization method */

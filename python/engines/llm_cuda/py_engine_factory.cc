@@ -16,9 +16,10 @@
 // under the License.
 
 #include "py_engine.h"
-#include "ppl/nn/engines/cuda/engine_factory.h"
+#include "ppl/nn/engines/llm_cuda/engine_factory.h"
+#include "ppl/nn/engines/llm_cuda/engine_options.h"
 #include "pybind11/pybind11.h"
-using namespace ppl::nn::cuda;
+using namespace ppl::nn::llm::cuda;
 
 namespace ppl { namespace nn { namespace python { namespace llm { namespace cuda {
 

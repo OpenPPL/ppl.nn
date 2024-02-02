@@ -56,7 +56,7 @@ DeviceContext* EngineFactory::CreateDeviceContext(const DeviceOptions& options) 
     unique_ptr<LlmCudaDevice> dev;
     if (options.mm_policy == MM_PLAIN) {
         dev.reset(new PlainDevice(true));
-    } else if (options.mm_policy == MM_BESTFIT) {
+    } else if (options.mm_policy == MM_BEST_FIT) {
         dev.reset(new BestFitBufferedDevice());
     } else if (options.mm_policy == MM_COMPACT) {
         dev.reset(new BufferedDevice());

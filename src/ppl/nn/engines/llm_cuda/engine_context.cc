@@ -46,7 +46,7 @@ RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tens
 
     if (options.mm_policy == MM_PLAIN) {
         device_.reset(new PlainDevice(true));
-    } else if (options.mm_policy == MM_BESTFIT) {
+    } else if (options.mm_policy == MM_BEST_FIT) {
         device_.reset(new BestFitBufferedDevice());
     } else if (options.mm_policy == MM_COMPACT) {
         device_.reset(new BufferedDevice());

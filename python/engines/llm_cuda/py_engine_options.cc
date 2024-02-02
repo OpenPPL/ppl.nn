@@ -32,7 +32,7 @@ void RegisterEngineOptions(pybind11::module* m) {
 
     m->attr("MM_PLAIN") = (uint32_t)MM_PLAIN;
     m->attr("MM_COMPACT") = (uint32_t)MM_COMPACT;
-    m->attr("MM_BESTFIT") = (uint32_t)MM_BESTFIT;
+    m->attr("MM_BEST_FIT") = (uint32_t)MM_BEST_FIT;
 
     m->attr("QUANT_METHOD_ONLINE_I8I8") = (uint32_t)QUANT_METHOD_ONLINE_I8I8;
     m->attr("QUANT_METHOD_ONLINE_I4F16") = (uint32_t)QUANT_METHOD_ONLINE_I4F16;
