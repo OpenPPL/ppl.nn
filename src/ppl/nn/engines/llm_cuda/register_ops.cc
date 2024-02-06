@@ -45,6 +45,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/row_parallel_linear_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/silu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/swiglu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/swish_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
@@ -168,6 +169,7 @@ void RegisterBuiltinOpImpls() {
     // S
     RegisterOptKernelCreator<pmx::SiLUOp>("pmx", "SiLU", 1, 1);
     RegisterOptKernelCreator<pmx::SwiGLUOp>("pmx", "SwiGLU", 1, 1);
+    RegisterOptKernelCreator<pmx::SwishOp>("pmx", "Swish", 1, 1);
     // T
     // U
     // V

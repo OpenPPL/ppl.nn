@@ -15,23 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "silu_kernel.h"
+#include "swish_kernel.h"
 
 #include "ppl/kernel/llm/cuda/pmx/silu.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-
-ppl::common::RetCode SiLUKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(input, 0);
     PPLNN_LLM_CUDA_OPTIONAL_INPUT(gate, 1);
-
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input);
+
+    PPLNN_LLM_CUDA_DEBUG_TRACE("beta: %f\n", param_->beta);
 
     void* gate_data = nullptr;
     if (gate) {
@@ -53,16 +53,18 @@ ppl::common::RetCode SiLUKernel::DoExecute(KernelExecContext* ctx) {
     } else {
         PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(output);
     }
+    PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
     return ppl::kernel::llm::cuda::pmx::silu(
         GetStream(), 
         input->GetShape(),
-        input_data,
+        input->GetBufferPtr(),
         gate_data,
-        1.f,
+        param_->beta,
         output->GetBufferPtr());
 }
+
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
