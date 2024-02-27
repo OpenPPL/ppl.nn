@@ -119,66 +119,70 @@ unset(__PPLCOMMON_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "disable tests")
-set(FLATBUFFERS_INSTALL OFF CACHE BOOL "disable installation")
-set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "")
-set(FLATBUFFERS_BUILD_FLATC OFF CACHE BOOL "")
-set(FLATBUFFERS_BUILD_FLATHASH OFF CACHE BOOL "")
+if(PPLNN_ENABLE_PMX_MODEL)
+    set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "disable tests")
+    set(FLATBUFFERS_INSTALL OFF CACHE BOOL "disable installation")
+    set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "")
+    set(FLATBUFFERS_BUILD_FLATC OFF CACHE BOOL "")
+    set(FLATBUFFERS_BUILD_FLATHASH OFF CACHE BOOL "")
 
-set(__FLATBUFFERS_TAG__ v2.0.8)
+    set(__FLATBUFFERS_TAG__ v2.0.8)
 
-if(PPLNN_DEP_FLATBUFFERS_PKG)
-    hpcc_declare_pkg_dep(flatbuffers
-        ${PPLNN_DEP_FLATBUFFERS_PKG})
-elseif(PPLNN_DEP_FLATBUFFERS_GIT)
-    hpcc_declare_git_dep(flatbuffers
-        ${PPLNN_DEP_FLATBUFFERS_GIT}
-        ${__FLATBUFFERS_TAG__})
-else()
-    hpcc_declare_pkg_dep(flatbuffers
-        "https://github.com/google/flatbuffers/archive/refs/tags/${__FLATBUFFERS_TAG__}.zip")
+    if(PPLNN_DEP_FLATBUFFERS_PKG)
+        hpcc_declare_pkg_dep(flatbuffers
+            ${PPLNN_DEP_FLATBUFFERS_PKG})
+    elseif(PPLNN_DEP_FLATBUFFERS_GIT)
+        hpcc_declare_git_dep(flatbuffers
+            ${PPLNN_DEP_FLATBUFFERS_GIT}
+            ${__FLATBUFFERS_TAG__})
+    else()
+        hpcc_declare_pkg_dep(flatbuffers
+            "https://github.com/google/flatbuffers/archive/refs/tags/${__FLATBUFFERS_TAG__}.zip")
+    endif()
+
+    unset(__FLATBUFFERS_TAG__)
 endif()
-
-unset(__FLATBUFFERS_TAG__)
 
 # --------------------------------------------------------------------------- #
 
-set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
-set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
+if(PPLNN_ENABLE_ONNX_MODEL)
+    set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
+    set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
 
-if(MSVC)
-    if(PPLNN_USE_MSVC_STATIC_RUNTIME)
-        set(protobuf_BUILD_SHARED_LIBS OFF CACHE BOOL "")
-    else()
-        set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "")
+    if(MSVC)
+        if(PPLNN_USE_MSVC_STATIC_RUNTIME)
+            set(protobuf_BUILD_SHARED_LIBS OFF CACHE BOOL "")
+        else()
+            set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "")
+        endif()
     endif()
-endif()
 
-if(PPLNN_PROTOBUF_VERSION)
-    set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
-else()
-    set(__PROTOBUF_TAG__ v3.1.0)
-endif()
-
-if(PPLNN_DEP_PROTOBUF_PKG)
-    hpcc_declare_pkg_dep(protobuf
-        ${PPLNN_DEP_PROTOBUF_PKG})
-elseif(PPLNN_DEP_PROTOBUF_GIT)
-    hpcc_declare_git_dep(protobuf
-        ${PPLNN_DEP_PROTOBUF_GIT}
-        ${__PROTOBUF_TAG__})
-else()
     if(PPLNN_PROTOBUF_VERSION)
+        set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
+    else()
+        set(__PROTOBUF_TAG__ v3.1.0)
+    endif()
+
+    if(PPLNN_DEP_PROTOBUF_PKG)
+        hpcc_declare_pkg_dep(protobuf
+            ${PPLNN_DEP_PROTOBUF_PKG})
+    elseif(PPLNN_DEP_PROTOBUF_GIT)
         hpcc_declare_git_dep(protobuf
             ${PPLNN_DEP_PROTOBUF_GIT}
             ${__PROTOBUF_TAG__})
     else()
-        hpcc_declare_pkg_dep(protobuf
-            "https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip")
+        if(PPLNN_PROTOBUF_VERSION)
+            hpcc_declare_git_dep(protobuf
+                ${PPLNN_DEP_PROTOBUF_GIT}
+                ${__PROTOBUF_TAG__})
+        else()
+            hpcc_declare_pkg_dep(protobuf
+                "https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip")
+        endif()
     endif()
-endif()
 
-unset(__PROTOBUF_TAG__)
+    unset(__PROTOBUF_TAG__)
+endif()
 
 # --------------------------------------------------------------------------- #
 
@@ -204,49 +208,53 @@ unset(__RAPIDJSON_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
-set(PYBIND11_INSTALL OFF CACHE BOOL "disable pybind11 installation")
-set(PYBIND11_TEST OFF CACHE BOOL "disable pybind11 tests")
-set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
-set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
+if(PPLNN_ENABLE_PYTHON_API)
+    set(PYBIND11_INSTALL OFF CACHE BOOL "disable pybind11 installation")
+    set(PYBIND11_TEST OFF CACHE BOOL "disable pybind11 tests")
+    set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
+    set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
-set(__PYBIND11_TAG__ v2.9.2)
+    set(__PYBIND11_TAG__ v2.9.2)
 
-if(PPLNN_DEP_PYBIND11_PKG)
-    hpcc_declare_pkg_dep(pybind11
-        ${PPLNN_DEP_PYBIND11_PKG})
-elseif(PPLNN_DEP_PYBIND11_GIT)
-    hpcc_declare_git_dep(pybind11
-        ${PPLNN_DEP_PYBIND11_GIT}
-        ${__PYBIND11_TAG__})
-else()
-    hpcc_declare_pkg_dep(pybind11
-        "https://github.com/pybind/pybind11/archive/refs/tags/${__PYBIND11_TAG__}.zip")
+    if(PPLNN_DEP_PYBIND11_PKG)
+        hpcc_declare_pkg_dep(pybind11
+            ${PPLNN_DEP_PYBIND11_PKG})
+    elseif(PPLNN_DEP_PYBIND11_GIT)
+        hpcc_declare_git_dep(pybind11
+            ${PPLNN_DEP_PYBIND11_GIT}
+            ${__PYBIND11_TAG__})
+    else()
+        hpcc_declare_pkg_dep(pybind11
+            "https://github.com/pybind/pybind11/archive/refs/tags/${__PYBIND11_TAG__}.zip")
+    endif()
+
+    unset(__PYBIND11_TAG__)
 endif()
-
-unset(__PYBIND11_TAG__)
 
 # --------------------------------------------------------------------------- #
 
-set(BUILD_GMOCK OFF CACHE BOOL "")
-set(INSTALL_GTEST OFF CACHE BOOL "")
-# Prevent overriding the parent project's compiler/linker settings on Windows
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+if(PPLNN_BUILD_TESTS)
+    set(BUILD_GMOCK OFF CACHE BOOL "")
+    set(INSTALL_GTEST OFF CACHE BOOL "")
+    # Prevent overriding the parent project's compiler/linker settings on Windows
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-set(__GOOGLETEST_TAG__ release-1.10.0)
+    set(__GOOGLETEST_TAG__ release-1.10.0)
 
-if(PPLNN_DEP_GOOGLETEST_PKG)
-    hpcc_declare_pkg_dep(googletest
-        ${PPLNN_DEP_GOOGLETEST_PKG})
-elseif(PPLNN_DEP_GOOGLETEST_GIT)
-    hpcc_declare_git_dep(googletest
-        ${PPLNN_DEP_GOOGLETEST_GIT}
-        ${__GOOGLETEST_TAG__})
-else()
-    hpcc_declare_pkg_dep(googletest
-        "https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip")
+    if(PPLNN_DEP_GOOGLETEST_PKG)
+        hpcc_declare_pkg_dep(googletest
+            ${PPLNN_DEP_GOOGLETEST_PKG})
+    elseif(PPLNN_DEP_GOOGLETEST_GIT)
+        hpcc_declare_git_dep(googletest
+            ${PPLNN_DEP_GOOGLETEST_GIT}
+            ${__GOOGLETEST_TAG__})
+    else()
+        hpcc_declare_pkg_dep(googletest
+            "https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip")
+    endif()
+
+    unset(__GOOGLETEST_TAG__)
 endif()
-
-unset(__GOOGLETEST_TAG__)
 
 # --------------------------------------------------------------------------- #
 
