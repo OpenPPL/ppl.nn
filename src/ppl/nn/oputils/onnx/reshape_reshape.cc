@@ -46,7 +46,7 @@ RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr* arg, const int64_t
                 LOG(DEBUG) << "ERROR: axis_need_infer[" << axis_need_infer << "] != -1.";
                 return RC_INVALID_VALUE;
             }
-        } else if (shape_data[i] == 0 && param->allowzero) {
+        } else if (shape_data[i] == 0 && !param->allowzero) {
             if (i < data->GetDimCount()) {
                 reshaped->SetDim(i, data->GetDim(i));
             } else {

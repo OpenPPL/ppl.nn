@@ -27,7 +27,7 @@ RetCode ParseReshapeParam(const ::onnx::NodeProto& pb_node, const onnx::ParamPar
                           ir::Attr* arg) {
     auto param = static_cast<onnx::ReshapeParam*>(arg);
 
-    param->allowzero = 1;
+    param->allowzero = 0;
 
     node->SetType({"", "Reshape", 14});
 
