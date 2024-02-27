@@ -64,6 +64,13 @@ RetCode ConvOp::DoInit(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        auto x = info->GetInput<TensorImpl>(0)->GetShape();
+        auto w = info->GetInput<TensorImpl>(1)->GetShape();
+        if (x->GetDim(1) != w->GetDim(1)) {
+            LOG(ERROR) << "input tensor's channels(" << x->GetDim(1) <<
+                ") and weight's channels(" << w->GetDim(1) << ") not match.";
+            return ppl::common::RC_INVALID_VALUE;
+        }
         return onnx::ReshapeConv(info, param_.get());
     };
 
