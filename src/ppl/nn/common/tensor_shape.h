@@ -22,7 +22,7 @@
 
 namespace ppl { namespace nn {
 
-typedef ppl::common::TensorShape TensorShape;
+using TensorShape = ppl::common::TensorShape;
 
 }} // namespace ppl::nn
 

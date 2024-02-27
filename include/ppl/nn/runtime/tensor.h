@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_RUNTIME_TENSOR_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/common/device_context.h"
 #include "ppl/nn/common/common.h"
 
@@ -33,7 +33,7 @@ public:
     virtual const char* GetName() const = 0;
 
     /** @brief returns tensor's shape */
-    virtual TensorShape* GetShape() const = 0;
+    virtual ppl::common::TensorShape* GetShape() const = 0;
 
     /**
        @brief copies tensor's data to `dst`, which points to a host memory.
@@ -57,19 +57,19 @@ public:
        @brief converts tensor's data to `dst` with shape `dst_desc`.
        @note `dst` MUST have enough space.
     */
-    virtual ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc) const = 0;
+    virtual ppl::common::RetCode ConvertToHost(void* dst, const ppl::common::TensorShape& dst_desc) const = 0;
 
     /**
        @brief converts tensor's data to `dst` with shape `dst_desc` asynchronously.
        @note `dst` MUST have enough space.
     */
-    virtual ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc) const = 0;
+    virtual ppl::common::RetCode ConvertToHostAsync(void* dst, const ppl::common::TensorShape& dst_desc) const = 0;
 
     /** @brief converts tensor's data from `src` with shape `src_desc`. */
-    virtual ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) = 0;
+    virtual ppl::common::RetCode ConvertFromHost(const void* src, const ppl::common::TensorShape& src_desc) = 0;
 
     /** @brief converts tensor's data from `src` with shape `src_desc` asynchronously. */
-    virtual ppl::common::RetCode ConvertFromHostAsync(const void* src, const TensorShape& src_desc) = 0;
+    virtual ppl::common::RetCode ConvertFromHostAsync(const void* src, const ppl::common::TensorShape& src_desc) = 0;
 
     /** @brief get context of the underlying `Device` */
     virtual DeviceContext* GetDeviceContext() const = 0;
