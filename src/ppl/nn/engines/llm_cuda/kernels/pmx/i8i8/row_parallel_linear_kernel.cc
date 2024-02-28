@@ -103,6 +103,7 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
+    const bool use_algo_cache = GetCudaDevice()->GetSMVersion() < 89;
 
     auto weight_layout = GetEngineOptions().cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
         ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32_2R_4R4
@@ -131,7 +132,7 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
         quant_buffer,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
         use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr,
-        GetCudaDevice()->GetCublasAlgoCache(),
+        use_algo_cache ? GetCudaDevice()->GetCublasAlgoCache() : nullptr,
         output_shape,
         output->GetBufferPtr()
     );
