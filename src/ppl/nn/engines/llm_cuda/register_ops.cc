@@ -19,6 +19,7 @@
 
 #include "ppl/nn/common/logger.h"
 
+#include "ppl/nn/engines/llm_cuda/ops/onnx/add_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/cast_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/gather_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/mul_op.h"
@@ -92,6 +93,7 @@ void RegisterBuiltinOpImpls() {
     /*                                 ONNX                                   */
     /*                                                                        */
     // A
+    RegisterOptKernelCreator<onnx::AddOp>("", "Add", 7, 16);
     // B
     // C
     RegisterOptKernelCreator<onnx::CastOp>("", "Cast", 9, 16);
