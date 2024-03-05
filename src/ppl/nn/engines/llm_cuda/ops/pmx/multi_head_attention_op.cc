@@ -45,9 +45,6 @@ RetCode MultiHeadAttentionOp::DoInit(const OptKernelOptions& options) {
         return status;
     }
 
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
-
     return CommonInit();
 }
 

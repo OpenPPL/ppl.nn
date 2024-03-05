@@ -16,6 +16,7 @@
 // under the License.
 
 #include "multi_head_attention_kernel.h"
+#include "ppl/kernel/llm/cuda/pmx/multi_head_attention.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -48,30 +49,35 @@ ppl::common::RetCode MultiHeadAttentionKernel::DoExecute(KernelExecContext* ctx)
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
-    if (param_->is_causal == false) {
-        LOG(ERROR) << "currently only support is_causal == true";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (param_->num_heads != param_->num_kv_heads) {
-        LOG(ERROR) << "currently not support group query attention";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (attn_mask && attn_mask->GetShape()->CalcElementsExcludingPadding() > 0) {
-        LOG(ERROR) << "currently do not support attn_mask";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(attn_output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [attn_output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(attn_output);
 
-    // void *attn_mask_data = nullptr;
-    // TensorShape *attn_mask_shape = nullptr;
+    void *attn_mask_data = nullptr;
+    TensorShape *attn_mask_shape = nullptr;
 
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
+    if (attn_mask && attn_mask->GetShape()->CalcElementsExcludingPadding() > 0) {
+        attn_mask_data = attn_mask->GetBufferPtr();
+        attn_mask_shape = attn_mask->GetShape();
+    }
+
+    return ppl::kernel::llm::cuda::pmx::multi_head_attention(
+        GetStream(),
+        GetCudaDevice()->GetDeviceProp(),
+        query->GetShape(),
+        query->GetBufferPtr(),
+        key->GetShape(),
+        key->GetBufferPtr(),
+        value->GetShape(),
+        value->GetBufferPtr(),
+        attn_mask_shape,
+        attn_mask_data,
+        param_->is_causal,
+        param_->num_heads,
+        param_->num_kv_heads,
+        param_->head_dim,
+        attn_output->GetShape(),
+        attn_output->GetBufferPtr());
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

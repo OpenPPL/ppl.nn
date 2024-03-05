@@ -44,7 +44,7 @@ RetCode DynamicBatchingMultiHeadCacheAttentionOp::DoInit(const OptKernelOptions&
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
     }
-    
+
     return CommonInit();
 }
 

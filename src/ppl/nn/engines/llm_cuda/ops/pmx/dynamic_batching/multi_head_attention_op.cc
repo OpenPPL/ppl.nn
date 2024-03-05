@@ -45,9 +45,6 @@ RetCode DynamicBatchingMultiHeadAttentionOp::DoInit(const OptKernelOptions& opti
         return status;
     }
 
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
-
     return CommonInit();
 }
 

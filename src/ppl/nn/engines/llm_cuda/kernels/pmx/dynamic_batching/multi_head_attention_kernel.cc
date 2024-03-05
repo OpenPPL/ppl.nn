@@ -16,6 +16,7 @@
 // under the License.
 
 #include "multi_head_attention_kernel.h"
+#include "ppl/kernel/llm/cuda/pmx/multi_head_attention.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -63,21 +64,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionKernel::DoExecute(KernelEx
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
-    if (param_->is_causal == false) {
-        LOG(ERROR) << "currently only support is_causal == true";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (param_->num_heads != param_->num_kv_heads) {
-        LOG(ERROR) << "currently not support group query attention";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (attn_mask && attn_mask->GetShape()->CalcElementsExcludingPadding() > 0) {
-        LOG(ERROR) << "currently do not support attn_mask";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(attn_output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [attn_output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(attn_output);
@@ -100,8 +86,39 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionKernel::DoExecute(KernelEx
         return ppl::common::RC_DEVICE_MEMORY_ERROR;
     }
 
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
+    void *attn_mask_data = nullptr;
+    TensorShape *attn_mask_shape = nullptr;
+
+    if (attn_mask && attn_mask->GetShape()->CalcElementsExcludingPadding() > 0) {
+        attn_mask_data = attn_mask->GetBufferPtr();
+        attn_mask_shape = attn_mask->GetShape();
+    }
+
+    const int64_t batch = (int64_t)seqstarts->GetShape()->GetDim(0) - 1;
+
+    return ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_attention(
+        GetStream(),
+        GetCudaDevice()->GetDeviceProp(),
+        query->GetShape(),
+        query->GetBufferPtr(),
+        key->GetShape(),
+        key->GetBufferPtr(),
+        value->GetShape(),
+        value->GetBufferPtr(),
+        attn_mask_shape,
+        attn_mask_data,
+        seqstarts->GetBufferPtr(),
+        kvstarts->GetBufferPtr(),
+        param_->is_causal,
+        batch,
+        decodeing_batches_val,
+        max_seqlen_val,
+        max_kvlen_val,
+        param_->num_heads,
+        param_->num_kv_heads,
+        param_->head_dim,
+        attn_output->GetShape(),
+        attn_output->GetBufferPtr());
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
