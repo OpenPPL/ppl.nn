@@ -54,8 +54,9 @@
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DeviceType: %s\n", X->GetDevice()->GetType().str);                                \
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DataType: %s\n", ppl::common::GetDataTypeStr(X->GetShape()->GetDataType()));       \
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape()->GetDataFormat())); \
-        const uint64_t __num_elem = X->GetShape()->CalcElementsIncludingPadding();                                          \
-        if (X->GetShape()->GetDataType() == ppl::common::DATATYPE_INT64 && __num_elem <= 32 && __num_elem > 0) {    \
+        uint64_t __num_elem = X->GetShape()->CalcElementsIncludingPadding();                                          \
+        if (X->GetShape()->GetDataType() == ppl::common::DATATYPE_INT64 && __num_elem > 0) {    \
+            __num_elem = std::min(__num_elem, uint64_t(64));                                                                                \
             PPLNN_LLM_CUDA_DEBUG_TRACE(" |-Value(s):\n");                                                                  \
             std::vector<int64_t> __values(__num_elem);                                   \
             auto __status = X->CopyToHost(__values.data());                                                                          \

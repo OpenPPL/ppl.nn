@@ -102,6 +102,7 @@ void RegisterParsers() {
     PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "MultiHeadCacheAttention", 1, 1,
                                ppl::nn::pmx::MultiHeadCacheAttentionParam, ppl::nn::pmx::ParseMultiHeadCacheAttentionParam,
                                nullptr);
+    PPL_REGISTER_OP_WITHOUT_PARAM("pmx.dynamic_batching", "PositionIndex", 1, 1, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
                                ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
 

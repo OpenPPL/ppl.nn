@@ -60,7 +60,7 @@ ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     return ppl::kernel::llm::cuda::pmx::silu(
         GetStream(), 
         input->GetShape(),
-        input->GetBufferPtr(),
+        input_data,
         gate_data,
         param_->beta,
         output->GetBufferPtr());
