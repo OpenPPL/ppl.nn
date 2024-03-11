@@ -51,6 +51,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_cache_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/position_index_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_position_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_2d_position_embedding_op.h"
 
@@ -202,6 +203,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<pmx::DynamicBatchingMultiHeadCacheAttentionOp>("pmx.dynamic_batching", "MultiHeadCacheAttention", 1, 1);
     // O
     // P
+    RegisterOptKernelCreator<pmx::DynamicBatchingPositionIndexOp>("pmx.dynamic_batching", "PositionIndex", 1, 1);
     // Q
     // R
     RegisterOptKernelCreator<pmx::DynamicBatchingRotaryPositionEmbeddingOp>("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1);
