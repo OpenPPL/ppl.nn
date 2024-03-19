@@ -161,6 +161,17 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
             omit_data = (data_omitted_constants->find(eid) != data_omitted_constants->end());
         }
 
+        if (!omit_data) {
+            if (constant_ref->second.data.GetSize() == 0) {
+                if (tensor_shape.CalcBytesIncludingPadding() == 0) {
+                    omit_data = true;
+                } else {
+                    LOG(ERROR) << "constant [" << edge->GetName() << "] data size is 0 but shape size is not 0.";
+                    return RC_INVALID_VALUE;
+                }
+            }
+        }
+
         RuntimeConstantInfo& constant_info = ret_pair.first->second;
         auto status = GenericLoadConstant(constant_ref->second.data.GetData(), constant_ref->second.data.GetSize(),
                                           tensor_shape, device, &constant_info, omit_data);
