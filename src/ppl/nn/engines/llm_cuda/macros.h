@@ -56,7 +56,6 @@
         PPLNN_LLM_CUDA_DEBUG_TRACE(" |-DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape()->GetDataFormat())); \
         uint64_t __num_elem = X->GetShape()->CalcElementsIncludingPadding();                                          \
         if (X->GetShape()->GetDataType() == ppl::common::DATATYPE_INT64 && __num_elem > 0) {    \
-            __num_elem = std::min(__num_elem, uint64_t(64));                                                                                \
             PPLNN_LLM_CUDA_DEBUG_TRACE(" |-Value(s):\n");                                                                  \
             std::vector<int64_t> __values(__num_elem);                                   \
             auto __status = X->CopyToHost(__values.data());                                                                          \
@@ -64,6 +63,7 @@
                 LOG(ERROR) << "CopyToHost of tensor[" << X->GetName() << "] failed: " << ppl::common::GetRetCodeStr(__status);\
                 return __status;                                                                                           \
             }                                                                                                               \
+            __num_elem = std::min(__num_elem, uint64_t(64));                                                                                \
             std::string __values_str;                                                                                   \
             for (uint32_t __idx = 0; __idx < __num_elem; ++__idx) {                                                             \
                 __values_str += std::to_string(__values[__idx]) + " ";                                                      \

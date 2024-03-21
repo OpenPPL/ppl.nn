@@ -25,8 +25,8 @@ ppl::common::RetCode MoeReduceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(y_permute_expand, 0);
-    PPLNN_LLM_CUDA_OPTIONAL_INPUT(expert_weights, 1);
-    PPLNN_LLM_CUDA_OPTIONAL_INPUT(invert_permutation, 2);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(expert_weights, 1);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(invert_permutation, 2);
 
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(y_reduced, 0);
 
