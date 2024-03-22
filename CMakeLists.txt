@@ -135,6 +135,12 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+if(PPLNN_INSTALL)
+    include(cmake/install.cmake)
+endif()
+
+# --------------------------------------------------------------------------- #
+
 if(PPLNN_BUILD_TOOLS)
     add_subdirectory(tools)
 endif()
