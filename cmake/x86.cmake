@@ -21,20 +21,6 @@ target_link_libraries(pplnn_x86_static PUBLIC pplnn_basic_static pplkernelx86_st
 
 target_compile_definitions(pplnn_x86_static PUBLIC PPLNN_USE_X86)
 
-if(PPLNN_ENABLE_SANITIZE_OPTIONS)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(__ASAN_FLAGS__ "-fsanitize=undefined -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__ASAN_FLAGS__}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__ASAN_FLAGS__}")
-        unset(__ASAN_FLAGS__)
-        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-            add_link_options("-static-libasan")
-        endif()
-    else()
-        message(FATAL_ERROR "UNSUPPORTED: `PPLNN_USE_SANITIZE` is ON when using compiler `${CMAKE_CXX_COMPILER_ID}`.")
-    endif()
-endif()
-
 target_link_libraries(pplnn_static INTERFACE pplnn_x86_static)
 
 if(PPLNN_INSTALL)
