@@ -19,8 +19,6 @@ option(PPLNN_ENABLE_PYTHON_API "enable python api support" OFF)
 
 option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
-option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory errors. Note that this option is only available for GCC and Clang." OFF)
-
 if(MSVC)
     option(PPLNN_USE_MSVC_STATIC_RUNTIME "" ON)
 endif()
@@ -43,6 +41,9 @@ if(HPCC_USE_CUDA)
 endif()
 if(HPCC_USE_RISCV)
     message(FATAL_ERROR "`HPCC_USE_RISCV` is deprecated. use `PPLNN_USE_RISCV64` instead.")
+endif()
+if(PPLNN_ENABLE_SANITIZE_OPTIONS)
+    message(FATAL_ERROR "`PPLNN_ENABLE_SANITIZE_OPTIONS` is deprecated. use `HPCC_ENABLE_SANITIZE_OPTIONS` instead.")
 endif()
 
 # --------------------------------------------------------------------------- #
