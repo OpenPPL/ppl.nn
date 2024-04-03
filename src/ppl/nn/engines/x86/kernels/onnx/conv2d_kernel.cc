@@ -79,13 +79,23 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     }
 
 #ifdef DUMP_CONV
+    std::string conv_dump_name = GetName();
+    if (cur_executor->conv_param()->fuse_flag & kernel::x86::conv_fuse_flag::SUM) {
+        conv_dump_name += "-sum";
+    }
+    if (cur_executor->conv_param()->fuse_flag & kernel::x86::conv_fuse_flag::RELU) {
+        conv_dump_name += "-relu";
+    }
+    if (cur_executor->conv_param()->fuse_flag & kernel::x86::conv_fuse_flag::RELU6) {
+        conv_dump_name += "-relu6";
+    }
     fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape()->GetDim(0),
             cur_executor->conv_param()->channels, X->GetShape()->GetDim(2), X->GetShape()->GetDim(3),
             cur_executor->conv_param()->num_output, Y->GetShape()->GetDim(2), Y->GetShape()->GetDim(3),
             cur_executor->conv_param()->kernel_h, cur_executor->conv_param()->kernel_w,
             cur_executor->conv_param()->stride_h, cur_executor->conv_param()->stride_w,
             cur_executor->conv_param()->pad_h, cur_executor->conv_param()->pad_w,
-            cur_executor->conv_param()->dilation_h - 1, cur_executor->conv_param()->dilation_w - 1, GetName().c_str());
+            cur_executor->conv_param()->dilation_h - 1, cur_executor->conv_param()->dilation_w - 1, conv_dump_name.c_str());
 #endif
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
