@@ -137,8 +137,8 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
     if (kernel_dims == 1) {
         return kernel::x86::conv1d_ndarray_fp32(
             GetISA(), X->GetShape(), sum_src_shape, Y->GetShape(),
-            X->GetBufferPtr<float>(), W->GetBufferPtr<float>(),
-            sum_src_data, b_data, param_->param->group, channels, num_output,
+            X->GetBufferPtr<float>(), sum_src_data, W->GetBufferPtr<float>(),
+            b_data, param_->param->group, channels, num_output,
             param_->param->kernel_shape[0], param_->param->strides[0],
             param_->param->pads[0], param_->param->dilations[0],
             param_->fuse_flag, tmp_buffer, Y->GetBufferPtr<float>());
@@ -146,8 +146,8 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
     if (kernel_dims == 2) {
         return kernel::x86::conv2d_ndarray_fp32(
             GetISA(), X->GetShape(), sum_src_shape, Y->GetShape(),
-            X->GetBufferPtr<float>(), W->GetBufferPtr<float>(),
-            sum_src_data, b_data, param_->param->group, channels, num_output,
+            X->GetBufferPtr<float>(), sum_src_data, W->GetBufferPtr<float>(),
+            b_data, param_->param->group, channels, num_output,
             param_->param->kernel_shape[0], param_->param->kernel_shape[1],
             param_->param->strides[0], param_->param->strides[1],
             param_->param->pads[0], param_->param->pads[1],
