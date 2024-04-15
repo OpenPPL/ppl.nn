@@ -73,10 +73,23 @@
 #include "ppl/nn/models/onnx/parsers/mmdeploy/parse_ms_deformable_attention_param.h"
 
 #include "ppl/nn/models/onnx/parsers/pmx/parse_channel_shuffle_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_column_parallel_linear_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_gelu_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_key_value_cache_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_layer_norm_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_column_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_reduce_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_moe_select_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_attention_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_multi_head_cache_attention_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_parallel_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_reshape_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_rms_norm_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_rotary_position_embedding_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_swish_param.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -263,18 +276,68 @@ ParamParserManager::ParamParserManager() {
     // C
     PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
                                ppl::nn::pmx::ParseChannelShuffleParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "ColumnParallelLinear", 1, 1, ppl::nn::pmx::ColumnParallelLinearParam,
+                               ppl::nn::pmx::ParseColumnParallelLinearParam, nullptr);
     // G
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "GeGLU", 1, 1, ppl::nn::pmx::GELUParam, ppl::nn::pmx::ParseGELUParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "GELU", 1, 1, ppl::nn::pmx::GELUParam, ppl::nn::pmx::ParseGELUParam, nullptr);
+    // K
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "KeyValueCache", 1, 1, ppl::nn::pmx::KeyValueCacheParam,
+                               ppl::nn::pmx::ParseKeyValueCacheParam, nullptr);
     // L
     PPL_REGISTER_OP_WITH_PARAM("pmx", "LayerNorm", 1, 1, ppl::nn::pmx::LayerNormParam,
                                ppl::nn::pmx::ParseLayerNormParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Linear", 1, 1, ppl::nn::pmx::LinearParam,
+                               ppl::nn::pmx::ParseLinearParam, nullptr);
+    // M
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeColumnParallelLinear", 1, 1, ppl::nn::pmx::MoeColumnParallelLinearParam,
+                               ppl::nn::pmx::ParseMoeColumnParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeReduce", 1, 1, ppl::nn::pmx::MoeReduceParam,
+                               ppl::nn::pmx::ParseMoeReduceParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeRowParallelLinear", 1, 1, ppl::nn::pmx::MoeRowParallelLinearParam,
+                               ppl::nn::pmx::ParseMoeRowParallelLinearParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MoeSelect", 1, 1, ppl::nn::pmx::MoeSelectParam,
+                               ppl::nn::pmx::ParseMoeSelectParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "MultiHeadAttention", 1, 1, ppl::nn::pmx::MultiHeadAttentionParam,
+                               ppl::nn::pmx::ParseMultiHeadAttentionParam, nullptr);
+    // P
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "ParallelEmbedding", 1, 1, ppl::nn::pmx::ParallelEmbeddingParam,
+                               ppl::nn::pmx::ParseParallelEmbeddingParam, nullptr);
     // R
     PPL_REGISTER_OP_WITH_PARAM("pmx", "Reshape", 1, 1, ppl::nn::onnx::ReshapeParam, ppl::nn::pmx::ParseReshapeParam,
                                nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "RMSNorm", 1, 1, ppl::nn::pmx::RMSNormParam, ppl::nn::pmx::ParseRMSNormParam,
                                nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "RotaryPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Rotary2DPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "RowParallelLinear", 1, 1, ppl::nn::pmx::RowParallelLinearParam,
+                               ppl::nn::pmx::ParseRowParallelLinearParam, nullptr);
     // S
     PPL_REGISTER_OP_WITHOUT_PARAM("pmx", "SiLU", 1, 1, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "SwiGLU", 1, 1, ppl::nn::pmx::SwishParam,
+                               ppl::nn::pmx::ParseSwishParam, nullptr);
+
+    // dynamic batching
+
+    // K
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "KeyValueCache", 1, 1, ppl::nn::pmx::KeyValueCacheParam,
+                               ppl::nn::pmx::ParseKeyValueCacheParam, nullptr);
+    // M
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "MultiHeadAttention", 1, 1,
+                               ppl::nn::pmx::MultiHeadAttentionParam, ppl::nn::pmx::ParseMultiHeadAttentionParam,
+                               nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "MultiHeadCacheAttention", 1, 1,
+                               ppl::nn::pmx::MultiHeadCacheAttentionParam, ppl::nn::pmx::ParseMultiHeadCacheAttentionParam,
+                               nullptr);
+    // P
+    PPL_REGISTER_OP_WITHOUT_PARAM("pmx.dynamic_batching", "PositionIndex", 1, 1, nullptr);
+    // R
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "Rotary2DPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
 }
 
 }}} // namespace ppl::nn::onnx

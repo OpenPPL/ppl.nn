@@ -76,6 +76,8 @@ Refer to [Documents](#documents) for more details.
   - ARM
     - [Adding Ops](docs/en/arm-doc/add_op.md)（[中文版](docs/cn/arm-doc/add_op.md)）
     - [Benchmark](docs/en/arm-doc/benchmark_tool.md)（[中文版](docs/cn/arm-doc/benchmark_tool.md)）
+  - LLM-CUDA
+    - [Overview](docs/en/llm-cuda-overview.md)
 * Models
   - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
   - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)

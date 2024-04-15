@@ -33,6 +33,10 @@
 #include "engines/arm/py_arm.h"
 #endif
 
+#ifdef PPLNN_USE_LLM_CUDA
+#include "engines/llm_cuda/py_llm_cuda.h"
+#endif
+
 #ifdef PPLNN_ENABLE_ONNX_MODEL
 #include "models/onnx/py_onnx.h"
 #endif
@@ -107,6 +111,13 @@ PYBIND11_MODULE(nn, m) {
     arm::RegisterEngineFactory(&arm_module);
     arm::RegisterEngineOptions(&arm_module);
     arm::RegisterEngine(&arm_module);
+#endif
+
+#ifdef PPLNN_USE_LLM_CUDA
+    pybind11::module llm_cuda_module = m.def_submodule("llm_cuda");
+    llm::cuda::RegisterEngineFactory(&llm_cuda_module);
+    llm::cuda::RegisterEngineOptions(&llm_cuda_module);
+    llm::cuda::RegisterEngine(&llm_cuda_module);
 #endif
 
     LoadResources(&m);

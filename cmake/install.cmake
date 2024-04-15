@@ -16,3 +16,5 @@ install(FILES include/ppl/nn/engines/engine.h DESTINATION include/ppl/nn/engines
 if(PPLNN_ENABLE_PMX_MODEL)
     install(DIRECTORY include/ppl/nn/models/pmx DESTINATION include/ppl/nn/models)
 endif()
+
+install(TARGETS ${PPLNN_ONNX_GENERATED_LIBS} DESTINATION lib)

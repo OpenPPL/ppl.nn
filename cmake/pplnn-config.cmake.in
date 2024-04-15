@@ -18,6 +18,7 @@ option(PPLNN_USE_X86_64 "" @PPLNN_USE_X86_64@)
 option(PPLNN_USE_AARCH64 "" @PPLNN_USE_AARCH64@)
 option(PPLNN_USE_RISCV64 "" @PPLNN_USE_RISCV64@)
 option(PPLNN_USE_CUDA "" @PPLNN_USE_CUDA@)
+option(PPLNN_USE_LLM_CUDA "" @PPLNN_USE_LLM_CUDA@)
 
 option(PPLNN_ENABLE_ONNX_MODEL "" @PPLNN_ENABLE_ONNX_MODEL@)
 
@@ -105,6 +106,30 @@ if(PPLNN_USE_RISCV64)
     unset(__PPLNN_LIB_PATH__)
 
     list(APPEND PPLNN_LIBRARIES pplnn_riscv_static)
+endif()
+
+if(PPLNN_USE_LLM_CUDA)
+    if(NOT TARGET "pplkernelcuda_static")
+        include(${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake)
+    endif()
+
+    set(__LINK_LIBS__ pplnn_basic_static pplkernelcuda_static)
+    if(PPLNN_CUDA_ENABLE_NCCL)
+        list(APPEND __LINK_LIBS__ ${NCCL_LIBRARIES})
+    endif()
+
+    get_filename_component(__LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@ppl_llm_cuda_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(ppl_llm_cuda_static STATIC IMPORTED)
+    set_target_properties(ppl_llm_cuda_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "${__LINK_LIBS__}"
+        IMPORTED_LOCATION "${__LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__LIB_PATH__}")
+    unset(__LIB_PATH__)
+
+    unset(__LINK_LIBS__)
+
+    list(APPEND PPLNN_LIBRARIES ppl_llm_cuda_static)
 endif()
 
 get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_basic_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)

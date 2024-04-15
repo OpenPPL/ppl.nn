@@ -28,6 +28,18 @@ option(PPLNN_USE_AARCH64 "" OFF)
 option(PPLNN_USE_ARMV7 "" OFF)
 option(PPLNN_USE_RISCV64 "" OFF)
 option(PPLNN_USE_CUDA "" OFF)
+option(PPLNN_USE_LLM_CUDA "" OFF)
+
+if(PPLNN_USE_LLM_CUDA)
+    if(NOT CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD 17)
+    endif()
+    if(NOT CMAKE_CUDA_STANDARD)
+        set(CMAKE_CUDA_STANDARD 17)
+    endif()
+    set(PPLNN_PROTOBUF_VERSION "v23.4")
+    set(PPLCOMMON_USE_CUDA ON)
+endif()
 
 # deprecated options
 if(HPCC_USE_X86_64)
@@ -93,6 +105,10 @@ endif()
 
 if(PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7)
     include(cmake/arm.cmake)
+endif()
+
+if(PPLNN_USE_LLM_CUDA)
+    include(cmake/llm_cuda.cmake)
 endif()
 
 # pplcommon MUST be placed after engines because engines may set pplcommon options
