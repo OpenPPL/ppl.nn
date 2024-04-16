@@ -2,11 +2,9 @@
 
 `ppl.nn.llm` is a part of `PPL.LLM` system.
 
-![SYSTEM_OVERVIEW](docs/system_overview.png)
+![SYSTEM_OVERVIEW](../images/llm-system-overview.png)
 
-**We recommend users who are new to this project to read the [Overview of system](docs/system_overview.md).**
-
-`ppl.nn.llm` is a collection of Large Language Models(LLM) inferencing engines based on [ppl.nn](https://github.com/openppl-public/ppl.nn).
+**We recommend users who are new to this project to read the [Overview of system](llm-system-overview.md).**
 
 ## Features
 
@@ -57,7 +55,7 @@ apt-get install build-essential cmake git
 * Cloning source code:
 
 ```bash
-git clone https://github.com/openppl-public/ppl.nn.llm.git
+git clone https://github.com/openppl-public/ppl.nn.git
 ```
 
 * Building from source:
@@ -65,7 +63,7 @@ git clone https://github.com/openppl-public/ppl.nn.llm.git
 For nvidia ampere architecture we should use sm80, sm86 and sm87.
 
 ```bash
-cd ppl.nn.llm
+cd ppl.nn
 ./build.sh -DPPLNN_USE_LLM_CUDA=ON -DPPLNN_CUDA_ENABLE_NCCL=ON -DPPLNN_ENABLE_CUDA_JIT=OFF -DPPLNN_CUDA_ARCHITECTURES="'80;86;87'" -DPPLCOMMON_CUDA_ARCHITECTURES="'80;86;87'"
 ```
 
@@ -137,7 +135,7 @@ The `MP` value for LLaMA can be found [Here](https://github.com/openppl-public/p
 build with `-DPPLNN_ENABLE_PYTHON_API=ON` (use sm80, sm86 and sm87 in this example):
 
 ```bash
-cd ppl.nn.llm
+cd ppl.nn
 ./build.sh -DPPLNN_USE_LLM_CUDA=ON -DPPLNN_CUDA_ENABLE_NCCL=ON -DPPLNN_ENABLE_CUDA_JIT=OFF -DPPLNN_CUDA_ARCHITECTURES="'80;86;87'" -DPPLCOMMON_CUDA_ARCHITECTURES="'80;86;87'" -DPPLNN_ENABLE_PYTHON_API=ON
 ```
 
@@ -151,7 +149,7 @@ PYTHONPATH=./pplnn-build/install/lib python3 tools/pplnn.py --use-llm-cuda --onn
 
 Building a benchmark test for LLaMA model with full generation steps. The difference with previous benchmark, is that previous one benchmark with one step, while here benchmark for whole generation steps. Refer to [tools/benchmark.sh](tools/benchmark.sh) for more detail.
 ```
-~/ppl.nn.llm/pplnn-build/tools/benchmark_llama \
+~/ppl.nn/pplnn-build/tools/benchmark_llama \
     --model_type $MODEL_TYPE \
     --model_dir $MODEL_DIR \
     --model_param_path $MODEL_PARAM_PATH \
