@@ -11,6 +11,9 @@ if(CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.0)
         message(FATAL_ERROR "gcc >= 4.9.0 is required.")
     endif()
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 10.3.0)
+        message(FATAL_ERROR "gcc 10.3.0 has known bugs. use another version >= 9.4.0.")
+    endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0.0)
         message(FATAL_ERROR "clang >= 6.0.0 is required.")
@@ -63,6 +66,7 @@ else()
     FetchContent_Declare(hpcc
         GIT_REPOSITORY ${PPLNN_DEP_HPCC_GIT}
         GIT_TAG ${__HPCC_COMMIT__}
+        GIT_SHALLOW TRUE
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
@@ -131,7 +135,7 @@ if(PPLNN_DEP_FLATBUFFERS_PKG)
     hpcc_declare_pkg_dep(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_PKG})
 elseif(PPLNN_DEP_FLATBUFFERS_GIT)
-    hpcc_declare_git_dep(flatbuffers
+    hpcc_declare_git_dep_depth1(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_GIT}
         ${__FLATBUFFERS_TAG__})
 else()
@@ -163,19 +167,16 @@ endif()
 if(PPLNN_DEP_PROTOBUF_PKG)
     hpcc_declare_pkg_dep(protobuf
         ${PPLNN_DEP_PROTOBUF_PKG})
-elseif(PPLNN_DEP_PROTOBUF_GIT)
-    hpcc_declare_git_dep(protobuf
+else()
+    if(NOT PPLNN_DEP_PROTOBUF_GIT)
+        set(PPLNN_DEP_PROTOBUF_GIT "https://github.com/protocolbuffers/protobuf.git")
+    endif()
+    if(PPLNN_PROTOBUF_VERSION)
+        set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
+    endif()
+    hpcc_declare_git_dep_depth1(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
         ${__PROTOBUF_TAG__})
-else()
-    if(PPLNN_PROTOBUF_VERSION)
-        hpcc_declare_git_dep(protobuf
-            ${PPLNN_DEP_PROTOBUF_GIT}
-            ${__PROTOBUF_TAG__})
-    else()
-        hpcc_declare_pkg_dep(protobuf
-            "https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip")
-    endif()
 endif()
 
 unset(__PROTOBUF_TAG__)
@@ -215,7 +216,7 @@ if(PPLNN_DEP_PYBIND11_PKG)
     hpcc_declare_pkg_dep(pybind11
         ${PPLNN_DEP_PYBIND11_PKG})
 elseif(PPLNN_DEP_PYBIND11_GIT)
-    hpcc_declare_git_dep(pybind11
+    hpcc_declare_git_dep_depth1(pybind11
         ${PPLNN_DEP_PYBIND11_GIT}
         ${__PYBIND11_TAG__})
 else()
@@ -238,7 +239,7 @@ if(PPLNN_DEP_GOOGLETEST_PKG)
     hpcc_declare_pkg_dep(googletest
         ${PPLNN_DEP_GOOGLETEST_PKG})
 elseif(PPLNN_DEP_GOOGLETEST_GIT)
-    hpcc_declare_git_dep(googletest
+    hpcc_declare_git_dep_depth1(googletest
         ${PPLNN_DEP_GOOGLETEST_GIT}
         ${__GOOGLETEST_TAG__})
 else()
@@ -258,7 +259,7 @@ if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64
         if(NOT PPLNN_DEP_PPLCPUKERNEL_GIT)
             set(PPLNN_DEP_PPLCPUKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cpu.git")
         endif()
-        hpcc_declare_git_dep(ppl.kernel.cpu
+        hpcc_declare_git_dep_depth1(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_GIT}
             master)
     endif()
@@ -274,8 +275,26 @@ if(PPLNN_USE_CUDA)
         if(NOT PPLNN_DEP_PPLCUDAKERNEL_GIT)
             set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cuda.git")
         endif()
-        hpcc_declare_git_dep(ppl.kernel.cuda
+        hpcc_declare_git_dep_depth1(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
             master)
     endif()
 endif()
+
+# --------------------------------------------------------------------------- #
+
+set(__LLM_KERNEL_CUDA_COMMIT__ master)
+
+if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
+    hpcc_declare_pkg_dep(ppl.llm.kernel.cuda
+        ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG})
+else()
+    if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT)
+        set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT "https://github.com/openppl-public/ppl.llm.kernel.cuda.git")
+    endif()
+    hpcc_declare_git_dep_depth1(ppl.llm.kernel.cuda
+        ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT}
+        ${__LLM_KERNEL_CUDA_COMMIT__})
+endif()
+
+unset(__LLM_KERNEL_CUDA_COMMIT__)

@@ -1,0 +1,120 @@
+namespace ppl.nn.llm.cuda.pmx;
+
+table ColumnParallelLinearParam {
+    in_features: int32;
+    out_features: int32;
+    bias_term: bool;
+    gather_output: bool;
+}
+
+table GELUParam {
+    approximate: bool;
+}
+
+table KeyValueCacheParam {
+    num_layer: int32;
+    layer_idx: int32;
+    quant_bit: int32;
+    quant_group: int32;
+    num_repeat: int32;
+    cache_mode: int32;
+    cache_layout: int32;
+}
+
+table LayerNormParam {
+    elementwise_affine: bool;
+    axis: int32;
+    eps: float;
+    skip_term: bool;
+}
+table MultiHeadAttentionParam {
+    num_heads: int32;
+    num_kv_heads: int32;
+    head_dim: int32;
+    is_causal: bool;
+}
+
+table ParallelEmbeddingParam {
+    num_embeddings: int32;
+    embedding_dims: int32;
+    padding_idx: int32;
+    max_norm: float;
+    norm_type: float;
+}
+
+table RMSNormParam {
+    axis: int32;
+    eps: float;
+    skip_term: bool;
+}
+
+table RotaryPositionEmbeddingParam {
+    bypass_key: int32;
+    rotary_dim: int32;
+    theta: float;
+}
+
+table RowParallelLinearParam {
+    in_features: int32;
+    out_features: int32;
+    bias_term: bool;
+    input_is_parallel: bool;
+}
+
+table MultiHeadCacheAttentionParam {
+    num_heads: int32;
+    num_kv_heads: int32;
+    head_dim: int32;
+    is_causal: bool;
+    num_layer: int32;
+    layer_idx: int32;
+    quant_bit: int32;
+    quant_group: int32;
+    cache_mode: int32;
+    cache_layout: int32;
+}
+
+table ReshapeParam {
+    allowzero: int32;
+    constant_shape_data: [int64];
+}
+
+table SliceParam {
+    starts: [int64];
+    ends: [int64];
+    axes: [int64];
+    steps: [int64];
+}
+
+table SplitParam {
+    axis: int32;
+    split_point: [int32];
+    constant_split_data: [int64];
+}
+
+table SwishParam {
+    beta: float;
+}
+
+union OpParamType {
+    ColumnParallelLinearParam,
+    GELUParam,
+    KeyValueCacheParam,
+    LayerNormParam,
+    MultiHeadAttentionParam,
+    ParallelEmbeddingParam,
+    RMSNormParam,
+    RotaryPositionEmbeddingParam,
+    RowParallelLinearParam,
+    MultiHeadCacheAttentionParam,
+    ReshapeParam,
+    SliceParam,
+    SplitParam,
+    SwishParam,
+}
+
+table OpParam {
+    value: OpParamType;
+}
+
+root_type OpParam;

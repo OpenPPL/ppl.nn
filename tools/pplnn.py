@@ -29,8 +29,6 @@ from pyppl import common as pplcommon
 
 # ---------------------------------------------------------------------------- #
 
-g_supported_devices = ["x86", "cuda", "riscv", "arm"]
-
 g_pplnntype2numpytype = {
     pplcommon.DATATYPE_INT8 : np.int8,
     pplcommon.DATATYPE_INT16 : np.int16,
@@ -70,43 +68,62 @@ def ParseCommandLineArgs():
     parser.add_argument("--version", dest = "display_version", action = "store_true",
                         default = False, required = False)
 
-    for dev in g_supported_devices:
-        parser.add_argument("--use-" + dev, dest = "use_" + dev, action = "store_true",
-                            default = False, required = False)
+    # x86
 
-        if dev == "x86":
-            parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
-                                default = False, required = False)
-            parser.add_argument("--disable-avx-fma3", dest = "disable_avx_fma3", action = "store_true",
-                                default = False, required = False)
-            parser.add_argument("--disable-graph-fusion", dest = "disable_graph_fusion", action = "store_true",
-                                default = False, required = False)
-            parser.add_argument("--enable-tensor-debug", dest = "enable_tensor_debug", action = "store_true",
-                                default = False, required = False)
-            parser.add_argument("--debug-data-dir", type = str, default = ".", required = False,
-                                help = "directory to save dumped tensors' data")
-        elif dev == "cuda":
-            parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
-                                default = False, required = False)
-            parser.add_argument("--device-id", type = int, dest = "device_id",
-                                default = 0, required = False, help = "specify which device is used.")
-            parser.add_argument("--import-algo-file", type = str, default = "", required = False,
-                                help = "a json file containing op implementations info")
-            parser.add_argument("--export-algo-file", type = str, default = "", required = False,
-                                help = "a json file used to store op implementations info")
-            parser.add_argument("--kernel-type", type = str, default = "", required = False,
-                                help = "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32")
-            parser.add_argument("--quant-file", type = str, default = "", required = False,
-                                help = "a json file containing quantization information")
-        elif dev == "arm":
-            parser.add_argument("--wg-level", type = int, default = 3, required = False,
-                                help = "select winograd level[0-3]. 0: wingorad off."
-                                " 1: turn on winograd and automatically select block size."
-                                " 2: use winograd block 2 if possible. 3: use winograd block 4 if possible")
-            parser.add_argument("--tuning-level", type = int, default = 1, required = False,
-                                help = "select conv algo dynamic tuning level[0-1]. 0: off. 1: on")
-            parser.add_argument("--numa-node-id", type = int, default = -1, required = False,
-                                help = "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind")
+    parser.add_argument("--use-x86", dest = "use_x86", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--disable-avx-fma3", dest = "disable_avx_fma3", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--disable-graph-fusion", dest = "disable_graph_fusion", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--enable-tensor-debug", dest = "enable_tensor_debug", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--debug-data-dir", type = str, default = ".", required = False,
+                        help = "directory to save dumped tensors' data")
+
+    # cuda or llm-cuda
+
+    parser.add_argument("--use-llm-cuda", dest = "use_llm_cuda", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--device-id", type = int, dest = "device_id",
+                        default = 0, required = False, help = "specify which device is used.")
+
+    # cuda
+
+    parser.add_argument("--use-cuda", dest = "use_cuda", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--import-algo-file", type = str, default = "", required = False,
+                        help = "a json file containing op implementations info")
+    parser.add_argument("--export-algo-file", type = str, default = "", required = False,
+                        help = "a json file used to store op implementations info")
+    parser.add_argument("--kernel-type", type = str, default = "", required = False,
+                        help = "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32")
+    parser.add_argument("--quant-file", type = str, default = "", required = False,
+                        help = "a json file containing quantization information")
+
+    # arm
+
+    parser.add_argument("--use-arm", dest = "use_arm", action = "store_true",
+                        default = False, required = False)
+    parser.add_argument("--wg-level", type = int, default = 3, required = False,
+                        help = "select winograd level[0-3]. 0: wingorad off."
+                        " 1: turn on winograd and automatically select block size."
+                        " 2: use winograd block 2 if possible. 3: use winograd block 4 if possible")
+    parser.add_argument("--tuning-level", type = int, default = 1, required = False,
+                        help = "select conv algo dynamic tuning level[0-1]. 0: off. 1: on")
+    parser.add_argument("--numa-node-id", type = int, default = -1, required = False,
+                        help = "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind")
+
+    # riscv
+
+    parser.add_argument("--use-riscv", dest = "use_riscv", action = "store_true",
+                        default = False, required = False)
+
+    # common
 
     parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
                         default = False, required = False, help = "infer with fp16. avaliable for arm8.2 and riscv.")
@@ -309,6 +326,24 @@ def CreateArmEngine(args):
 
     return arm_engine
 
+def CreateLlmCudaEngine(args):
+    cuda_options = pplnn.llm_cuda.EngineOptions()
+    cuda_options.device_id = args.device_id
+    if args.mm_policy == "bestfit":
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_BEST_FIT
+    elif args.mm_policy == "compact":
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_COMPACT
+    else:
+        logging.info("use native alloc/free by default.")
+        cuda_options.mm_policy = pplnn.llm_cuda.MM_PLAIN
+
+    cuda_engine = pplnn.llm_cuda.EngineFactory.Create(cuda_options)
+    if not cuda_engine:
+        logging.error("create cuda engine failed.")
+        sys.exit(-1)
+
+    return cuda_engine
+
 def RegisterEngines(args):
     engines = []
     if args.use_x86:
@@ -326,6 +361,10 @@ def RegisterEngines(args):
     if args.use_arm:
         arm_engine = CreateArmEngine(args)
         engines.append(arm_engine)
+
+    if args.use_llm_cuda:
+        cuda_engine = CreateLlmCudaEngine(args)
+        engines.append(cuda_engine)
 
     return engines
 
