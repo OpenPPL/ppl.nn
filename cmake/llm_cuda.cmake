@@ -1,4 +1,6 @@
-hpcc_populate_dep(protobuf)
+if(NOT TARGET libprotobuf)
+    hpcc_populate_dep(protobuf)
+endif()
 
 if(NOT PPL_LLM_PROTOC_EXECUTABLE)
     set(PPL_LLM_PROTOC_EXECUTABLE ${protobuf_BINARY_DIR}/protoc)
