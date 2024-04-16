@@ -118,14 +118,14 @@ if(PPLNN_USE_LLM_CUDA)
         list(APPEND __LINK_LIBS__ ${NCCL_LIBRARIES})
     endif()
 
-    get_filename_component(__LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@ppl_llm_cuda_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@ppl_llm_cuda_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
     add_library(ppl_llm_cuda_static STATIC IMPORTED)
     set_target_properties(ppl_llm_cuda_static PROPERTIES
         INTERFACE_LINK_LIBRARIES "${__LINK_LIBS__}"
-        IMPORTED_LOCATION "${__LIB_PATH__}"
-        IMPORTED_LOCATION_DEBUG "${__LIB_PATH__}"
-        IMPORTED_LOCATION_RELEASE "${__LIB_PATH__}")
-    unset(__LIB_PATH__)
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
 
     unset(__LINK_LIBS__)
 
@@ -147,10 +147,18 @@ if(PPLNN_ENABLE_ONNX_MODEL)
         include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
     endif()
 
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@@PPLNN_ONNX_GENERATED_LIBS@@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_onnx_generated_static STATIC IMPORTED)
+    set_target_properties(pplnn_onnx_generated_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "protobuf::libprotobuf"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+
     get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_onnx_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
     add_library(pplnn_onnx_static STATIC IMPORTED)
     set_target_properties(pplnn_onnx_static PROPERTIES
-        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;protobuf::libprotobuf"
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;pplnn_onnx_generated_static"
         IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
         IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
         IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
