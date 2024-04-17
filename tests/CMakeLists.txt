@@ -37,6 +37,7 @@ endif()
 
 hpcc_populate_dep(googletest)
 target_link_libraries(pplnn_unittest PRIVATE pplnn_static gtest_main)
+target_link_directories(pplnn_unittest PRIVATE /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/lib)
 
 target_include_directories(pplnn_unittest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..

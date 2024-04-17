@@ -96,6 +96,12 @@ table SwishParam {
     beta: float;
 }
 
+table VisionEmbeddingParam {
+    hidden_dim: int32;
+    image_size: int32;
+    patch_size: int32;
+}
+
 union OpParamType {
     ColumnParallelLinearParam,
     GELUParam,
@@ -107,6 +113,7 @@ union OpParamType {
     RotaryPositionEmbeddingParam,
     RowParallelLinearParam,
     MultiHeadCacheAttentionParam,
+    VisionEmbeddingParam,
     ReshapeParam,
     SliceParam,
     SplitParam,

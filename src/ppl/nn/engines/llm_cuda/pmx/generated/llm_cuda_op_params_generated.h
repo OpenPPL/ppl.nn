@@ -61,6 +61,9 @@ struct SplitParamBuilder;
 struct SwishParam;
 struct SwishParamBuilder;
 
+struct VisionEmbeddingParam;
+struct VisionEmbeddingParamBuilder;
+
 struct OpParam;
 struct OpParamBuilder;
 
@@ -76,15 +79,16 @@ enum OpParamType : uint8_t {
   OpParamType_RotaryPositionEmbeddingParam = 8,
   OpParamType_RowParallelLinearParam = 9,
   OpParamType_MultiHeadCacheAttentionParam = 10,
-  OpParamType_ReshapeParam = 11,
-  OpParamType_SliceParam = 12,
-  OpParamType_SplitParam = 13,
-  OpParamType_SwishParam = 14,
+  OpParamType_VisionEmbeddingParam = 11,
+  OpParamType_ReshapeParam = 12,
+  OpParamType_SliceParam = 13,
+  OpParamType_SplitParam = 14,
+  OpParamType_SwishParam = 15,
   OpParamType_MIN = OpParamType_NONE,
   OpParamType_MAX = OpParamType_SwishParam
 };
 
-inline const OpParamType (&EnumValuesOpParamType())[15] {
+inline const OpParamType (&EnumValuesOpParamType())[16] {
   static const OpParamType values[] = {
     OpParamType_NONE,
     OpParamType_ColumnParallelLinearParam,
@@ -97,6 +101,7 @@ inline const OpParamType (&EnumValuesOpParamType())[15] {
     OpParamType_RotaryPositionEmbeddingParam,
     OpParamType_RowParallelLinearParam,
     OpParamType_MultiHeadCacheAttentionParam,
+    OpParamType_VisionEmbeddingParam,
     OpParamType_ReshapeParam,
     OpParamType_SliceParam,
     OpParamType_SplitParam,
@@ -106,7 +111,7 @@ inline const OpParamType (&EnumValuesOpParamType())[15] {
 }
 
 inline const char * const *EnumNamesOpParamType() {
-  static const char * const names[16] = {
+  static const char * const names[17] = {
     "NONE",
     "ColumnParallelLinearParam",
     "GELUParam",
@@ -118,6 +123,7 @@ inline const char * const *EnumNamesOpParamType() {
     "RotaryPositionEmbeddingParam",
     "RowParallelLinearParam",
     "MultiHeadCacheAttentionParam",
+    "VisionEmbeddingParam",
     "ReshapeParam",
     "SliceParam",
     "SplitParam",
@@ -175,6 +181,10 @@ template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::pmx::RowParallelLinearPa
 
 template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam> {
   static const OpParamType enum_value = OpParamType_MultiHeadCacheAttentionParam;
+};
+
+template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::pmx::VisionEmbeddingParam> {
+  static const OpParamType enum_value = OpParamType_VisionEmbeddingParam;
 };
 
 template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::pmx::ReshapeParam> {
@@ -1230,6 +1240,67 @@ inline flatbuffers::Offset<SwishParam> CreateSwishParam(
   return builder_.Finish();
 }
 
+struct VisionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef VisionEmbeddingParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_HIDDEN_DIM = 4,
+    VT_IMAGE_SIZE = 6,
+    VT_PATCH_SIZE = 8
+  };
+  int32_t hidden_dim() const {
+    return GetField<int32_t>(VT_HIDDEN_DIM, 0);
+  }
+  int32_t image_size() const {
+    return GetField<int32_t>(VT_IMAGE_SIZE, 0);
+  }
+  int32_t patch_size() const {
+    return GetField<int32_t>(VT_PATCH_SIZE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_HIDDEN_DIM, 4) &&
+           VerifyField<int32_t>(verifier, VT_IMAGE_SIZE, 4) &&
+           VerifyField<int32_t>(verifier, VT_PATCH_SIZE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct VisionEmbeddingParamBuilder {
+  typedef VisionEmbeddingParam Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_hidden_dim(int32_t hidden_dim) {
+    fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_HIDDEN_DIM, hidden_dim, 0);
+  }
+  void add_image_size(int32_t image_size) {
+    fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_IMAGE_SIZE, image_size, 0);
+  }
+  void add_patch_size(int32_t patch_size) {
+    fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_PATCH_SIZE, patch_size, 0);
+  }
+  explicit VisionEmbeddingParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<VisionEmbeddingParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<VisionEmbeddingParam>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<VisionEmbeddingParam> CreateVisionEmbeddingParam(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t hidden_dim = 0,
+    int32_t image_size = 0,
+    int32_t patch_size = 0) {
+  VisionEmbeddingParamBuilder builder_(_fbb);
+  builder_.add_patch_size(patch_size);
+  builder_.add_image_size(image_size);
+  builder_.add_hidden_dim(hidden_dim);
+  return builder_.Finish();
+}
+
 struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef OpParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1272,6 +1343,9 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam *value_as_MultiHeadCacheAttentionParam() const {
     return value_type() == ppl::nn::llm::cuda::pmx::OpParamType_MultiHeadCacheAttentionParam ? static_cast<const ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam *>(value()) : nullptr;
+  }
+  const ppl::nn::llm::cuda::pmx::VisionEmbeddingParam *value_as_VisionEmbeddingParam() const {
+    return value_type() == ppl::nn::llm::cuda::pmx::OpParamType_VisionEmbeddingParam ? static_cast<const ppl::nn::llm::cuda::pmx::VisionEmbeddingParam *>(value()) : nullptr;
   }
   const ppl::nn::llm::cuda::pmx::ReshapeParam *value_as_ReshapeParam() const {
     return value_type() == ppl::nn::llm::cuda::pmx::OpParamType_ReshapeParam ? static_cast<const ppl::nn::llm::cuda::pmx::ReshapeParam *>(value()) : nullptr;
@@ -1332,6 +1406,10 @@ template<> inline const ppl::nn::llm::cuda::pmx::RowParallelLinearParam *OpParam
 
 template<> inline const ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam *OpParam::value_as<ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam>() const {
   return value_as_MultiHeadCacheAttentionParam();
+}
+
+template<> inline const ppl::nn::llm::cuda::pmx::VisionEmbeddingParam *OpParam::value_as<ppl::nn::llm::cuda::pmx::VisionEmbeddingParam>() const {
+  return value_as_VisionEmbeddingParam();
 }
 
 template<> inline const ppl::nn::llm::cuda::pmx::ReshapeParam *OpParam::value_as<ppl::nn::llm::cuda::pmx::ReshapeParam>() const {
@@ -1424,6 +1502,10 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case OpParamType_MultiHeadCacheAttentionParam: {
       auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::pmx::MultiHeadCacheAttentionParam *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParamType_VisionEmbeddingParam: {
+      auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::pmx::VisionEmbeddingParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case OpParamType_ReshapeParam: {
