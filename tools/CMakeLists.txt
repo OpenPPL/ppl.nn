@@ -3,6 +3,7 @@ file(GLOB __SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
 add_executable(pplnn ${__SRC__})
 target_link_libraries(pplnn PRIVATE pplnn_static)
+target_link_directories(pplnn PRIVATE /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/lib)
 
 # -------------------------------------------------------------------------- #
 
@@ -11,6 +12,7 @@ file(GLOB __SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
 add_executable(pplnn_llm ${__SRC__})
 target_link_libraries(pplnn_llm PRIVATE pplnn_static)
+target_link_directories(pplnn_llm PRIVATE /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/lib)
 
 if(PPLNN_CUDA_ENABLE_NCCL)
     set(PPLNN_ENABLE_MPI_TOOLS ON)
@@ -32,6 +34,7 @@ if(PPLNN_USE_LLM_CUDA)
         ${CMAKE_CURRENT_SOURCE_DIR}/benchmark_llama.cc sampler.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
         target_link_libraries(benchmark_llama pplnn_static)
+    target_link_directories(benchmark_llama PRIVATE /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/lib)
     target_include_directories(benchmark_llama PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
 
     if(PPLNN_CUDA_ENABLE_NCCL)

@@ -15,6 +15,7 @@ elseif(CUDA_VERSION VERSION_LESS "10.2")
 endif()
 
 # ----- #
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -I /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/include -L /mnt/hpc/share/jianliheng/cudnn-linux-x86_64-8.9.6.50_cuda11-archive/lib -lcudnn")
 
 if(PPLNN_USE_MSVC_STATIC_RUNTIME)
     hpcc_cuda_use_msvc_static_runtime()
