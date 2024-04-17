@@ -26,6 +26,7 @@
 
 #include <cuda_runtime.h>
 #include <cublasLt.h>
+#include <cudnn.h>
 
 #include <functional>
 #include <map>
@@ -126,6 +127,14 @@ public:
         return &cublas_algo_cache_;
     }
 
+    void SetCudnnHandle(cudnnHandle_t cudnn_handle) {
+        cudnn_handle_ = cudnn_handle;
+    };
+
+    cudnnHandle_t GetCudnnHandle() const {
+        return cudnn_handle_;
+    }
+
     ppl::common::NcclParam* GetTensorParallelNcclParam() const {
         return tensor_parallel_nccl_param_;
     }
@@ -180,6 +189,8 @@ protected:
     void* cublas_workspace_ = nullptr;
     int cublas_workspace_size_ = 0;
     ppl::kernel::llm::cuda::cublas::AlgoCache cublas_algo_cache_;
+
+    cudnnHandle_t cudnn_handle_ = nullptr;
 
     void* i4f16_gemm_handle_ = nullptr;
 
