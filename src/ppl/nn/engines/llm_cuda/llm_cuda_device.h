@@ -26,6 +26,7 @@
 
 #include <cuda_runtime.h>
 #include <cublasLt.h>
+#include <cudnn.h>
 
 #ifdef PPLNN_CUDA_ENABLE_CUDNN
 #include <cudnn.h>
