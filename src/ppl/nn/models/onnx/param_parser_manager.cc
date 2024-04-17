@@ -91,6 +91,7 @@
 #include "ppl/nn/models/onnx/parsers/opmx/parse_reshape_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_rotary_position_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/opmx/parse_vision_embedding_param.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -331,6 +332,12 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("opmx", "SiLU", 1, 1, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("opmx", "SwiGLU", 1, 1, ppl::nn::pmx::SwishParam,
                                ppl::nn::pmx::ParseSwishParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Swish", 1, 1, ppl::nn::pmx::SwishParam,
+                               ppl::nn::pmx::ParseSwishParam, nullptr);
+
+    // V
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "VisionEmbedding", 1, 1, ppl::nn::pmx::VisionEmbeddingParam,
+                               ppl::nn::pmx::ParseVisionEmbeddingParam, nullptr);
 
     // dynamic batching
 

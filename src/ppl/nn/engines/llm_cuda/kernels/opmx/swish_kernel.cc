@@ -58,7 +58,7 @@ ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
     return ppl::kernel::llm::cuda::pmx::silu(
-        GetStream(), 
+        GetStream(),
         input->GetShape(),
         input_data,
         gate_data,

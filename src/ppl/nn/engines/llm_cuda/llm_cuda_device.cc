@@ -51,6 +51,10 @@ LlmCudaDevice::~LlmCudaDevice() {
         cudaFree(cublas_workspace_);
     }
 
+    if (cudnn_handle_) {
+        cudnnDestroy(cudnn_handle_);
+    }
+
     if (i4f16_gemm_handle_) {
         ppl::kernel::llm::cuda::pmx::i4f16::destory_gemm_handle(i4f16_gemm_handle_);
     }
