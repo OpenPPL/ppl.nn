@@ -33,9 +33,15 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 RetCode RegisterResourcesOnce();
 
 Engine* EngineFactory::Create(const EngineOptions& options) {
+    auto rc = RegisterResourcesOnce();
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "register llm_cuda resources failed: " << GetRetCodeStr(rc);
+        return nullptr;
+    }
+
     auto engine = new LlmCudaEngine();
     if (engine) {
-        auto rc = engine->Init(options);
+        rc = engine->Init(options);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init llm cuda engine failed: " << GetRetCodeStr(rc);
             delete engine;
