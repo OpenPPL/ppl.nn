@@ -46,6 +46,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/opmx/silu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/swiglu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/swish_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/vision_embedding_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/key_value_cache_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/multi_head_attention_op.h"
@@ -173,6 +174,7 @@ void RegisterBuiltinOpImpls() {
     // T
     // U
     // V
+    RegisterOptKernelCreator<opmx::VisionEmbeddingOp>("opmx", "VisionEmbedding", 1, 1);
     // W
     // X
     // Y
