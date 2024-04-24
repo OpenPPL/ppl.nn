@@ -38,13 +38,13 @@ table NodeInfo {
 }
 
 enum ConstantFlag : uint32 {
-    EXTERNAL_DATA = 1,
+    EXTERNAL_FILE = 1,
 }
 
 table Constant {
     edge_id: uint32;
     flags: uint32; // or-ed flags
-    // if EXTERNAL_DATA is set
+    // if EXTERNAL_FILE is set
     //   - `data_offset` == UINT64_MAX: use the defalut gen name function to get the file name,
     //                                  `data_bytes` is the size of data
     //   - `data_offset` < UINT64_MAX: file name is stored in GraphData::shared_data + `data_offset`,

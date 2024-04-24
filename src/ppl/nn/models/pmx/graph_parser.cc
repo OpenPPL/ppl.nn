@@ -156,7 +156,7 @@ public:
     RetCode ForEach(const function<RetCode(edgeid_t, uint64_t)>& f) const override {
         for (auto fb_constant = fb_constants_->begin(); fb_constant != fb_constants_->end(); ++fb_constant) {
             uint32_t flags = fb_constant->flags();
-            if (flags & ConstantFlag_EXTERNAL_DATA) {
+            if (flags & ConstantFlag_EXTERNAL_FILE) {
                 if (fb_constant->data_offset() == UINT64_MAX) {
                     auto status = f(fb_constant->edge_id(), fb_constant->data_bytes());
                     if (status != RC_SUCCESS) {
@@ -197,7 +197,7 @@ public:
             }
 
             uint32_t flags = fb_constant->flags();
-            if (flags & ConstantFlag_EXTERNAL_DATA) {
+            if (flags & ConstantFlag_EXTERNAL_FILE) {
                 string path;
                 if (fb_constant->data_offset() == UINT64_MAX) {
                     path = external_data_dir_ + "/" +

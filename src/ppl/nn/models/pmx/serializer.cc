@@ -282,7 +282,7 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const SaveModelOpti
         uint64_t offset = UINT64_MAX;
 
         if (options.external_data_dir && options.external_data_dir[0] != '\0') {
-            flags |= ConstantFlag_EXTERNAL_DATA;
+            flags |= ConstantFlag_EXTERNAL_FILE;
             const string fname = utils::GenOutputFileName(edge->GetName());
             const string path = string(options.external_data_dir) + "/" + fname;
             auto rc = SaveData(data, path);
