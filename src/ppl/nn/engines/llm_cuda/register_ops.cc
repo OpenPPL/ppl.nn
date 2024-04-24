@@ -28,38 +28,36 @@
 #include "ppl/nn/engines/llm_cuda/ops/onnx/split_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/sub_op.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/column_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/geglu_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/gelu_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/key_value_cache_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/layer_norm_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_column_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_reduce_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_row_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/moe_select_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/multi_head_attention_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/parallel_embedding_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/rms_norm_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/rotary_position_embedding_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/rotary_2d_position_embedding_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/row_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/silu_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/swiglu_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/swish_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/geglu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/gelu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/key_value_cache_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/layer_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/moe_column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/moe_reduce_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/moe_row_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/moe_select_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/multi_head_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/parallel_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/rms_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/rotary_position_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/row_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/silu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/swiglu_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/swish_op.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/key_value_cache_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_cache_attention_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/position_index_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_position_embedding_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_2d_position_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/key_value_cache_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/multi_head_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/multi_head_cache_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/position_index_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/rotary_position_embedding_op.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/column_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_dequantize_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_rms_norm_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/row_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_dequantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_quantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_quantize_rms_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/row_parallel_linear_op.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -130,49 +128,48 @@ void RegisterBuiltinOpImpls() {
     // Z
 
     /*                                                                        */
-    /*                                 PMX                                    */
+    /*                                 OPMX                                    */
     /*                                                                        */
     // A
     // B
     // C
-    RegisterOptKernelCreator<pmx::ColumnParallelLinearOp>("pmx", "ColumnParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::ColumnParallelLinearOp>("opmx", "ColumnParallelLinear", 1, 1);
     // D
     // E
     // F
     // G
-    RegisterOptKernelCreator<pmx::GeGLUOp>("pmx", "GeGLU", 1, 1);
-    RegisterOptKernelCreator<pmx::GELUOp>("pmx", "GELU", 1, 1);
+    RegisterOptKernelCreator<opmx::GeGLUOp>("opmx", "GeGLU", 1, 1);
+    RegisterOptKernelCreator<opmx::GELUOp>("opmx", "GELU", 1, 1);
     // H
     // I
     // J
     // K
-    RegisterOptKernelCreator<pmx::KeyValueCacheOp>("pmx", "KeyValueCache", 1, 1);
+    RegisterOptKernelCreator<opmx::KeyValueCacheOp>("opmx", "KeyValueCache", 1, 1);
     // L
-    RegisterOptKernelCreator<pmx::LayerNormOp>("pmx", "LayerNorm", 1, 1);
-    RegisterOptKernelCreator<pmx::LinearOp>("pmx", "Linear", 1, 1);
+    RegisterOptKernelCreator<opmx::LayerNormOp>("opmx", "LayerNorm", 1, 1);
+    RegisterOptKernelCreator<opmx::LinearOp>("opmx", "Linear", 1, 1);
 
     // M
-    RegisterOptKernelCreator<pmx::MoeColumnParallelLinearOp>("pmx", "MoeColumnParallelLinear", 1, 1);
-    RegisterOptKernelCreator<pmx::MoeReduceOp>("pmx", "MoeReduce", 1, 1);
-    RegisterOptKernelCreator<pmx::MoeRowParallelLinearOp>("pmx", "MoeRowParallelLinear", 1, 1);
-    RegisterOptKernelCreator<pmx::MoeSelectOp>("pmx", "MoeSelect", 1, 1);
+    RegisterOptKernelCreator<opmx::MoeColumnParallelLinearOp>("opmx", "MoeColumnParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::MoeReduceOp>("opmx", "MoeReduce", 1, 1);
+    RegisterOptKernelCreator<opmx::MoeRowParallelLinearOp>("opmx", "MoeRowParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::MoeSelectOp>("opmx", "MoeSelect", 1, 1);
     // N
-    RegisterOptKernelCreator<pmx::MultiHeadAttentionOp>("pmx", "MultiHeadAttention", 1, 1);
+    RegisterOptKernelCreator<opmx::MultiHeadAttentionOp>("opmx", "MultiHeadAttention", 1, 1);
 
     // N
     // O
     // P
-    RegisterOptKernelCreator<pmx::ParallelEmbeddingOp>("pmx", "ParallelEmbedding", 1, 1);
+    RegisterOptKernelCreator<opmx::ParallelEmbeddingOp>("opmx", "ParallelEmbedding", 1, 1);
     // Q
     // R
-    RegisterOptKernelCreator<pmx::RMSNormOp>("pmx", "RMSNorm", 1, 1);
-    RegisterOptKernelCreator<pmx::RotaryPositionEmbeddingOp>("pmx", "RotaryPositionEmbedding", 1, 1);
-    RegisterOptKernelCreator<pmx::Rotary2DPositionEmbeddingOp>("pmx", "Rotary2DPositionEmbedding", 1, 1);
-    RegisterOptKernelCreator<pmx::RowParallelLinearOp>("pmx", "RowParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::RMSNormOp>("opmx", "RMSNorm", 1, 1);
+    RegisterOptKernelCreator<opmx::RotaryPositionEmbeddingOp>("opmx", "RotaryPositionEmbedding", 1, 1);
+    RegisterOptKernelCreator<opmx::RowParallelLinearOp>("opmx", "RowParallelLinear", 1, 1);
     // S
-    RegisterOptKernelCreator<pmx::SiLUOp>("pmx", "SiLU", 1, 1);
-    RegisterOptKernelCreator<pmx::SwiGLUOp>("pmx", "SwiGLU", 1, 1);
-    RegisterOptKernelCreator<pmx::SwishOp>("pmx", "Swish", 1, 1);
+    RegisterOptKernelCreator<opmx::SiLUOp>("opmx", "SiLU", 1, 1);
+    RegisterOptKernelCreator<opmx::SwiGLUOp>("opmx", "SwiGLU", 1, 1);
+    RegisterOptKernelCreator<opmx::SwishOp>("opmx", "Swish", 1, 1);
     // T
     // U
     // V
@@ -182,7 +179,7 @@ void RegisterBuiltinOpImpls() {
     // Z
 
     /*                                                                        */
-    /*                        PMX.DYNAMIC_BATCHING                            */
+    /*                        OPMX.DYNAMIC_BATCHING                            */
     /*                                                                        */
     // A
     // B
@@ -195,19 +192,18 @@ void RegisterBuiltinOpImpls() {
     // I
     // J
     // K
-    RegisterOptKernelCreator<pmx::DynamicBatchingKeyValueCacheOp>("pmx.dynamic_batching", "KeyValueCache", 1, 1);
+    RegisterOptKernelCreator<opmx::DynamicBatchingKeyValueCacheOp>("opmx.dynamic_batching", "KeyValueCache", 1, 1);
     // L
     // M
     // N
-    RegisterOptKernelCreator<pmx::DynamicBatchingMultiHeadAttentionOp>("pmx.dynamic_batching", "MultiHeadAttention", 1, 1);
-    RegisterOptKernelCreator<pmx::DynamicBatchingMultiHeadCacheAttentionOp>("pmx.dynamic_batching", "MultiHeadCacheAttention", 1, 1);
+    RegisterOptKernelCreator<opmx::DynamicBatchingMultiHeadAttentionOp>("opmx.dynamic_batching", "MultiHeadAttention", 1, 1);
+    RegisterOptKernelCreator<opmx::DynamicBatchingMultiHeadCacheAttentionOp>("opmx.dynamic_batching", "MultiHeadCacheAttention", 1, 1);
     // O
     // P
-    RegisterOptKernelCreator<pmx::DynamicBatchingPositionIndexOp>("pmx.dynamic_batching", "PositionIndex", 1, 1);
+    RegisterOptKernelCreator<opmx::DynamicBatchingPositionIndexOp>("opmx.dynamic_batching", "PositionIndex", 1, 1);
     // Q
     // R
-    RegisterOptKernelCreator<pmx::DynamicBatchingRotaryPositionEmbeddingOp>("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1);
-    RegisterOptKernelCreator<pmx::DynamicBatchingRotary2DPositionEmbeddingOp>("pmx.dynamic_batching", "Rotary2DPositionEmbedding", 1, 1);
+    RegisterOptKernelCreator<opmx::DynamicBatchingRotaryPositionEmbeddingOp>("opmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1);
 
     // S
     // T
@@ -219,12 +215,12 @@ void RegisterBuiltinOpImpls() {
     // Z
 
     /*                                                                        */
-    /*                        PMX.I8I8                                        */
+    /*                        OPMX.I8I8                                        */
     /*                                                                        */
     // A
     // B
     // C
-    RegisterOptKernelCreator<pmx::I8I8ColumnParallelLinearOp>("pmx.i8i8", "ColumnParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::I8I8ColumnParallelLinearOp>("opmx.i8i8", "ColumnParallelLinear", 1, 1);
     // D
     // E
     // F
@@ -237,13 +233,13 @@ void RegisterBuiltinOpImpls() {
     // M
     // N
     // O
-    RegisterOptKernelCreator<pmx::I8I8OnlineDequantizeOp>("pmx.i8i8", "OnlineDequantize", 1, 1);
-    RegisterOptKernelCreator<pmx::I8I8OnlineQuantizeOp>("pmx.i8i8", "OnlineQuantize", 1, 1);
-    RegisterOptKernelCreator<pmx::I8I8OnlineQuantizeRMSNormOp>("pmx.i8i8", "OnlineQuantizeRMSNorm", 1, 1);
+    RegisterOptKernelCreator<opmx::I8I8OnlineDequantizeOp>("opmx.i8i8", "OnlineDequantize", 1, 1);
+    RegisterOptKernelCreator<opmx::I8I8OnlineQuantizeOp>("opmx.i8i8", "OnlineQuantize", 1, 1);
+    RegisterOptKernelCreator<opmx::I8I8OnlineQuantizeRMSNormOp>("opmx.i8i8", "OnlineQuantizeRMSNorm", 1, 1);
     // P
     // Q
     // R
-    RegisterOptKernelCreator<pmx::I8I8RowParallelLinearOp>("pmx.i8i8", "RowParallelLinear", 1, 1);
+    RegisterOptKernelCreator<opmx::I8I8RowParallelLinearOp>("opmx.i8i8", "RowParallelLinear", 1, 1);
     // S
     // T
     // U
