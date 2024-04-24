@@ -17,7 +17,7 @@
 
 #include "fuse_rms_norm_pass.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_rms_norm_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_quantize_rms_norm_op.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace i8i8 {
 
@@ -27,7 +27,7 @@ OptPassStatus FuseRMSNormPass(const OptKernelOptions& options)
 
     for (auto it = options.graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto norm_node = it->Get();
-        if (norm_node->GetType().domain == "pmx" && norm_node->GetType().name == "RMSNorm") {
+        if (norm_node->GetType().domain == "opmx" && norm_node->GetType().name == "RMSNorm") {
 
             auto topo = options.graph->topo.get();
             auto kernels = &options.partition_info->kernels;
@@ -37,7 +37,7 @@ OptPassStatus FuseRMSNormPass(const OptKernelOptions& options)
 
             if (output_edge->CalcConsumerCount() == 1
                 && q_node
-                && q_node->GetType().domain == "pmx.i8i8"
+                && q_node->GetType().domain == "opmx.i8i8"
                 && q_node->GetType().name == "OnlineQuantize")
             {
                 status.graph_modified = status.graph_modified || true;
@@ -57,8 +57,8 @@ OptPassStatus FuseRMSNormPass(const OptKernelOptions& options)
                 q_output_edge->SetProducer(norm_node->GetId());
                 scale_edge->SetProducer(norm_node->GetId());
 
-                norm_node->SetType({"pmx.i8i8", "OnlineQuantizeRMSNorm", 1});
-                auto q_norm_kernel = new pmx::I8I8OnlineQuantizeRMSNormOp(norm_node);
+                norm_node->SetType({"opmx.i8i8", "OnlineQuantizeRMSNorm", 1});
+                auto q_norm_kernel = new opmx::I8I8OnlineQuantizeRMSNormOp(norm_node);
                 status.retcode = q_norm_kernel->Init(options);
                 if (ppl::common::RC_SUCCESS != status.retcode) {
                     LOG(ERROR) << "init kernel[" << q_norm_kernel->GetNode()->GetName()

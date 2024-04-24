@@ -17,12 +17,12 @@
 
 #include "quantization_pass.h"
 
-#include "ppl/nn/params/pmx/column_parallel_linear_param.h"
+#include "ppl/nn/params/opmx/column_parallel_linear_param.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_quantize_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/online_dequantize_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/column_parallel_linear_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/i8i8/row_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_quantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/online_dequantize_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/i8i8/row_parallel_linear_op.h"
 
 #include "ppl/kernel/llm/cuda/pmx/i8i8/quantize.h"
 
@@ -261,9 +261,9 @@ static ppl::common::RetCode QuantizeLinear(
     auto q_node = node_ret_pair.first;
     if (!node_ret_pair.second) {
         // we shoud check the quantization method of q_node
-        if (q_node->GetType().domain != "pmx.i8i8" || q_node->GetType().name != "OnlineQuantize") {
+        if (q_node->GetType().domain != "opmx.i8i8" || q_node->GetType().name != "OnlineQuantize") {
             LOG(ERROR) << "quantize node[" << q_node_name << "] for input[" << input_edge->GetName() << "] exists, "
-                << "expect for [pmx.i8i8:OnlineQuantize] but given ["
+                << "expect for [opmx.i8i8:OnlineQuantize] but given ["
                 << q_node->GetType().domain << ":" << q_node->GetType().name << "]";
             return ppl::common::RC_EXISTS;
         }
@@ -271,7 +271,7 @@ static ppl::common::RetCode QuantizeLinear(
         q_node_exists = true;
     } else {
         LOG(DEBUG) << "add quantize node[" << q_node_name << "] for input[" << input_edge->GetName() << "] success";
-        q_node->SetType({"pmx.i8i8", "OnlineQuantize", 1});
+        q_node->SetType({"opmx.i8i8", "OnlineQuantize", 1});
     }
 
     auto dq_node_name = GetDequantizeNodeName(output_edge->GetName());
@@ -282,7 +282,7 @@ static ppl::common::RetCode QuantizeLinear(
     }
     LOG(DEBUG) << "add dequantize node[" << dq_node_name << "] for output[" << output_edge->GetName() << "] success";
     auto dq_node = node_ret_pair.first;
-    dq_node->SetType({"pmx.i8i8", "OnlineDequantize", 1});
+    dq_node->SetType({"opmx.i8i8", "OnlineDequantize", 1});
 
     bool input_has_quantized = q_node_exists && q_input_exits && input_scale_exits;
     if (!input_has_quantized && (q_node_exists || q_input_exits || input_scale_exits)) {
@@ -347,7 +347,7 @@ static ppl::common::RetCode QuantizeLinear(
     {
         // opt kernels
         if (!input_has_quantized) {
-            auto q_kernel = std::unique_ptr<LlmCudaOptKernel>(new pmx::I8I8OnlineQuantizeOp(q_node));
+            auto q_kernel = std::unique_ptr<LlmCudaOptKernel>(new opmx::I8I8OnlineQuantizeOp(q_node));
             auto rc = q_kernel->Init(options);
             if (ppl::common::RC_SUCCESS != rc) {
                 LOG(ERROR) << "init kernel[" << q_kernel->GetNode()->GetName() << " failed: " << ppl::common::GetRetCodeStr(rc);
@@ -356,13 +356,13 @@ static ppl::common::RetCode QuantizeLinear(
             kernels->emplace(q_node->GetId(), std::move(q_kernel));
         }
 
-        auto dq_kernel = std::unique_ptr<LlmCudaOptKernel>(new pmx::I8I8OnlineDequantizeOp(dq_node));
+        auto dq_kernel = std::unique_ptr<LlmCudaOptKernel>(new opmx::I8I8OnlineDequantizeOp(dq_node));
         auto rc = dq_kernel->Init(options);
         if (ppl::common::RC_SUCCESS != rc) {
             LOG(ERROR) << "init kernel[" << dq_kernel->GetNode()->GetName() << " failed: " << ppl::common::GetRetCodeStr(rc);
             return rc;
         }
-        ((pmx::I8I8OnlineDequantizeOp*)(dq_kernel.get()))->GetParam()->bias_term = bias_term;
+        ((opmx::I8I8OnlineDequantizeOp*)(dq_kernel.get()))->GetParam()->bias_term = bias_term;
         kernels->emplace(dq_node->GetId(), std::move(dq_kernel));
     }
 
@@ -418,9 +418,9 @@ static ppl::common::RetCode QuantizeLinearSelfDequant(
     auto q_node = node_ret_pair.first;
     if (!node_ret_pair.second) {
         // we shoud check the quantization method of q_node
-        if (q_node->GetType().domain != "pmx.i8i8" || q_node->GetType().name != "OnlineQuantize") {
+        if (q_node->GetType().domain != "opmx.i8i8" || q_node->GetType().name != "OnlineQuantize") {
             LOG(ERROR) << "quantize node[" << q_node_name << "] for input[" << input_edge->GetName() << "] exists, "
-                << "expect for [pmx.i8i8:OnlineQuantize] but given ["
+                << "expect for [opmx.i8i8:OnlineQuantize] but given ["
                 << q_node->GetType().domain << ":" << q_node->GetType().name << "]";
             return ppl::common::RC_EXISTS;
         }
@@ -428,7 +428,7 @@ static ppl::common::RetCode QuantizeLinearSelfDequant(
         q_node_exists = true;
     } else {
         LOG(DEBUG) << "add quantize node[" << q_node_name << "] for input[" << input_edge->GetName() << "] success";
-        q_node->SetType({"pmx.i8i8", "OnlineQuantize", 1});
+        q_node->SetType({"opmx.i8i8", "OnlineQuantize", 1});
     }
 
     bool input_has_quantized = q_node_exists && q_input_exits && input_scale_exits;
@@ -473,7 +473,7 @@ static ppl::common::RetCode QuantizeLinearSelfDequant(
     {
         // opt kernels
         if (!input_has_quantized) {
-            auto q_kernel = std::unique_ptr<LlmCudaOptKernel>(new pmx::I8I8OnlineQuantizeOp(q_node));
+            auto q_kernel = std::unique_ptr<LlmCudaOptKernel>(new opmx::I8I8OnlineQuantizeOp(q_node));
             auto rc = q_kernel->Init(options);
             if (ppl::common::RC_SUCCESS != rc) {
                 LOG(ERROR) << "init kernel[" << q_kernel->GetNode()->GetName() << " failed: " << ppl::common::GetRetCodeStr(rc);
@@ -489,7 +489,7 @@ static ppl::common::RetCode QuantizeLinearSelfDequant(
 static OptPassStatus QuantizeColunmParallelLinear(ir::Node* linear_node, const OptKernelOptions& options) {
     OptPassStatus status = {ppl::common::RC_SUCCESS, false};
 
-    auto param = std::static_pointer_cast<ppl::nn::pmx::ColumnParallelLinearParam>(options.graph->data->attrs[linear_node->GetId()]);
+    auto param = std::static_pointer_cast<ppl::nn::opmx::ColumnParallelLinearParam>(options.graph->data->attrs[linear_node->GetId()]);
     const auto in_features = param->in_features;
     const auto out_features_per_part = param->out_features / options.device->GetTensorParallelNcclParam()->size;
     if ((in_features % 32 != 0) || (out_features_per_part % 32 != 0 )) {
@@ -528,8 +528,8 @@ static OptPassStatus QuantizeColunmParallelLinear(ir::Node* linear_node, const O
 
     if (status.graph_modified) {
         // change ColunmParallelLinear to i8i8.ColunmParallelLinear
-        linear_node->SetType({"pmx.i8i8", "ColumnParallelLinear", 1});
-        auto q_linear_kernel = new pmx::I8I8ColumnParallelLinearOp(linear_node);
+        linear_node->SetType({"opmx.i8i8", "ColumnParallelLinear", 1});
+        auto q_linear_kernel = new opmx::I8I8ColumnParallelLinearOp(linear_node);
         status.retcode = q_linear_kernel->Init(options);
         if (ppl::common::RC_SUCCESS != status.retcode) {
             LOG(ERROR) << "init kernel[" << q_linear_kernel->GetNode()->GetName()
@@ -546,7 +546,7 @@ static OptPassStatus QuantizeColunmParallelLinear(ir::Node* linear_node, const O
 static OptPassStatus QuantizeRowParallelLinear(ir::Node* linear_node, const OptKernelOptions& options) {
     OptPassStatus status = {ppl::common::RC_SUCCESS, false};
 
-    auto param = std::static_pointer_cast<ppl::nn::pmx::RowParallelLinearParam>(options.graph->data->attrs[linear_node->GetId()]);
+    auto param = std::static_pointer_cast<ppl::nn::opmx::RowParallelLinearParam>(options.graph->data->attrs[linear_node->GetId()]);
     const auto in_features_per_part = param->in_features / options.device->GetTensorParallelNcclParam()->size;
     const auto out_features = param->out_features;
     if ((in_features_per_part % 32 != 0) || (out_features % 32 != 0 )) {
@@ -577,8 +577,8 @@ static OptPassStatus QuantizeRowParallelLinear(ir::Node* linear_node, const OptK
 
     if (status.graph_modified) {
         // change RowParallelLinear to i8i8.RowParallelLinear
-        linear_node->SetType({"pmx.i8i8", "RowParallelLinear", 1});
-        auto q_linear_kernel = new pmx::I8I8RowParallelLinearOp(linear_node);
+        linear_node->SetType({"opmx.i8i8", "RowParallelLinear", 1});
+        auto q_linear_kernel = new opmx::I8I8RowParallelLinearOp(linear_node);
         status.retcode = q_linear_kernel->Init(options);
         if (ppl::common::RC_SUCCESS != status.retcode) {
             LOG(ERROR) << "init kernel[" << q_linear_kernel->GetNode()->GetName()
@@ -603,14 +603,14 @@ OptPassStatus QuantizationPass(const OptKernelOptions& options)
 
     for (auto it = options.graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
-        if (node->GetType().domain == "pmx" && node->GetType().name == "ColumnParallelLinear") {
+        if (node->GetType().domain == "opmx" && node->GetType().name == "ColumnParallelLinear") {
             auto ret = QuantizeColunmParallelLinear(node, options);
             status.graph_modified = status.graph_modified || ret.graph_modified;
             status.retcode = ret.retcode;
             if (ppl::common::RC_SUCCESS != status.retcode)
                 return status;
         }
-        if (node->GetType().domain == "pmx" && node->GetType().name == "RowParallelLinear") {
+        if (node->GetType().domain == "opmx" && node->GetType().name == "RowParallelLinear") {
             auto ret = QuantizeRowParallelLinear(node, options);
             status.graph_modified = status.graph_modified || ret.graph_modified;
             status.retcode = ret.retcode;

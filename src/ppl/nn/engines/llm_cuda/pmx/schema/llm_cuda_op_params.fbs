@@ -1,4 +1,4 @@
-namespace ppl.nn.llm.cuda.pmx;
+namespace ppl.nn.llm.cuda.opmx;
 
 table ColumnParallelLinearParam {
     in_features: int32;

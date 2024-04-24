@@ -1,4 +1,4 @@
-namespace ppl.nn.llm.cuda.pmx.i8i8;
+namespace ppl.nn.llm.cuda.opmx.i8i8;
 
 table OnlineDequantizeParam {
     bias_term: bool;
