@@ -91,21 +91,41 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
         LOG(ERROR) << "currently only support fp16";
         return ppl::common::RC_UNSUPPORTED;
     }
-    
-    return ppl::kernel::llm::cuda::pmx::layer_norm(
-        GetStream(),
-        input_shape,
-        input_data,
-        weight->GetBufferPtr(),
-        bias->GetBufferPtr(),
-        skip_in_data,
-        param_->axis,
-        param_->elementwise_affine,
-        param_->eps,
-        param_->skip_term,
-        output->GetBufferPtr(),
-        skip_out->GetBufferPtr()
-    );
+
+    ppl::common::RetCode code;
+    if (param_->skip_term) {
+        code = ppl::kernel::llm::cuda::pmx::layer_norm(
+            GetStream(),
+            input_shape,
+            input_data,
+            weight->GetBufferPtr(),
+            bias->GetBufferPtr(),
+            skip_in_data,
+            param_->axis,
+            param_->elementwise_affine,
+            param_->eps,
+            param_->skip_term,
+            output->GetBufferPtr(),
+            skip_out->GetBufferPtr()
+        );
+    }
+    else {
+        code = ppl::kernel::llm::cuda::pmx::layer_norm(
+            GetStream(),
+            input_shape,
+            input_data,
+            weight->GetBufferPtr(),
+            bias->GetBufferPtr(),
+            skip_in_data,
+            param_->axis,
+            param_->elementwise_affine,
+            param_->eps,
+            param_->skip_term,
+            output->GetBufferPtr()
+        );
+    }
+
+    return code;
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

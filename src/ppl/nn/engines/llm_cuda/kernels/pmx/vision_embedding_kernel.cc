@@ -157,41 +157,21 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     }
     size_t size = batch_size * hidden_dim * grid * grid * sizeof(half);
 
-    BufferDesc workspace_desc;
-    auto status1 = GetCudaDevice()->AllocTmpBuffer(workspace_size, &workspace_desc);
+    workspace_size = ((workspace_size + sizeof(half)) >> 1) << 1;
+    size_t total_size = workspace_size + size * 2;
+    BufferDesc buffers_desc;
+    auto status1 = GetCudaDevice()->AllocTmpBuffer(total_size, &buffers_desc);
     if (status1 != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc workspace buffer size[" << workspace_size << "] for kernel["
+        LOG(ERROR) << "alloc buffers size[" << total_size << "] for kernel["
                    << GetName() << "] failed: " << ppl::common::GetRetCodeStr(status1);
         return status1;
     }
-    ppl::common::Destructor workspace_guard([this, &workspace_desc]() -> void {
-        GetCudaDevice()->FreeTmpBuffer(&workspace_desc);
+    ppl::common::Destructor patch1_guard([this, &buffers_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&buffers_desc);
     });
-    void* workspace = workspace_desc.addr;
-
-    BufferDesc patch_embeds0_desc;
-    status1 = GetCudaDevice()->AllocTmpBuffer(size, &patch_embeds0_desc);
-    if (status1 != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc patch 0 buffer size[" << size << "] for kernel["
-                   << GetName() << "] failed: " << ppl::common::GetRetCodeStr(status1);
-        return status1;
-    }
-    ppl::common::Destructor patch0_guard([this, &patch_embeds0_desc]() -> void {
-        GetCudaDevice()->FreeTmpBuffer(&patch_embeds0_desc);
-    });
-    void* patch_embeds0 = patch_embeds0_desc.addr;
-
-    BufferDesc patch_embeds1_desc;
-    status1 = GetCudaDevice()->AllocTmpBuffer(size, &patch_embeds1_desc);
-    if (status1 != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc patch 1 buffer size[" << size << "] for kernel["
-                   << GetName() << "] failed: " << ppl::common::GetRetCodeStr(status1);
-        return status1;
-    }
-    ppl::common::Destructor patch1_guard([this, &patch_embeds1_desc]() -> void {
-        GetCudaDevice()->FreeTmpBuffer(&patch_embeds1_desc);
-    });
-    void* patch_embeds1 = patch_embeds1_desc.addr;
+    void* workspace = buffers_desc.addr;
+    void* patch_embeds0 = workspace + workspace_size;
+    void* patch_embeds1 = patch_embeds0 + size;
 
     ppl::kernel::llm::cuda::pmx::vision_embedding(
         GetStream(),
