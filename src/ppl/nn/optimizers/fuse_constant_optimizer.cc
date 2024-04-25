@@ -149,20 +149,53 @@ static RetCode FuseConvMul(ir::Graph* graph) {
             }
 
             // fuse conv & mul
-            float* conv_filter_ptr = (float*)constants[conv_filter_edge->GetId()].data.GetData();
-            float* conv_bias_ptr = nullptr;
-            if (conv_bias_edge) {
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
+            const int64_t chw = conv_filter_dims[1] * conv_filter_dims[2] * conv_filter_dims[3];
+            auto conv_filter_ref = constants.find(conv_filter_edge->GetId());
+            if (conv_filter_ref->second.data.GetPermission() & Mmap::WRITE) {
+                float* conv_filter_ptr = (float*)conv_filter_ref->second.data.GetData();
+                for (uint32_t c = 0; c < channels; c++) {
+                    for (int64_t i = 0; i < chw; i++) {
+                        // scale * (SUM(filter * x) + bias) -----> SUM(scale * filter * x) + scale * bias
+                        conv_filter_ptr[c * chw + i] *= scale_data[c];
+                    }
+                }
+            } else {
+                Mmap new_data;
+                auto rc = new_data.Init(channels * chw * sizeof(float));
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "allocate " << channels * chw * sizeof(float) << " bytes failed.";
+                    continue;
+                }
+                auto new_ptr = (float*)new_data.GetData();
+                auto conv_filter_ptr = (float*)conv_filter_ref->second.data.GetData();
+                for (uint32_t c = 0; c < channels; c++) {
+                    for (int64_t i = 0; i < chw; i++) {
+                        new_ptr[c * chw + i] = conv_filter_ptr[c * chw + i] * scale_data[c];
+                    }
+                }
+                conv_filter_ref->second.data = std::move(new_data);
             }
 
-            const int64_t chw = conv_filter_dims[1] * conv_filter_dims[2] * conv_filter_dims[3];
-            for (uint32_t c = 0; c < channels; c++) {
-                // scale * (SUM(filter * x) + bias) -----> SUM(scale * filter * x) + scale * bias
-                for (int64_t i = 0; i < chw; i++) {
-                    conv_filter_ptr[c * chw + i] *= scale_data[c];
-                }
-                if (conv_bias_ptr) {
-                    conv_bias_ptr[c] = scale_data[c] * conv_bias_ptr[c];
+            if (conv_bias_edge) {
+                auto conv_bias_ref = constants.find(conv_bias_edge->GetId());
+                if(conv_bias_ref->second.data.GetPermission() & Mmap::WRITE) {
+                    float* conv_bias_ptr = (float*)conv_bias_ref->second.data.GetData();
+                    for (uint32_t c = 0; c < channels; c++) {
+                        conv_bias_ptr[c] = scale_data[c] * conv_bias_ptr[c];
+                    }
+                } else {
+                    Mmap new_data;
+                    auto rc = new_data.Init(channels * sizeof(float));
+                    if (rc != RC_SUCCESS) {
+                        LOG(ERROR) << "allocate " << channels * sizeof(float) << " bytes failed.";
+                        continue;
+                    }
+                    auto new_ptr = (float*)new_data.GetData();
+                    auto conv_bias_ptr = (float*)conv_bias_ref->second.data.GetData();
+                    for (uint32_t c = 0; c < channels; c++) {
+                        new_ptr[c] = scale_data[c] * conv_bias_ptr[c];
+                    }
+                    conv_bias_ref->second.data = std::move(new_data);
                 }
             }
 
