@@ -44,7 +44,8 @@ public:
     virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const Resources&,
                                            const LoadModelOptions&) = 0;
 
-    virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
+    /** @brief mark a tensor as reserved in order to avoid being fused and reused duing inferencing */
+    virtual ppl::common::RetCode ReserveTensor(const char* tensor_name) = 0;
 
     /** @note MUST be called before `CreateRuntime()` */
     virtual ppl::common::RetCode Preprocess() = 0;

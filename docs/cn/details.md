@@ -118,7 +118,7 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 
 `ir::Graph` 有两个成员：`topo` 和 `data`。
 
-`topo` 表示图的拓扑关系，主要是一个有向无环图（DAG），包括节点（node）和节点之间的有向边（edge）。node 有 input，output 和 extra input；edge 有 producer 和 consumer。edge 可能是 input，output 或 constant。注意这里的 input 和 output 是通过解析模型配置而不是拓扑关系得到的。举个例子，业务想要将某个中间 edge 作为输出，需要通过 `builder->Configure()` 来标记需要保留，也可以把需要输出的中间 edge 加到 output 中（使用 `topo->MarkAsOutput()`）。如果采用后者，那么解析出来的 topo 中会包含要保留的中间结果，尽管这些中间结果并不是拓扑结构中的 output。
+`topo` 表示图的拓扑关系，主要是一个有向无环图（DAG），包括节点（node）和节点之间的有向边（edge）。node 有 input，output 和 extra input；edge 有 producer 和 consumer。edge 可能是 input，output 或 constant。注意这里的 input 和 output 是通过解析模型配置而不是拓扑关系得到的。举个例子，业务想要将某个中间 edge 作为输出，需要通过 `builder->ReserveTensor()` 来标记需要保留，也可以把需要输出的中间 edge 加到 output 中（使用 `topo->MarkAsOutput()`）。如果采用后者，那么解析出来的 topo 中会包含要保留的中间结果，尽管这些中间结果并不是拓扑结构中的 output。
 
 关于 extra input 简单说下，这个主要是包含 `onnx::GraphProto` 的算子会用到的概念。将 `onnx::GraphProto` 类比成编程语言中的 block，edge 类比成 block 中的变量，也就是一个 `onnx::GraphProto` 中的 edge 可以来自外层的 `onnx::GraphProto`。举个例子，某个 `If` 算子 O 中有一个 subgraph S，其中有一条边 E，可以来自包含这个 `If` 算子的 graph G。那么对于算子 O 来说，edge E 就是这个 node 的 extra input；对于 subgraph S 来说，E 也是 extra input，在 graph G 中，E 就是一条正常的边。
 
@@ -155,7 +155,7 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 
 除了 plain 的释放是真正归还给系统外，mru，bestfit，compact 都是内存管理器负责回收管理，不会还给系统，可能会造成系统内存压力，可以考虑定一个条件（例如本次使用的总内存小于已分配内存的 1/2），在满足条件的情况下重新 realloc（TODO）。目前开源的 cpu（x86，arm，riscv）以及 cuda 默认采用 compact 策略。
 
-默认保留 input/output/constant 的内存，其它中间结果的 tensor 内存会被回收复用。如果需要保留某个中间结果，需要通过 `builder->Configure()` 来指定，如果不在 builder 的时候指定，该 tensor 可能会被图优化删掉。对于目前的串行执行策略，框架预先对节点拓扑排序，然后记录每个 tensor 的最后一个使用到它的 kernel，当该 kernel 执行完之后，会把最后一个使用者是它的 tensor 释放，回收该 tensor 占用的内存。tensor 最后的使用者信息保存在 `RuntimeAuxInfo::edge_last_consumer`。
+默认保留 input/output/constant 的内存，其它中间结果的 tensor 内存会被回收复用。如果需要保留某个中间结果，需要通过 `builder->ReserveTensor()` 来指定，如果不在 builder 的时候指定，该 tensor 可能会被图优化删掉。对于目前的串行执行策略，框架预先对节点拓扑排序，然后记录每个 tensor 的最后一个使用到它的 kernel，当该 kernel 执行完之后，会把最后一个使用者是它的 tensor 释放，回收该 tensor 占用的内存。tensor 最后的使用者信息保存在 `RuntimeAuxInfo::edge_last_consumer`。
 
 通过派生 `Device` 类来实现不同的内存管理策略，可以通过 `EngineOptions` 选项指定。
 
@@ -167,7 +167,7 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 
 # 执行模型的一部分
 
-pplnn 支持执行模型的某一部分（partition），通过指定 inputs 和 outputs 可以确定要执行的 partition。注意如果要执行的 partition 的输入输出是中间输出的 tensor，需要先通过 `builder->Configure()` 来标记这些 tensor 防止被复用。通过 `RuntimeImpl::CreatePartitionRunner()` 创建一个 `PartitionRunner` 实例来执行指定的 partition。
+pplnn 支持执行模型的某一部分（partition），通过指定 inputs 和 outputs 可以确定要执行的 partition。注意如果要执行的 partition 的输入输出是中间输出的 tensor，需要先通过 `builder->ReserveTensor()` 来标记这些 tensor 防止被复用。通过 `RuntimeImpl::CreatePartitionRunner()` 创建一个 `PartitionRunner` 实例来执行指定的 partition。
 
 # PMX 格式
 
