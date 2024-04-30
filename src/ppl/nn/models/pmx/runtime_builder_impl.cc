@@ -183,37 +183,15 @@ RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, util
     return RC_UNSUPPORTED;
 }
 
-/* -------------------------------------------------------------------------- */
-
-RetCode RuntimeBuilderImpl::ReserveTensor(RuntimeBuilderImpl* impl, va_list args) {
-    auto tensor_name = va_arg(args, const char*);
-
-    auto edge = impl->topo_->GetEdge(tensor_name);
+RetCode RuntimeBuilderImpl::ReserveTensor(const char* tensor_name) {
+    auto edge = topo_->GetEdge(tensor_name);
     if (!edge) {
         LOG(ERROR) << "ReserveTensor: cannot find tensor named[" << tensor_name << "]";
         return RC_NOT_FOUND;
     }
 
-    impl->resource_.reserved_edgeids.insert(edge->GetId());
+    resource_.reserved_edgeids.insert(edge->GetId());
     return RC_SUCCESS;
-}
-
-RuntimeBuilderImpl::ConfHandlerFunc RuntimeBuilderImpl::conf_handlers_[] = {
-    RuntimeBuilderImpl::ReserveTensor,
-};
-
-RetCode RuntimeBuilderImpl::Configure(uint32_t option, ...) {
-    if (option >= PRB_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)PRB_CONF_MAX << "]";
-        return RC_INVALID_VALUE;
-    }
-
-    va_list args;
-    va_start(args, option);
-    auto status = conf_handlers_[option](this, args);
-    va_end(args);
-
-    return status;
 }
 
 }}} // namespace ppl::nn::pmx

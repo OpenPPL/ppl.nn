@@ -185,10 +185,10 @@ Defined in [include/ppl/nn/runtime/runtime.h](../../include/ppl/nn/runtime/runti
 #### Functions
 
 ```c++
-ppl::common::RetCode Configure(uint32_t option, ...);
+ppl::common::RetCode ReserveTensor(const char* tensor_name);
 ```
 
-Sets various runtime options defined in `runtime_options.h`. Parameters vary depending on the first parameter `option`.
+Marks a tensor specified by `tensor_name` as reserved in order to avoid being fused and reused duing inferencing.
 
 ```c++
 uint32_t GetInputCount() const;
