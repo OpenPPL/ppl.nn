@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace pmx {
 #include "ppl/nn/common/common.h"
 
 struct PPLNN_PUBLIC LoadModelOptions final {
-    /** load constant from external data files in `external_data_dir` if `EXTERNAL_DATA` is enabled. */
+    /** load constant from external data files in `external_data_dir` if `EXTERNAL_MULTI_FILES` is enabled. */
     const char* external_data_dir = nullptr;
 };
 

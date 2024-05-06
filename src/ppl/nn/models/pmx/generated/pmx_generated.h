@@ -56,29 +56,29 @@ struct Model;
 struct ModelBuilder;
 
 enum ConstantFlag : uint32_t {
-  ConstantFlag_EXTERNAL_DATA = 1,
-  ConstantFlag_MIN = ConstantFlag_EXTERNAL_DATA,
-  ConstantFlag_MAX = ConstantFlag_EXTERNAL_DATA
+  ConstantFlag_EXTERNAL_MULTI_FILES = 1,
+  ConstantFlag_MIN = ConstantFlag_EXTERNAL_MULTI_FILES,
+  ConstantFlag_MAX = ConstantFlag_EXTERNAL_MULTI_FILES
 };
 
 inline const ConstantFlag (&EnumValuesConstantFlag())[1] {
   static const ConstantFlag values[] = {
-    ConstantFlag_EXTERNAL_DATA
+    ConstantFlag_EXTERNAL_MULTI_FILES
   };
   return values;
 }
 
 inline const char * const *EnumNamesConstantFlag() {
   static const char * const names[2] = {
-    "EXTERNAL_DATA",
+    "EXTERNAL_MULTI_FILES",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameConstantFlag(ConstantFlag e) {
-  if (flatbuffers::IsOutRange(e, ConstantFlag_EXTERNAL_DATA, ConstantFlag_EXTERNAL_DATA)) return "";
-  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(ConstantFlag_EXTERNAL_DATA);
+  if (flatbuffers::IsOutRange(e, ConstantFlag_EXTERNAL_MULTI_FILES, ConstantFlag_EXTERNAL_MULTI_FILES)) return "";
+  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(ConstantFlag_EXTERNAL_MULTI_FILES);
   return EnumNamesConstantFlag()[index];
 }
 
