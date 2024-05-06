@@ -12,12 +12,14 @@ struct MultiHeadAttentionParam final : public ir::TypedAttr<MultiHeadAttentionPa
     int32_t num_kv_heads;
     int32_t head_dim;
     bool is_causal;
+    bool is_alibi;
 
     bool operator==(const MultiHeadAttentionParam& p) const {
         return (num_heads == p.num_heads
             && num_kv_heads == p.num_kv_heads
             && head_dim == p.head_dim
-            && is_causal == p.is_causal);
+            && is_causal == p.is_causal
+            && is_alibi == p.is_alibi);
     }
 };
 

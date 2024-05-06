@@ -60,7 +60,10 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingOp::SerializeData(con
     auto fb_param = opmx::CreateRotaryPositionEmbeddingParam(builder, 
         param_.get()->bypass_key,
         param_.get()->rotary_dim,
-        param_.get()->theta);
+        param_.get()->theta,
+        param_.get()->max_position_embeddings,
+        (ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType)param_.get()->scaling_type,
+        param_.get()->scaling_factor);
     auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_RotaryPositionEmbeddingParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -70,10 +73,13 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingOp::DeserializeData(c
     auto fb_op_param = opmx::GetOpParam(base);
     auto fb_param = fb_op_param->value_as_RotaryPositionEmbeddingParam();
     param_ = make_shared<ppl::nn::opmx::RotaryPositionEmbeddingParam>();
-    param_.get()->bypass_key = fb_param->bypass_key();
-    param_.get()->rotary_dim = fb_param->rotary_dim();
-    param_.get()->theta      = fb_param->theta();
-    
+    param_.get()->bypass_key                = fb_param->bypass_key();
+    param_.get()->rotary_dim                = fb_param->rotary_dim();
+    param_.get()->theta                     = fb_param->theta();
+    param_.get()->max_position_embeddings   = fb_param->max_position_embeddings();
+    param_.get()->scaling_type              = fb_param->scaling_type();
+    param_.get()->scaling_factor            = fb_param->scaling_factor();
+
     return CommonInit();
 }
 #endif

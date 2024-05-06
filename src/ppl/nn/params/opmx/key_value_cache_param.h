@@ -15,6 +15,7 @@ struct KeyValueCacheParam final : public ir::TypedAttr<KeyValueCacheParam> {
     int32_t num_repeat;
     int32_t cache_mode;
     int32_t cache_layout;
+    int32_t page_size;
 
     bool operator==(const KeyValueCacheParam& p) const {
         return (num_layer == p.num_layer
@@ -23,7 +24,8 @@ struct KeyValueCacheParam final : public ir::TypedAttr<KeyValueCacheParam> {
             && quant_group == p.quant_group
             && num_repeat == p.num_repeat
             && cache_mode == p.cache_mode
-            && cache_layout == p.cache_layout);
+            && cache_layout == p.cache_layout
+            && (cache_mode == 0 || page_size == p.page_size));
     }
 };
 

@@ -61,12 +61,18 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionKernel::DoExecute(KernelEx
     PPLNN_LLM_CUDA_DEBUG_TRACE("num_kv_heads: %d\n", param_->num_kv_heads);
     PPLNN_LLM_CUDA_DEBUG_TRACE("head_dim: %d\n", param_->head_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("is_causal: %d\n", param_->is_causal);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("is_alibi: %d\n", param_->is_alibi);
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(attn_output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [attn_output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(attn_output);
+
+    if (param_->is_alibi) {
+        LOG(ERROR) << "currently only support is_alibi == false";
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
     int64_t decodeing_batches_val = 0;
     if (ppl::common::RC_SUCCESS != decoding_batches->CopyToHost(&decodeing_batches_val)) {

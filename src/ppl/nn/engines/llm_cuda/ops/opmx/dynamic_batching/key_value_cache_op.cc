@@ -84,7 +84,8 @@ ppl::common::RetCode DynamicBatchingKeyValueCacheOp::SerializeData(const ppl::nn
         param_.get()->quant_group,
         param_.get()->num_repeat,
         param_.get()->cache_mode,
-        param_.get()->cache_layout);
+        param_.get()->cache_layout,
+        param_.get()->page_size);
     auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_KeyValueCacheParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -101,7 +102,8 @@ ppl::common::RetCode DynamicBatchingKeyValueCacheOp::DeserializeData(const ppl::
     param_.get()->num_repeat   = fb_param->num_repeat();
     param_.get()->cache_mode   = fb_param->cache_mode();
     param_.get()->cache_layout = fb_param->cache_layout();
-    
+    param_.get()->page_size    = fb_param->page_size();
+
     return CommonInit();
 }
 #endif

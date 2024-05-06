@@ -21,9 +21,12 @@ RetCode ParseMultiHeadAttentionParam(const ::onnx::NodeProto& pb_node, const onn
     }
 
     int32_t is_causal;
-    onnx::utils::GetNodeAttr(pb_node, "num_kv_heads", &param->num_kv_heads, param->num_heads);
-    onnx::utils::GetNodeAttr(pb_node, "is_causal", &is_causal, 0);
+    onnx::utils::GetNodeAttr(pb_node, "is_causal", &is_causal, 1);
     param->is_causal = is_causal;
+    int32_t is_alibi;
+    onnx::utils::GetNodeAttr(pb_node, "is_alibi", &is_alibi, 0);
+    param->is_alibi = is_alibi;
+    onnx::utils::GetNodeAttr(pb_node, "num_kv_heads", &param->num_kv_heads, param->num_heads);
     return RC_SUCCESS;
 }
 

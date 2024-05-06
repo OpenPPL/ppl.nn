@@ -58,7 +58,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionOp::SerializeData(const pp
         param_.get()->num_heads,
         param_.get()->num_kv_heads,
         param_.get()->head_dim,
-        param_.get()->is_causal);
+        param_.get()->is_causal,
+        param_.get()->is_alibi);
     auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_MultiHeadAttentionParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -67,13 +68,13 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionOp::SerializeData(const pp
 ppl::common::RetCode DynamicBatchingMultiHeadAttentionOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
     auto fb_op_param = opmx::GetOpParam(base);
     auto fb_param = fb_op_param->value_as_MultiHeadAttentionParam();
-    
     param_ = make_shared<ppl::nn::opmx::MultiHeadAttentionParam>();
     param_.get()->num_heads    = fb_param->num_heads();
     param_.get()->num_kv_heads = fb_param->num_kv_heads();
     param_.get()->head_dim     = fb_param->head_dim();
     param_.get()->is_causal    = fb_param->is_causal();
-    
+    param_.get()->is_alibi     = fb_param->is_alibi();
+
     return CommonInit();
 }
 #endif

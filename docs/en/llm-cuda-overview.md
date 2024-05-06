@@ -23,8 +23,7 @@
 
 ## Model Zoo
 
-- [LLaMA 1&2](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama)
-- [ChatGLM 1](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm)
+- [LLaMA 1&2&3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama)
 - [ChatGLM 2&3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm2)
 - [Baichuan-7b](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/baichuan/huggingface)
 - [InternLM](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/internlm/huggingface)
@@ -150,49 +149,37 @@ PYTHONPATH=./pplnn-build/install/lib python3 tools/pplnn.py --use-llm-cuda --onn
 Building a benchmark test for LLaMA model with full generation steps. The difference with previous benchmark, is that previous one benchmark with one step, while here benchmark for whole generation steps. Refer to [tools/benchmark.sh](tools/benchmark.sh) for more detail.
 ```
 ~/ppl.nn/pplnn-build/tools/benchmark_llama \
-    --model_type $MODEL_TYPE \
-    --model_dir $MODEL_DIR \
-    --model_param_path $MODEL_PARAM_PATH \
-    --tensor_parallel_size $TENSOR_PARALLEL_SIZE \
-    --top_p $TOP_P \
-    --top_k $TOP_K \
-    --temperature $TEMPERATURE \
-    --warmup_loops $WARMUP_LOOPS \
+    --model-dir $MODEL_DIR \
+    --model-param_path $MODEL_PARAM_PATH \
+    --tensor-parallel-size $TENSOR_PARALLEL_SIZE \
+    --warmup-loops $WARMUP_LOOPS \
     --generation_len $GENERATION_LEN \
-    --benchmark_loops $BENCHMARK_LOOPS \
+    --benchmark-loops $BENCHMARK_LOOPS \
     --input-len $INPUT_LEN \
-    --batch_size $BATCH_SIZE \
+    --batch-size $BATCH_SIZE \
     --quant-method $QUANT_METHOD
 ```
 
 Input parameter explains:
 - `model-type`: basic type of model, including diffenent weight. For example, model type `llama` including llama-7b, llama-13b, llama-30b and llama-65b. For other llm model, we will support soon.
 
-- `model_dir`: path to the model.
+- `model-dir`: path to the model.
 
-- `model_param_path`: path to model params.
+- `model-param-path`: path to model params.
 
-- `tensor_parallel_size`: size of tensor parallel. For llama_7b, the value is 1.
+- `tensor-parallel-size`: size of tensor parallel. For llama_7b, the value is 1.
 
-- `top_p`:  select enough tokens to "cover" a certain amount of probability defined by the parameter p (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail). The value range from 0~1.
+- `warmup-loops`: loops to warm up GPU for accurate performance.
 
-- `top_k`: select the first top k tokens to create new distribution (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail). This value does not matter on current version.
+- `generation-len`: length of generated tokens.
 
-- `temperature`: Temperature affects how “random” the model’s output is (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail).
+- `benchmark-loops`: benchmark loops.
 
-- `warmup_loops`: loops to warm up GPU for accurate performance.
+- `input-len`: length of input tokens, default is zero.
 
-- `generation_len`: length of generated tokens.
+- `batch-size`: batch size.
 
-- `benchmark_loops`: benchmark loops.
-
-- `input_len`: length of input tokens, default is zero.
-
-- `input_file`: file of input tokens, not use if `input_len` is non-zero.
-
-- `batch_size`: batch size.
-
-- `quant_method`: only accept two value: {`none`, `online_i8i8`}. `none` means not quantize, and `online_i8i8` (also called `w8a8`) means weight and tensor are both quantized with int8.
+- `quant-method`: only accept two value: {`none`, `online_i8i8`}. `none` means not quantize, and `online_i8i8` (also called `w8a8`) means weight and tensor are both quantized with int8.
 
 Notice: we found that nsys profiler do not trace cuda kernel statisic in nccl multi-thread communication mode. If you want to profile with nsys, pleace compile with `PPLNN_CUDA_ENABLE_NCCL=OFF`, and it could only trace the performance in one card model.
 ```bash

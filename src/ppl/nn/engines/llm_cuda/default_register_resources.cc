@@ -16,6 +16,9 @@
 // under the License.
 
 #include "ppl/common/retcode.h"
+
+#include <mutex>
+
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
@@ -23,11 +26,10 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 void RegisterBuiltinOpImpls();
 
 RetCode RegisterResourcesOnce() {
-    static bool st_registered = false;
-    if (!st_registered) {
+    static std::once_flag st_registered;
+    std::call_once(st_registered, []() {
         RegisterBuiltinOpImpls();
-        st_registered = true;
-    }
+    });
     return RC_SUCCESS;
 }
 

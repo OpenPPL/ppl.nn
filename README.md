@@ -11,6 +11,39 @@
 
 ![alt arch](docs/images/arch.png)
 
+### About LLM_CUDA
+
+## Features
+
+- Flash Attention
+- Split-k Attention(Similar with Flash Decoding)
+- Group-query Attention
+- Dynamic Batching(Also called Continous Batching or In-flight Batching)
+- Tensor Parallelism
+- Graph Optimization
+- INT8 groupwise KV Cache(Numerical accuracy is very close to FP16🚀)
+- INT8 per token per channel Quantization(W8A8)
+
+## Model Zoo
+
+- [LLaMA 1/2/3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama)
+- [ChatGLM 2/3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm2)
+- [Baichuan 1/2 7B](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/baichuan)
+- [InternLM 1](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/internlm)
+- [InternLM 2](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/internlm2)
+- [Mixtral](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/mixtral)
+- [Qwen 1/1.5](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/qwen)
+- [Falcon](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/falcon)
+- [Bigcode](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/bigcode)
+
+## Known Issues
+
+ - NCCL issue on some Device: Currently reported that L40S and H800 may encounter illegal memory access on NCCL AllReduce. We suggest trying to turn NCCL protocol `Simple` off by setting environment `NCCL_PROTO=^Simple` to fix this issue.
+
+## Detials
+
+[Here](docs/en/llm-cuda-overview.md)
+
 ### Hello, world!
 
 * Installing prerequisites:
