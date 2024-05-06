@@ -67,7 +67,7 @@ LlmCudaDevice::~LlmCudaDevice() {
     }
 }
 
-RetCode LlmCudaDevice::Init(int device_id, bool init_cublas, NcclParam* tensor_parallel_nccl_param,
+RetCode LlmCudaDevice::Init(int device_id, bool init_cublas_cudnn, NcclParam* tensor_parallel_nccl_param,
                             DeviceStreamFlag flag, cudaStream_t stream) {
     auto rc = InitCudaEnv(device_id);
     if (rc != RC_SUCCESS) {
@@ -81,7 +81,7 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_cublas, NcclParam* tensor_p
         return RC_UNSUPPORTED;
     }
 
-    if (!cublas_handle_ && init_cublas) {
+    if (!cublas_handle_ && init_cublas_cudnn) {
         auto cu_status = cublasLtCreate(&cublas_handle_);
         if (cu_status != CUBLAS_STATUS_SUCCESS) {
             LOG(ERROR) << "cublasLtCreate failed: " << cublasLtGetStatusName(cu_status);
@@ -107,6 +107,14 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_cublas, NcclParam* tensor_p
             return RC_OUT_OF_MEMORY;
         }
         cublas_workspace_size_ = 32 * 1024 * 1024;
+    }
+
+    if (!cudnn_handle_ && init_cublas_cudnn) {
+        auto cu_status = cudnnCreate(&cudnn_handle_);
+        if (cu_status != CUDNN_STATUS_SUCCESS) {
+            LOG(ERROR) << "cudnnCreate failed: " << cudnnGetErrorString(cu_status);
+            return RC_INTERNAL_ERROR;
+        }
     }
 
     if (!stream_) {
