@@ -15,7 +15,7 @@ hpcc_populate_dep(ppl.llm.kernel.cuda)
 
 file(GLOB_RECURSE __SRC__ src/ppl/nn/engines/llm_cuda/*.cc)
 add_library(ppl_llm_cuda_static ${__SRC__})
-target_link_libraries(ppl_llm_cuda_static PUBLIC pplnn_basic_static pplkernelcuda_static cudnn)
+target_link_libraries(ppl_llm_cuda_static PUBLIC pplnn_basic_static pplkernelcuda_static)
 target_compile_definitions(ppl_llm_cuda_static PUBLIC PPLNN_USE_LLM_CUDA)
 
 target_link_libraries(ppl_llm_cuda_static PUBLIC ${CUDNN_LIBRARY})
