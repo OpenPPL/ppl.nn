@@ -72,6 +72,7 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
+    void *skip_out_data = nullptr;
     if (param_->skip_term) {
         if (can_trans_skip_in) {
             skip_out->TransferBufferFrom(skip_in);
@@ -80,6 +81,7 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
         }
         PPLNN_LLM_CUDA_DEBUG_TRACE("Output [skip_out]:\n");
         PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(skip_out);
+        skip_out_data = skip_out->GetBufferPtr();
     }
 
     if (param_->skip_term && !skip_out) {
@@ -92,40 +94,19 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    ppl::common::RetCode code;
-    if (param_->skip_term) {
-        code = ppl::kernel::llm::cuda::pmx::layer_norm(
-            GetStream(),
-            input_shape,
-            input_data,
-            weight->GetBufferPtr(),
-            bias->GetBufferPtr(),
-            skip_in_data,
-            param_->axis,
-            param_->elementwise_affine,
-            param_->eps,
-            param_->skip_term,
-            output->GetBufferPtr(),
-            skip_out->GetBufferPtr()
-        );
-    }
-    else {
-        code = ppl::kernel::llm::cuda::pmx::layer_norm(
-            GetStream(),
-            input_shape,
-            input_data,
-            weight->GetBufferPtr(),
-            bias->GetBufferPtr(),
-            skip_in_data,
-            param_->axis,
-            param_->elementwise_affine,
-            param_->eps,
-            param_->skip_term,
-            output->GetBufferPtr()
-        );
-    }
-
-    return code;
+    return ppl::kernel::llm::cuda::pmx::layer_norm(
+        GetStream(),
+        input_shape,
+        input_data,
+        weight->GetBufferPtr(),
+        bias->GetBufferPtr(),
+        skip_in_data,
+        param_->axis,
+        param_->elementwise_affine,
+        param_->eps,
+        param_->skip_term,
+        output->GetBufferPtr(),
+        skip_out_data);
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

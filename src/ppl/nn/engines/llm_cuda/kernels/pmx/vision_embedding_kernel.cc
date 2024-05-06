@@ -54,172 +54,52 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [vision_embeddings]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(vision_embeddings);
 
-    cudnnStatus_t status0;
-    cudnnHandle_t cudnn_handle;
-    if (GetCudaDevice()->GetCudnnHandle() != nullptr) {
-        cudnn_handle = GetCudaDevice()->GetCudnnHandle();
-    }
-    else {
-        status0 = cudnnCreate(&cudnn_handle);
-        if (status0 != CUDNN_STATUS_SUCCESS) {
-            LOG(ERROR) << "failed to create a cudnn handle with error: " << cudnnGetErrorString(status0);
-            return ppl::common::RC_OTHER_ERROR;
-        }
-        GetCudaDevice()->SetCudnnHandle(cudnn_handle);
+    ppl::kernel::llm::cuda::pmx::vision_embedding_config config;
+
+    cudnnStatus_t cudnn_status;
+    config.cudnn_handle = GetCudaDevice()->GetCudnnHandle();
+    if (config.cudnn_handle == nullptr) {
+        LOG(ERROR) << "cudnn handle is invalid.";
+        return ppl::common::RC_OTHER_ERROR;
     }
 
-    const int32_t hidden_dim = param_->hidden_dim;
-    const int32_t image_size = param_->image_size;
-    const int32_t patch_size = param_->patch_size;
+    config.hidden_dim = param_->hidden_dim;
+    config.image_size = param_->image_size;
+    config.patch_size = param_->patch_size;
     auto image_shape = pixel_values->GetShape();
-    const int32_t batch_size = image_shape->GetDim(0);
-    const int32_t image_channel = image_shape->GetDim(1);
-    const int32_t image_size1 = image_shape->GetDim(2);
-    if (image_size != image_size1) {
+    config.batch_size = image_shape->GetDim(0);
+    config.image_channel = image_shape->GetDim(1);
+    size_t image_size = image_shape->GetDim(2);
+    if (config.image_size != image_size) {
         LOG(ERROR) << "The image size is inconsistant with the image data.";
         return ppl::common::RC_INVALID_VALUE;
     }
-    const int32_t grid = image_size / patch_size;
-    cudnnTensorDescriptor_t image_desc, patch_desc0, patch_desc1;
-    status0 = cudnnCreateTensorDescriptor(&image_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to create the tensor descriptor of image with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnCreateTensorDescriptor(&patch_desc0);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to create the tensor descriptor of convolution output with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnCreateTensorDescriptor(&patch_desc1);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to create the tensor descriptor of transposed convolution output with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetTensor4dDescriptor(image_desc, CUDNN_TENSOR_NCHW,
-             CUDNN_DATA_HALF, batch_size, image_channel, image_size, image_size);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the tensor descriptor of image with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetTensor4dDescriptor(patch_desc0, CUDNN_TENSOR_NCHW,
-             CUDNN_DATA_HALF, batch_size, hidden_dim, grid, grid);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the tensor descriptor of convolution output with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetTensor4dDescriptor(patch_desc1, CUDNN_TENSOR_NHWC,
-             CUDNN_DATA_HALF, batch_size, hidden_dim, grid, grid);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the tensor descriptor of transposed convolution output with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
 
-    cudnnFilterDescriptor_t filter_desc;
-    status0 = cudnnCreateFilterDescriptor(&filter_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to create the filter descriptor with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetFilter4dDescriptor(filter_desc, CUDNN_DATA_HALF,
-             CUDNN_TENSOR_NCHW, hidden_dim, image_channel, patch_size, patch_size);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the filter descriptor with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
+    ppl::kernel::llm::cuda::pmx::vision_embedding_preprocessing(config);
 
-    cudnnConvolutionDescriptor_t conv_desc;
-    status0 = cudnnCreateConvolutionDescriptor(&conv_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to create the convolution descriptor with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetConvolution2dDescriptor(conv_desc, 0, 0, patch_size, patch_size, 1, 1,
-             CUDNN_CONVOLUTION, CUDNN_DATA_HALF);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the convolution descriptor with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnSetConvolutionMathType(conv_desc, CUDNN_TENSOR_OP_MATH);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to set the convolution math type with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-
-    size_t workspace_size;
-    status0 = cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle, image_desc,
-             filter_desc, conv_desc, patch_desc0,
-             CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM,
-             &workspace_size);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to get the workspace size of convolution with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    size_t size = batch_size * hidden_dim * grid * grid * sizeof(half);
-
-    workspace_size = ((workspace_size + sizeof(half)) >> 1) << 1;
-    size_t total_size = workspace_size + size * 2;
     BufferDesc buffers_desc;
-    auto status1 = GetCudaDevice()->AllocTmpBuffer(total_size, &buffers_desc);
-    if (status1 != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc buffers size[" << total_size << "] for kernel["
-                   << GetName() << "] failed: " << ppl::common::GetRetCodeStr(status1);
-        return status1;
+    auto pplcommon_status = GetCudaDevice()->AllocTmpBuffer(config.total_buffer_size, &buffers_desc);
+    if (pplcommon_status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc buffers size[" << config.total_buffer_size << "] for kernel["
+                   << GetName() << "] failed: " << ppl::common::GetRetCodeStr(pplcommon_status);
+        return pplcommon_status;
     }
-    ppl::common::Destructor patch1_guard([this, &buffers_desc]() -> void {
+    ppl::common::Destructor buffer_guard([this, &buffers_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&buffers_desc);
     });
-    void* workspace = buffers_desc.addr;
-    void* patch_embeds0 = workspace + workspace_size;
-    void* patch_embeds1 = patch_embeds0 + size;
+    config.buffer_addr = buffers_desc.addr;
 
     ppl::kernel::llm::cuda::pmx::vision_embedding(
         GetStream(),
-        cudnn_handle,
-        image_desc,
+        config,
         pixel_values->GetBufferPtr(),
-        filter_desc,
-        patch_emb_weight->GetBufferPtr(),  // weight of convolution filter
-        conv_desc,
-        workspace,
-        workspace_size,
-        patch_desc0,
-        patch_embeds0,  // output of cudnnConvolutionForward()
-        patch_desc1,
-        patch_embeds1,  // output of cudnnTransformTensor()
-        cls_emb_weight->GetBufferPtr(),  // [hidden_dim]
-        pos_emb_weight->GetBufferPtr(),  // [num_positions * hidden_dim]
-        grid,
-        batch_size,
-        hidden_dim,
+        patch_emb_weight->GetBufferPtr(),  // [hidden_dim, image_channel, patch_size, patch_size]
+        cls_emb_weight->GetBufferPtr(),    // [hidden_dim]
+        pos_emb_weight->GetBufferPtr(),    // [num_positions * hidden_dim]
         vision_embeddings->GetBufferPtr()
     );
 
-    status0 = cudnnDestroyTensorDescriptor(image_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to destroy the cudnn tensor descriptor image_desc with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnDestroyTensorDescriptor(patch_desc0);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to destroy the cudnn tensor descriptor patch_desc0 with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnDestroyTensorDescriptor(patch_desc1);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to destroy the cudnn tensor descriptor patch_desc1 with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnDestroyFilterDescriptor(filter_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to destroy the cudnn filter descriptor filter_desc with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
-    status0 = cudnnDestroyConvolutionDescriptor(conv_desc);
-    if (status0 != CUDNN_STATUS_SUCCESS) {
-        LOG(ERROR) << "failed to destroy the cudnn convolution descriptor conv_desc with error: " << cudnnGetErrorString(status0);
-        return ppl::common::RC_OTHER_ERROR;
-    }
+    ppl::kernel::llm::cuda::pmx::vision_embedding_postprocessing(config);
 
     return ppl::common::RC_SUCCESS;
 }
