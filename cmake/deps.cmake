@@ -51,7 +51,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ master)
+set(__HPCC_COMMIT__ 8cc3ad6d7f320071aac4b71ca9eab62dbf89e9da)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -105,7 +105,7 @@ if(PPLNN_CUDA_ENABLE_NCCL)
     set(PPLCOMMON_ENABLE_NCCL ON)
 endif()
 
-set(__PPLCOMMON_COMMIT__ master)
+set(__PPLCOMMON_COMMIT__ a0fe67edeb814fdefb2c39a7857fb080c18fbe51)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -283,7 +283,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__LLM_KERNEL_CUDA_COMMIT__ master)
+set(__LLM_KERNEL_CUDA_COMMIT__ llm_v1)
 
 if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
     hpcc_declare_pkg_dep(ppl.llm.kernel.cuda
