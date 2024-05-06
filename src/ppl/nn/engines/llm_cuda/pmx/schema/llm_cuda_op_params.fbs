@@ -19,6 +19,7 @@ table KeyValueCacheParam {
     num_repeat: int32;
     cache_mode: int32;
     cache_layout: int32;
+    page_size: int32;
 }
 
 table LayerNormParam {
@@ -32,6 +33,7 @@ table MultiHeadAttentionParam {
     num_kv_heads: int32;
     head_dim: int32;
     is_causal: bool;
+    is_alibi: bool;
 }
 
 table ParallelEmbeddingParam {
@@ -48,10 +50,19 @@ table RMSNormParam {
     skip_term: bool;
 }
 
+enum RotaryPositionEmbeddingScalingType : uint32 {
+    NONE = 0,
+    LINEAR,
+    DYNAMIC,
+}
+
 table RotaryPositionEmbeddingParam {
     bypass_key: int32;
     rotary_dim: int32;
     theta: float;
+    max_position_embeddings: int32;
+    scaling_type: RotaryPositionEmbeddingScalingType;
+    scaling_factor: float;
 }
 
 table RowParallelLinearParam {
@@ -66,12 +77,14 @@ table MultiHeadCacheAttentionParam {
     num_kv_heads: int32;
     head_dim: int32;
     is_causal: bool;
+    is_alibi: bool;
     num_layer: int32;
     layer_idx: int32;
     quant_bit: int32;
     quant_group: int32;
     cache_mode: int32;
     cache_layout: int32;
+    page_size: int32;
 }
 
 table ReshapeParam {

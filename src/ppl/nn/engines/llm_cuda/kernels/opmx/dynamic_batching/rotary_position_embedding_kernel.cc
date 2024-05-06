@@ -47,6 +47,9 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("theta: %f\n", param_->theta);
     PPLNN_LLM_CUDA_DEBUG_TRACE("rotary_dim: %d\n", param_->rotary_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bypass_key: %d\n", param_->bypass_key);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("max_position_embeddings: %d\n", param_->max_position_embeddings);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("scaling_type: %d\n", param_->scaling_type);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("scaling_factor: %f\n", param_->scaling_factor);
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
@@ -77,6 +80,11 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
 
     if (ppl::common::DATATYPE_FLOAT16 != query_shape->GetDataType()) {
         LOG(ERROR) << "currently only support fp16";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    if (param_->scaling_type != param_->SCALING_TYPE_NONE) {
+        LOG(ERROR) << "currently only support scaling_type == ''";
         return ppl::common::RC_UNSUPPORTED;
     }
 

@@ -7,7 +7,7 @@ if [ -z "$PPL_BUILD_THREAD_NUM" ]; then
     echo -e "env 'PPL_BUILD_THREAD_NUM' is not set. use PPL_BUILD_THREAD_NUM=${PPL_BUILD_THREAD_NUM} by default."
 fi
 
-build_type='RelWithDebInfo'
+build_type='Release'
 options="-DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_INSTALL_PREFIX=install $*"
 
 pplnn_build_dir="${workdir}/pplnn-build"

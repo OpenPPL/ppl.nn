@@ -38,7 +38,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_REQUIRED_INPUT(max_seqlen, 8);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(max_kvlen, 9);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(cache, 10);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(scale, 11);
+    PPLNN_LLM_CUDA_OPTIONAL_INPUT(scale, 11);
     PPLNN_LLM_CUDA_OPTIONAL_INPUT(attn_mask, 12);
 
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(attn_output, 0);
@@ -65,8 +65,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(max_kvlen);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [cache]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(cache);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [scale]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(scale);
     if (scale) {
         PPLNN_LLM_CUDA_DEBUG_TRACE("Input [scale]:\n");
         PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(scale);
@@ -80,12 +78,14 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("num_kv_heads: %d\n", param_->num_kv_heads);
     PPLNN_LLM_CUDA_DEBUG_TRACE("head_dim: %d\n", param_->head_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("is_causal: %d\n", param_->is_causal);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("is_alibi: %d\n", param_->is_alibi);
     PPLNN_LLM_CUDA_DEBUG_TRACE("num_layer: %d\n", param_->num_layer);
     PPLNN_LLM_CUDA_DEBUG_TRACE("layer_idx: %d\n", param_->layer_idx);
     PPLNN_LLM_CUDA_DEBUG_TRACE("quant_bit: %d\n", param_->quant_bit);
     PPLNN_LLM_CUDA_DEBUG_TRACE("quant_group: %d\n", param_->quant_group);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_mode: %d\n", param_->cache_mode);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_layout: %d\n", param_->cache_layout);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("page_size: %d\n", param_->page_size);
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
 
@@ -97,6 +97,11 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
 
     if (param_->cache_mode != 0) {
         LOG(ERROR) << "currently only support cache_mode == 0";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    if (param_->is_alibi) {
+        LOG(ERROR) << "currently only support is_alibi == false";
         return ppl::common::RC_UNSUPPORTED;
     }
 

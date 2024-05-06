@@ -59,12 +59,14 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionOp::SerializeData(con
         param_.get()->num_kv_heads,
         param_.get()->head_dim,
         param_.get()->is_causal,
+        param_.get()->is_alibi,
         param_.get()->num_layer,
         param_.get()->layer_idx,
         param_.get()->quant_bit,
         param_.get()->quant_group,
         param_.get()->cache_mode,
-        param_.get()->cache_layout);
+        param_.get()->cache_layout,
+        param_.get()->page_size);
     auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_MultiHeadCacheAttentionParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -79,13 +81,15 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionOp::DeserializeData(c
     param_.get()->num_kv_heads = fb_param->num_kv_heads();
     param_.get()->head_dim     = fb_param->head_dim();
     param_.get()->is_causal    = fb_param->is_causal();
+    param_.get()->is_alibi     = fb_param->is_alibi();
     param_.get()->num_layer    = fb_param->num_layer();
     param_.get()->layer_idx    = fb_param->layer_idx();
     param_.get()->quant_bit    = fb_param->quant_bit();
     param_.get()->quant_group  = fb_param->quant_group();
     param_.get()->cache_mode   = fb_param->cache_mode();
     param_.get()->cache_layout = fb_param->cache_layout();
-    
+    param_.get()->page_size    = fb_param->page_size();
+
     return CommonInit();
 }
 #endif

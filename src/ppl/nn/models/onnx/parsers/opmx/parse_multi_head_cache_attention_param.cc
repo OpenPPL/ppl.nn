@@ -31,13 +31,17 @@ RetCode ParseMultiHeadCacheAttentionParam(const ::onnx::NodeProto& pb_node, cons
     }
 
     int32_t is_causal;
-    onnx::utils::GetNodeAttr(pb_node, "is_causal", &is_causal, 0);
+    onnx::utils::GetNodeAttr(pb_node, "is_causal", &is_causal, 1);
     param->is_causal = is_causal;
+    int32_t is_alibi;
+    onnx::utils::GetNodeAttr(pb_node, "is_alibi", &is_alibi, 0);
+    param->is_alibi = is_alibi;
     onnx::utils::GetNodeAttr(pb_node, "num_kv_heads", &param->num_kv_heads, param->num_heads);
     onnx::utils::GetNodeAttr(pb_node, "quant_bit", &param->quant_bit, 0);
     onnx::utils::GetNodeAttr(pb_node, "quant_group", &param->quant_group, 8);
     onnx::utils::GetNodeAttr(pb_node, "cache_mode", &param->cache_mode, 0);
     onnx::utils::GetNodeAttr(pb_node, "cache_layout", &param->cache_layout, 0);
+    onnx::utils::GetNodeAttr(pb_node, "page_size", &param->page_size, 128);
     return RC_SUCCESS;
 }
 

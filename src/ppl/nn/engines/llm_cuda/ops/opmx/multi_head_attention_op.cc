@@ -57,7 +57,8 @@ ppl::common::RetCode MultiHeadAttentionOp::SerializeData(const ppl::nn::pmx::Ser
         param_.get()->num_heads,
         param_.get()->num_kv_heads,
         param_.get()->head_dim,
-        param_.get()->is_causal);
+        param_.get()->is_causal,
+        param_.get()->is_alibi);
     auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_MultiHeadAttentionParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
@@ -71,7 +72,8 @@ ppl::common::RetCode MultiHeadAttentionOp::DeserializeData(const ppl::nn::pmx::D
     param_.get()->num_kv_heads = fb_param->num_kv_heads();
     param_.get()->head_dim     = fb_param->head_dim();
     param_.get()->is_causal    = fb_param->is_causal();
-    
+    param_.get()->is_alibi     = fb_param->is_alibi();
+
     return CommonInit();
 }
 #endif

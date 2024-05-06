@@ -43,6 +43,7 @@ RetCode ParseKeyValueCacheParam(const ::onnx::NodeProto& pb_node, const onnx::Pa
     onnx::utils::GetNodeAttr(pb_node, "num_repeat", &param->num_repeat, 1);
     onnx::utils::GetNodeAttr(pb_node, "cache_mode", &param->cache_mode, 0);
     onnx::utils::GetNodeAttr(pb_node, "cache_layout", &param->cache_layout, 0);
+    onnx::utils::GetNodeAttr(pb_node, "page_size", &param->page_size, 128);
     return RC_SUCCESS;
 }
 

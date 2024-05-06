@@ -64,6 +64,39 @@ struct SwishParamBuilder;
 struct OpParam;
 struct OpParamBuilder;
 
+enum RotaryPositionEmbeddingScalingType : uint32_t {
+  RotaryPositionEmbeddingScalingType_NONE = 0,
+  RotaryPositionEmbeddingScalingType_LINEAR = 1,
+  RotaryPositionEmbeddingScalingType_DYNAMIC = 2,
+  RotaryPositionEmbeddingScalingType_MIN = RotaryPositionEmbeddingScalingType_NONE,
+  RotaryPositionEmbeddingScalingType_MAX = RotaryPositionEmbeddingScalingType_DYNAMIC
+};
+
+inline const RotaryPositionEmbeddingScalingType (&EnumValuesRotaryPositionEmbeddingScalingType())[3] {
+  static const RotaryPositionEmbeddingScalingType values[] = {
+    RotaryPositionEmbeddingScalingType_NONE,
+    RotaryPositionEmbeddingScalingType_LINEAR,
+    RotaryPositionEmbeddingScalingType_DYNAMIC
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesRotaryPositionEmbeddingScalingType() {
+  static const char * const names[4] = {
+    "NONE",
+    "LINEAR",
+    "DYNAMIC",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameRotaryPositionEmbeddingScalingType(RotaryPositionEmbeddingScalingType e) {
+  if (flatbuffers::IsOutRange(e, RotaryPositionEmbeddingScalingType_NONE, RotaryPositionEmbeddingScalingType_DYNAMIC)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesRotaryPositionEmbeddingScalingType()[index];
+}
+
 enum OpParamType : uint8_t {
   OpParamType_NONE = 0,
   OpParamType_ColumnParallelLinearParam = 1,
@@ -317,7 +350,8 @@ struct KeyValueCacheParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_QUANT_GROUP = 10,
     VT_NUM_REPEAT = 12,
     VT_CACHE_MODE = 14,
-    VT_CACHE_LAYOUT = 16
+    VT_CACHE_LAYOUT = 16,
+    VT_PAGE_SIZE = 18
   };
   int32_t num_layer() const {
     return GetField<int32_t>(VT_NUM_LAYER, 0);
@@ -340,6 +374,9 @@ struct KeyValueCacheParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t cache_layout() const {
     return GetField<int32_t>(VT_CACHE_LAYOUT, 0);
   }
+  int32_t page_size() const {
+    return GetField<int32_t>(VT_PAGE_SIZE, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_NUM_LAYER, 4) &&
@@ -349,6 +386,7 @@ struct KeyValueCacheParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_NUM_REPEAT, 4) &&
            VerifyField<int32_t>(verifier, VT_CACHE_MODE, 4) &&
            VerifyField<int32_t>(verifier, VT_CACHE_LAYOUT, 4) &&
+           VerifyField<int32_t>(verifier, VT_PAGE_SIZE, 4) &&
            verifier.EndTable();
   }
 };
@@ -378,6 +416,9 @@ struct KeyValueCacheParamBuilder {
   void add_cache_layout(int32_t cache_layout) {
     fbb_.AddElement<int32_t>(KeyValueCacheParam::VT_CACHE_LAYOUT, cache_layout, 0);
   }
+  void add_page_size(int32_t page_size) {
+    fbb_.AddElement<int32_t>(KeyValueCacheParam::VT_PAGE_SIZE, page_size, 0);
+  }
   explicit KeyValueCacheParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -397,8 +438,10 @@ inline flatbuffers::Offset<KeyValueCacheParam> CreateKeyValueCacheParam(
     int32_t quant_group = 0,
     int32_t num_repeat = 0,
     int32_t cache_mode = 0,
-    int32_t cache_layout = 0) {
+    int32_t cache_layout = 0,
+    int32_t page_size = 0) {
   KeyValueCacheParamBuilder builder_(_fbb);
+  builder_.add_page_size(page_size);
   builder_.add_cache_layout(cache_layout);
   builder_.add_cache_mode(cache_mode);
   builder_.add_num_repeat(num_repeat);
@@ -486,7 +529,8 @@ struct MultiHeadAttentionParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Ta
     VT_NUM_HEADS = 4,
     VT_NUM_KV_HEADS = 6,
     VT_HEAD_DIM = 8,
-    VT_IS_CAUSAL = 10
+    VT_IS_CAUSAL = 10,
+    VT_IS_ALIBI = 12
   };
   int32_t num_heads() const {
     return GetField<int32_t>(VT_NUM_HEADS, 0);
@@ -500,12 +544,16 @@ struct MultiHeadAttentionParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Ta
   bool is_causal() const {
     return GetField<uint8_t>(VT_IS_CAUSAL, 0) != 0;
   }
+  bool is_alibi() const {
+    return GetField<uint8_t>(VT_IS_ALIBI, 0) != 0;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_NUM_HEADS, 4) &&
            VerifyField<int32_t>(verifier, VT_NUM_KV_HEADS, 4) &&
            VerifyField<int32_t>(verifier, VT_HEAD_DIM, 4) &&
            VerifyField<uint8_t>(verifier, VT_IS_CAUSAL, 1) &&
+           VerifyField<uint8_t>(verifier, VT_IS_ALIBI, 1) &&
            verifier.EndTable();
   }
 };
@@ -526,6 +574,9 @@ struct MultiHeadAttentionParamBuilder {
   void add_is_causal(bool is_causal) {
     fbb_.AddElement<uint8_t>(MultiHeadAttentionParam::VT_IS_CAUSAL, static_cast<uint8_t>(is_causal), 0);
   }
+  void add_is_alibi(bool is_alibi) {
+    fbb_.AddElement<uint8_t>(MultiHeadAttentionParam::VT_IS_ALIBI, static_cast<uint8_t>(is_alibi), 0);
+  }
   explicit MultiHeadAttentionParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -542,11 +593,13 @@ inline flatbuffers::Offset<MultiHeadAttentionParam> CreateMultiHeadAttentionPara
     int32_t num_heads = 0,
     int32_t num_kv_heads = 0,
     int32_t head_dim = 0,
-    bool is_causal = false) {
+    bool is_causal = false,
+    bool is_alibi = false) {
   MultiHeadAttentionParamBuilder builder_(_fbb);
   builder_.add_head_dim(head_dim);
   builder_.add_num_kv_heads(num_kv_heads);
   builder_.add_num_heads(num_heads);
+  builder_.add_is_alibi(is_alibi);
   builder_.add_is_causal(is_causal);
   return builder_.Finish();
 }
@@ -698,7 +751,10 @@ struct RotaryPositionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_BYPASS_KEY = 4,
     VT_ROTARY_DIM = 6,
-    VT_THETA = 8
+    VT_THETA = 8,
+    VT_MAX_POSITION_EMBEDDINGS = 10,
+    VT_SCALING_TYPE = 12,
+    VT_SCALING_FACTOR = 14
   };
   int32_t bypass_key() const {
     return GetField<int32_t>(VT_BYPASS_KEY, 0);
@@ -709,11 +765,23 @@ struct RotaryPositionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
   float theta() const {
     return GetField<float>(VT_THETA, 0.0f);
   }
+  int32_t max_position_embeddings() const {
+    return GetField<int32_t>(VT_MAX_POSITION_EMBEDDINGS, 0);
+  }
+  ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type() const {
+    return static_cast<ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType>(GetField<uint32_t>(VT_SCALING_TYPE, 0));
+  }
+  float scaling_factor() const {
+    return GetField<float>(VT_SCALING_FACTOR, 0.0f);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_BYPASS_KEY, 4) &&
            VerifyField<int32_t>(verifier, VT_ROTARY_DIM, 4) &&
            VerifyField<float>(verifier, VT_THETA, 4) &&
+           VerifyField<int32_t>(verifier, VT_MAX_POSITION_EMBEDDINGS, 4) &&
+           VerifyField<uint32_t>(verifier, VT_SCALING_TYPE, 4) &&
+           VerifyField<float>(verifier, VT_SCALING_FACTOR, 4) &&
            verifier.EndTable();
   }
 };
@@ -731,6 +799,15 @@ struct RotaryPositionEmbeddingParamBuilder {
   void add_theta(float theta) {
     fbb_.AddElement<float>(RotaryPositionEmbeddingParam::VT_THETA, theta, 0.0f);
   }
+  void add_max_position_embeddings(int32_t max_position_embeddings) {
+    fbb_.AddElement<int32_t>(RotaryPositionEmbeddingParam::VT_MAX_POSITION_EMBEDDINGS, max_position_embeddings, 0);
+  }
+  void add_scaling_type(ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type) {
+    fbb_.AddElement<uint32_t>(RotaryPositionEmbeddingParam::VT_SCALING_TYPE, static_cast<uint32_t>(scaling_type), 0);
+  }
+  void add_scaling_factor(float scaling_factor) {
+    fbb_.AddElement<float>(RotaryPositionEmbeddingParam::VT_SCALING_FACTOR, scaling_factor, 0.0f);
+  }
   explicit RotaryPositionEmbeddingParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -746,8 +823,14 @@ inline flatbuffers::Offset<RotaryPositionEmbeddingParam> CreateRotaryPositionEmb
     flatbuffers::FlatBufferBuilder &_fbb,
     int32_t bypass_key = 0,
     int32_t rotary_dim = 0,
-    float theta = 0.0f) {
+    float theta = 0.0f,
+    int32_t max_position_embeddings = 0,
+    ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type = ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType_NONE,
+    float scaling_factor = 0.0f) {
   RotaryPositionEmbeddingParamBuilder builder_(_fbb);
+  builder_.add_scaling_factor(scaling_factor);
+  builder_.add_scaling_type(scaling_type);
+  builder_.add_max_position_embeddings(max_position_embeddings);
   builder_.add_theta(theta);
   builder_.add_rotary_dim(rotary_dim);
   builder_.add_bypass_key(bypass_key);
@@ -832,12 +915,14 @@ struct MultiHeadCacheAttentionParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
     VT_NUM_KV_HEADS = 6,
     VT_HEAD_DIM = 8,
     VT_IS_CAUSAL = 10,
-    VT_NUM_LAYER = 12,
-    VT_LAYER_IDX = 14,
-    VT_QUANT_BIT = 16,
-    VT_QUANT_GROUP = 18,
-    VT_CACHE_MODE = 20,
-    VT_CACHE_LAYOUT = 22
+    VT_IS_ALIBI = 12,
+    VT_NUM_LAYER = 14,
+    VT_LAYER_IDX = 16,
+    VT_QUANT_BIT = 18,
+    VT_QUANT_GROUP = 20,
+    VT_CACHE_MODE = 22,
+    VT_CACHE_LAYOUT = 24,
+    VT_PAGE_SIZE = 26
   };
   int32_t num_heads() const {
     return GetField<int32_t>(VT_NUM_HEADS, 0);
@@ -850,6 +935,9 @@ struct MultiHeadCacheAttentionParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
   }
   bool is_causal() const {
     return GetField<uint8_t>(VT_IS_CAUSAL, 0) != 0;
+  }
+  bool is_alibi() const {
+    return GetField<uint8_t>(VT_IS_ALIBI, 0) != 0;
   }
   int32_t num_layer() const {
     return GetField<int32_t>(VT_NUM_LAYER, 0);
@@ -869,18 +957,23 @@ struct MultiHeadCacheAttentionParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
   int32_t cache_layout() const {
     return GetField<int32_t>(VT_CACHE_LAYOUT, 0);
   }
+  int32_t page_size() const {
+    return GetField<int32_t>(VT_PAGE_SIZE, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_NUM_HEADS, 4) &&
            VerifyField<int32_t>(verifier, VT_NUM_KV_HEADS, 4) &&
            VerifyField<int32_t>(verifier, VT_HEAD_DIM, 4) &&
            VerifyField<uint8_t>(verifier, VT_IS_CAUSAL, 1) &&
+           VerifyField<uint8_t>(verifier, VT_IS_ALIBI, 1) &&
            VerifyField<int32_t>(verifier, VT_NUM_LAYER, 4) &&
            VerifyField<int32_t>(verifier, VT_LAYER_IDX, 4) &&
            VerifyField<int32_t>(verifier, VT_QUANT_BIT, 4) &&
            VerifyField<int32_t>(verifier, VT_QUANT_GROUP, 4) &&
            VerifyField<int32_t>(verifier, VT_CACHE_MODE, 4) &&
            VerifyField<int32_t>(verifier, VT_CACHE_LAYOUT, 4) &&
+           VerifyField<int32_t>(verifier, VT_PAGE_SIZE, 4) &&
            verifier.EndTable();
   }
 };
@@ -901,6 +994,9 @@ struct MultiHeadCacheAttentionParamBuilder {
   void add_is_causal(bool is_causal) {
     fbb_.AddElement<uint8_t>(MultiHeadCacheAttentionParam::VT_IS_CAUSAL, static_cast<uint8_t>(is_causal), 0);
   }
+  void add_is_alibi(bool is_alibi) {
+    fbb_.AddElement<uint8_t>(MultiHeadCacheAttentionParam::VT_IS_ALIBI, static_cast<uint8_t>(is_alibi), 0);
+  }
   void add_num_layer(int32_t num_layer) {
     fbb_.AddElement<int32_t>(MultiHeadCacheAttentionParam::VT_NUM_LAYER, num_layer, 0);
   }
@@ -919,6 +1015,9 @@ struct MultiHeadCacheAttentionParamBuilder {
   void add_cache_layout(int32_t cache_layout) {
     fbb_.AddElement<int32_t>(MultiHeadCacheAttentionParam::VT_CACHE_LAYOUT, cache_layout, 0);
   }
+  void add_page_size(int32_t page_size) {
+    fbb_.AddElement<int32_t>(MultiHeadCacheAttentionParam::VT_PAGE_SIZE, page_size, 0);
+  }
   explicit MultiHeadCacheAttentionParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -936,13 +1035,16 @@ inline flatbuffers::Offset<MultiHeadCacheAttentionParam> CreateMultiHeadCacheAtt
     int32_t num_kv_heads = 0,
     int32_t head_dim = 0,
     bool is_causal = false,
+    bool is_alibi = false,
     int32_t num_layer = 0,
     int32_t layer_idx = 0,
     int32_t quant_bit = 0,
     int32_t quant_group = 0,
     int32_t cache_mode = 0,
-    int32_t cache_layout = 0) {
+    int32_t cache_layout = 0,
+    int32_t page_size = 0) {
   MultiHeadCacheAttentionParamBuilder builder_(_fbb);
+  builder_.add_page_size(page_size);
   builder_.add_cache_layout(cache_layout);
   builder_.add_cache_mode(cache_mode);
   builder_.add_quant_group(quant_group);
@@ -952,6 +1054,7 @@ inline flatbuffers::Offset<MultiHeadCacheAttentionParam> CreateMultiHeadCacheAtt
   builder_.add_head_dim(head_dim);
   builder_.add_num_kv_heads(num_kv_heads);
   builder_.add_num_heads(num_heads);
+  builder_.add_is_alibi(is_alibi);
   builder_.add_is_causal(is_causal);
   return builder_.Finish();
 }
