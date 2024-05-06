@@ -124,10 +124,6 @@ public:
         return &cublas_algo_cache_;
     }
 
-    void SetCudnnHandle(cudnnHandle_t cudnn_handle) {
-        cudnn_handle_ = cudnn_handle;
-    };
-
     cudnnHandle_t GetCudnnHandle() const {
         return cudnn_handle_;
     }
