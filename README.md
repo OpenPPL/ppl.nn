@@ -13,6 +13,12 @@
 
 ### About LLM_CUDA
 
+## Important Notice
+- PMX has changed to OPMX at 25/04/2024.
+- ChatGLM1 will not be supported in OPMX.
+- All model must be converted(or just rename `pmx_params.json` to `opmx_params.json`) and exported again.
+- You can find the old code at [llm_v1](https://github.com/openppl-public/ppl.nn/tree/llm_v1)
+
 ## Features
 
 - Flash Attention
