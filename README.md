@@ -11,16 +11,19 @@
 
 ![alt arch](docs/images/arch.png)
 
-### About LLM_CUDA
-
-## Important Notice
+### **Important Notice**
 - PMX has changed to OPMX at 25/04/2024.
 - ChatGLM1 will not be supported in OPMX.
-- All model must be converted(or just rename `pmx_params.json` to `opmx_params.json`) and exported again.
+- All LLM must be converted(or just rename `pmx_params.json` to `opmx_params.json`) and exported again.
 - You can find the old code at [llm_v1](https://github.com/openppl-public/ppl.nn/tree/llm_v1)
 
-## Features
+### **Known Issues**
 
+ - NCCL issue on some Device: Currently reported that L40S and H800 may encounter illegal memory access on NCCL AllReduce. We suggest trying to turn NCCL protocol `Simple` off by setting environment `NCCL_PROTO=^Simple` to fix this issue.
+
+### LLM Features
+
+- New LLM Engine([Overview](docs/en/llm-cuda-overview.md))
 - Flash Attention
 - Split-k Attention(Similar with Flash Decoding)
 - Group-query Attention
@@ -30,7 +33,7 @@
 - INT8 groupwise KV Cache(Numerical accuracy is very close to FP16🚀)
 - INT8 per token per channel Quantization(W8A8)
 
-## Model Zoo
+### LLM Model Zoo
 
 - [LLaMA 1/2/3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama)
 - [ChatGLM 2/3](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/chatglm2)
@@ -41,14 +44,6 @@
 - [Qwen 1/1.5](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/qwen)
 - [Falcon](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/falcon)
 - [Bigcode](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/bigcode)
-
-## Known Issues
-
- - NCCL issue on some Device: Currently reported that L40S and H800 may encounter illegal memory access on NCCL AllReduce. We suggest trying to turn NCCL protocol `Simple` off by setting environment `NCCL_PROTO=^Simple` to fix this issue.
-
-## Detials
-
-[Here](docs/en/llm-cuda-overview.md)
 
 ### Hello, world!
 
