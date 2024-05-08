@@ -20,7 +20,7 @@
 #include "ppl/common/cuda/nccl_utils.h"
 #include "ppl/common/destructor.h"
 
-#include "ppl/kernel/llm/cuda/opmx/vision_embedding.h"
+#include "ppl/kernel/llm/cuda/pmx/vision_embedding.h"
 
 #include <cudnn.h>
 
