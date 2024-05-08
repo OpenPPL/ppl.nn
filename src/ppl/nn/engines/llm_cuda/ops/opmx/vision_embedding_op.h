@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_OPMX_VISION_EMBEDDING_OP_H_
 
 #include "ppl/nn/engines/llm_cuda/opt_kernel.h"
-#include "ppl/nn/params/pmx/vision_embedding_param.h"
+#include "ppl/nn/params/opmx/vision_embedding_param.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
@@ -38,7 +38,7 @@ public:
 private:
     ppl::common::RetCode CommonInit();
 
-    std::shared_ptr<ppl::nn::pmx::VisionEmbeddingParam> param_;
+    std::shared_ptr<ppl::nn::opmx::VisionEmbeddingParam> param_;
 };
 
 }}}}} // namespace ppl::nn::llm::cuda::opmx
