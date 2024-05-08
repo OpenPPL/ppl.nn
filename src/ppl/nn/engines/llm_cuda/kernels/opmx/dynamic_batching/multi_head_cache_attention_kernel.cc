@@ -95,11 +95,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (param_->cache_mode != 0) {
-        LOG(ERROR) << "currently only support cache_mode == 0";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     if (param_->is_alibi) {
         LOG(ERROR) << "currently only support is_alibi == false";
         return ppl::common::RC_UNSUPPORTED;
@@ -166,6 +161,15 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
+    int64_t cachestart_stride_b = 0;
+    if (param_->cache_mode == 1) {
+        if (cachestarts->GetShape()->GetDimCount() != 2) {
+            LOG(ERROR) << "cachestarts must be a 2d tensor in cache_mode 1";
+            return ppl::common::RC_INVALID_VALUE;
+        }
+        cachestart_stride_b = cachestarts->GetShape()->GetDim(1);
+    }
+
     auto p_ret = ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention_prepare(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
@@ -181,6 +185,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         kvstarts->GetBufferPtr(),
         cachestarts->GetBufferPtr(),
         start_pos->GetBufferPtr(),
+        nullptr,
         param_->is_causal,
         batch,
         decodeing_batches_val,
@@ -192,10 +197,12 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         param_->num_kv_heads,
         param_->head_dim,
         param_->cache_mode,
+        param_->page_size,
         cache_stride_s,
         cache_stride_l,
         cache_stride_h,
         cache_stride_kv,
+        cachestart_stride_b,
         cache->GetBufferPtr(),
         scale->GetBufferPtr(),
         attn_output->GetShape(),
