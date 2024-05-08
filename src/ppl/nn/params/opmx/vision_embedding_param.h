@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <cmath>
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace opmx {
 
 struct VisionEmbeddingParam final : public ir::TypedAttr<VisionEmbeddingParam> {
     int32_t hidden_dim;
@@ -19,6 +19,6 @@ struct VisionEmbeddingParam final : public ir::TypedAttr<VisionEmbeddingParam> {
     }
 };
 
-}}} // namespace ppl::nn::pmx
+}}} // namespace ppl::nn::opmx
 
 #endif
