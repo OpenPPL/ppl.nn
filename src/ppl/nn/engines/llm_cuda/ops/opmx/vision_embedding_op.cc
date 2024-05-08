@@ -43,7 +43,7 @@ RetCode VisionEmbeddingOp::CommonInit() {
 }
 
 RetCode VisionEmbeddingOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::pmx::VisionEmbeddingParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::opmx::VisionEmbeddingParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -71,7 +71,7 @@ ppl::common::RetCode VisionEmbeddingOp::SerializeData(const ppl::nn::pmx::Serial
 ppl::common::RetCode VisionEmbeddingOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
     auto fb_op_param = opmx::GetOpParam(base);
     auto fb_param = fb_op_param->value_as_VisionEmbeddingParam();
-    param_ = make_shared<ppl::nn::pmx::VisionEmbeddingParam>();
+    param_ = make_shared<ppl::nn::opmx::VisionEmbeddingParam>();
     param_.get()->hidden_dim = fb_param->hidden_dim();
     param_.get()->image_size = fb_param->image_size();
     param_.get()->patch_size = fb_param->patch_size();

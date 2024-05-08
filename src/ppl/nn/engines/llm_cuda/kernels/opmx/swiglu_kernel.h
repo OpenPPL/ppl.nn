@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_OPMX_SWIGLU_KERNEL_H_
 
 #include "ppl/nn/engines/llm_cuda/kernel.h"
-#include "ppl/nn/params/pmx/swish_param.h"
+#include "ppl/nn/params/opmx/swish_param.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
@@ -27,14 +27,14 @@ class SwiGLUKernel : public LlmCudaKernel {
 public:
     SwiGLUKernel(const ir::Node* node) : LlmCudaKernel(node) {}
 
-    void SetParam(const ppl::nn::pmx::SwishParam* p) {
+    void SetParam(const ppl::nn::opmx::SwishParam* p) {
         param_ = p;
     }
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
-    const ppl::nn::pmx::SwishParam* param_ = nullptr;
+    const ppl::nn::opmx::SwishParam* param_ = nullptr;
 
 };
 

@@ -1608,7 +1608,7 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
       return verifier.VerifyTable(ptr);
     }
     case OpParamType_VisionEmbeddingParam: {
-      auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::pmx::VisionEmbeddingParam *>(obj);
+      auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::opmx::VisionEmbeddingParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case OpParamType_ReshapeParam: {
