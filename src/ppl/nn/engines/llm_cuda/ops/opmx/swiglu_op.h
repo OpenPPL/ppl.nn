@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_OPMX_SWIGLU_OP_H_
 
 #include "ppl/nn/engines/llm_cuda/opt_kernel.h"
-#include "ppl/nn/params/pmx/swish_param.h"
+#include "ppl/nn/params/opmx/swish_param.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
@@ -37,8 +37,8 @@ public:
 
 private:
     ppl::common::RetCode CommonInit();
-    
-    std::shared_ptr<ppl::nn::pmx::SwishParam> param_;
+
+    std::shared_ptr<ppl::nn::opmx::SwishParam> param_;
 };
 
 }}}}} // namespace ppl::nn::llm::cuda::opmx
