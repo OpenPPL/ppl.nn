@@ -45,7 +45,6 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(pos_emb_weight);
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("hidden_dim: %d\n", param_->hidden_dim);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("image_size: %d\n", param_->image_size);
     PPLNN_LLM_CUDA_DEBUG_TRACE("patch_size: %d\n", param_->patch_size);
 
     PPLNN_LLM_CUDA_RESHAPE_OUTPUTS();
@@ -64,16 +63,11 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     config.hidden_dim = param_->hidden_dim;
-    config.image_size = param_->image_size;
     config.patch_size = param_->patch_size;
     auto image_shape = pixel_values->GetShape();
-    config.batch_size = image_shape->GetDim(0);
+    config.batch_size    = image_shape->GetDim(0);
     config.image_channel = image_shape->GetDim(1);
-    size_t image_size = image_shape->GetDim(2);
-    if (config.image_size != image_size) {
-        LOG(ERROR) << "The image size is inconsistant with the image data.";
-        return ppl::common::RC_INVALID_VALUE;
-    }
+    config.image_size    = image_shape->GetDim(2);
 
     ppl::kernel::llm::cuda::pmx::vision_embedding_preprocessing(config);
 
