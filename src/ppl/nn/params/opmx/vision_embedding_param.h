@@ -9,12 +9,10 @@ namespace ppl { namespace nn { namespace opmx {
 
 struct VisionEmbeddingParam final : public ir::TypedAttr<VisionEmbeddingParam> {
     int32_t hidden_dim;
-    int32_t image_size;
     int32_t patch_size;
 
     bool operator==(const VisionEmbeddingParam& p) const {
         return (hidden_dim == p.hidden_dim
-             && image_size == p.image_size
              && patch_size == p.patch_size);
     }
 };

@@ -778,8 +778,8 @@ struct RotaryPositionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffer
   int32_t max_position_embeddings() const {
     return GetField<int32_t>(VT_MAX_POSITION_EMBEDDINGS, 0);
   }
-  ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type() const {
-    return static_cast<ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType>(GetField<uint32_t>(VT_SCALING_TYPE, 0));
+  ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType scaling_type() const {
+    return static_cast<ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType>(GetField<uint32_t>(VT_SCALING_TYPE, 0));
   }
   float scaling_factor() const {
     return GetField<float>(VT_SCALING_FACTOR, 0.0f);
@@ -812,7 +812,7 @@ struct RotaryPositionEmbeddingParamBuilder {
   void add_max_position_embeddings(int32_t max_position_embeddings) {
     fbb_.AddElement<int32_t>(RotaryPositionEmbeddingParam::VT_MAX_POSITION_EMBEDDINGS, max_position_embeddings, 0);
   }
-  void add_scaling_type(ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type) {
+  void add_scaling_type(ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType scaling_type) {
     fbb_.AddElement<uint32_t>(RotaryPositionEmbeddingParam::VT_SCALING_TYPE, static_cast<uint32_t>(scaling_type), 0);
   }
   void add_scaling_factor(float scaling_factor) {
@@ -835,7 +835,7 @@ inline flatbuffers::Offset<RotaryPositionEmbeddingParam> CreateRotaryPositionEmb
     int32_t rotary_dim = 0,
     float theta = 0.0f,
     int32_t max_position_embeddings = 0,
-    ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType scaling_type = ppl::nn::llm::cuda::pmx::RotaryPositionEmbeddingScalingType_NONE,
+    ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType scaling_type = ppl::nn::llm::cuda::opmx::RotaryPositionEmbeddingScalingType_NONE,
     float scaling_factor = 0.0f) {
   RotaryPositionEmbeddingParamBuilder builder_(_fbb);
   builder_.add_scaling_factor(scaling_factor);
@@ -1347,14 +1347,10 @@ struct VisionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
   typedef VisionEmbeddingParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_HIDDEN_DIM = 4,
-    VT_IMAGE_SIZE = 6,
-    VT_PATCH_SIZE = 8
+    VT_PATCH_SIZE = 6
   };
   int32_t hidden_dim() const {
     return GetField<int32_t>(VT_HIDDEN_DIM, 0);
-  }
-  int32_t image_size() const {
-    return GetField<int32_t>(VT_IMAGE_SIZE, 0);
   }
   int32_t patch_size() const {
     return GetField<int32_t>(VT_PATCH_SIZE, 0);
@@ -1362,7 +1358,6 @@ struct VisionEmbeddingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_HIDDEN_DIM, 4) &&
-           VerifyField<int32_t>(verifier, VT_IMAGE_SIZE, 4) &&
            VerifyField<int32_t>(verifier, VT_PATCH_SIZE, 4) &&
            verifier.EndTable();
   }
@@ -1374,9 +1369,6 @@ struct VisionEmbeddingParamBuilder {
   flatbuffers::uoffset_t start_;
   void add_hidden_dim(int32_t hidden_dim) {
     fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_HIDDEN_DIM, hidden_dim, 0);
-  }
-  void add_image_size(int32_t image_size) {
-    fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_IMAGE_SIZE, image_size, 0);
   }
   void add_patch_size(int32_t patch_size) {
     fbb_.AddElement<int32_t>(VisionEmbeddingParam::VT_PATCH_SIZE, patch_size, 0);
@@ -1395,11 +1387,9 @@ struct VisionEmbeddingParamBuilder {
 inline flatbuffers::Offset<VisionEmbeddingParam> CreateVisionEmbeddingParam(
     flatbuffers::FlatBufferBuilder &_fbb,
     int32_t hidden_dim = 0,
-    int32_t image_size = 0,
     int32_t patch_size = 0) {
   VisionEmbeddingParamBuilder builder_(_fbb);
   builder_.add_patch_size(patch_size);
-  builder_.add_image_size(image_size);
   builder_.add_hidden_dim(hidden_dim);
   return builder_.Finish();
 }

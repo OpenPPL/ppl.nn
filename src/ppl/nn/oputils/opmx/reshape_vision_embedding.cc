@@ -37,8 +37,8 @@ RetCode ReshapeVisionEmbedding(InputOutputInfo* info, const ir::Attr* arg) {
 
     const uint32_t output_dim_count = 3;
     int64_t output_dims[output_dim_count];
-    output_dims[0] = input.GetDims()[0];
-    output_dims[1] = (param->image_size / param->patch_size) * (param->image_size / param->patch_size) + 1;
+    output_dims[0] = input.GetDim(0);
+    output_dims[1] = (input.GetDim(2) / param->patch_size) * (input.GetDim(2) / param->patch_size) + 1;
     output_dims[2] = param->hidden_dim;
 
     output.Reshape(output_dims, output_dim_count);
