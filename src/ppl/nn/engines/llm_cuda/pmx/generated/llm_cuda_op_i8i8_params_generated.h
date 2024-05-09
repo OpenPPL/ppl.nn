@@ -23,35 +23,41 @@ namespace i8i8 {
 struct OnlineDequantizeParam;
 struct OnlineDequantizeParamBuilder;
 
+struct OnlineDequantizeReshapeSplitParam;
+struct OnlineDequantizeReshapeSplitParamBuilder;
+
 struct OpParam;
 struct OpParamBuilder;
 
 enum OpParamType : uint8_t {
   OpParamType_NONE = 0,
   OpParamType_OnlineDequantizeParam = 1,
+  OpParamType_OnlineDequantizeReshapeSplitParam = 2,
   OpParamType_MIN = OpParamType_NONE,
-  OpParamType_MAX = OpParamType_OnlineDequantizeParam
+  OpParamType_MAX = OpParamType_OnlineDequantizeReshapeSplitParam
 };
 
-inline const OpParamType (&EnumValuesOpParamType())[2] {
+inline const OpParamType (&EnumValuesOpParamType())[3] {
   static const OpParamType values[] = {
     OpParamType_NONE,
-    OpParamType_OnlineDequantizeParam
+    OpParamType_OnlineDequantizeParam,
+    OpParamType_OnlineDequantizeReshapeSplitParam
   };
   return values;
 }
 
 inline const char * const *EnumNamesOpParamType() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
     "NONE",
     "OnlineDequantizeParam",
+    "OnlineDequantizeReshapeSplitParam",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameOpParamType(OpParamType e) {
-  if (flatbuffers::IsOutRange(e, OpParamType_NONE, OpParamType_OnlineDequantizeParam)) return "";
+  if (flatbuffers::IsOutRange(e, OpParamType_NONE, OpParamType_OnlineDequantizeReshapeSplitParam)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesOpParamType()[index];
 }
@@ -62,6 +68,10 @@ template<typename T> struct OpParamTypeTraits {
 
 template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam> {
   static const OpParamType enum_value = OpParamType_OnlineDequantizeParam;
+};
+
+template<> struct OpParamTypeTraits<ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam> {
+  static const OpParamType enum_value = OpParamType_OnlineDequantizeReshapeSplitParam;
 };
 
 bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, OpParamType type);
@@ -108,6 +118,109 @@ inline flatbuffers::Offset<OnlineDequantizeParam> CreateOnlineDequantizeParam(
   return builder_.Finish();
 }
 
+struct OnlineDequantizeReshapeSplitParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef OnlineDequantizeReshapeSplitParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_AXIS = 4,
+    VT_SPLIT_POINT = 6,
+    VT_SPLIT = 8,
+    VT_SHAPE = 10,
+    VT_BIAS_TERM = 12
+  };
+  int32_t axis() const {
+    return GetField<int32_t>(VT_AXIS, 0);
+  }
+  const flatbuffers::Vector<int32_t> *split_point() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_SPLIT_POINT);
+  }
+  const flatbuffers::Vector<int64_t> *split() const {
+    return GetPointer<const flatbuffers::Vector<int64_t> *>(VT_SPLIT);
+  }
+  const flatbuffers::Vector<int64_t> *shape() const {
+    return GetPointer<const flatbuffers::Vector<int64_t> *>(VT_SHAPE);
+  }
+  bool bias_term() const {
+    return GetField<uint8_t>(VT_BIAS_TERM, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
+           VerifyOffset(verifier, VT_SPLIT_POINT) &&
+           verifier.VerifyVector(split_point()) &&
+           VerifyOffset(verifier, VT_SPLIT) &&
+           verifier.VerifyVector(split()) &&
+           VerifyOffset(verifier, VT_SHAPE) &&
+           verifier.VerifyVector(shape()) &&
+           VerifyField<uint8_t>(verifier, VT_BIAS_TERM, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct OnlineDequantizeReshapeSplitParamBuilder {
+  typedef OnlineDequantizeReshapeSplitParam Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_axis(int32_t axis) {
+    fbb_.AddElement<int32_t>(OnlineDequantizeReshapeSplitParam::VT_AXIS, axis, 0);
+  }
+  void add_split_point(flatbuffers::Offset<flatbuffers::Vector<int32_t>> split_point) {
+    fbb_.AddOffset(OnlineDequantizeReshapeSplitParam::VT_SPLIT_POINT, split_point);
+  }
+  void add_split(flatbuffers::Offset<flatbuffers::Vector<int64_t>> split) {
+    fbb_.AddOffset(OnlineDequantizeReshapeSplitParam::VT_SPLIT, split);
+  }
+  void add_shape(flatbuffers::Offset<flatbuffers::Vector<int64_t>> shape) {
+    fbb_.AddOffset(OnlineDequantizeReshapeSplitParam::VT_SHAPE, shape);
+  }
+  void add_bias_term(bool bias_term) {
+    fbb_.AddElement<uint8_t>(OnlineDequantizeReshapeSplitParam::VT_BIAS_TERM, static_cast<uint8_t>(bias_term), 0);
+  }
+  explicit OnlineDequantizeReshapeSplitParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<OnlineDequantizeReshapeSplitParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<OnlineDequantizeReshapeSplitParam>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<OnlineDequantizeReshapeSplitParam> CreateOnlineDequantizeReshapeSplitParam(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t axis = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> split_point = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int64_t>> split = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int64_t>> shape = 0,
+    bool bias_term = false) {
+  OnlineDequantizeReshapeSplitParamBuilder builder_(_fbb);
+  builder_.add_shape(shape);
+  builder_.add_split(split);
+  builder_.add_split_point(split_point);
+  builder_.add_axis(axis);
+  builder_.add_bias_term(bias_term);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<OnlineDequantizeReshapeSplitParam> CreateOnlineDequantizeReshapeSplitParamDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t axis = 0,
+    const std::vector<int32_t> *split_point = nullptr,
+    const std::vector<int64_t> *split = nullptr,
+    const std::vector<int64_t> *shape = nullptr,
+    bool bias_term = false) {
+  auto split_point__ = split_point ? _fbb.CreateVector<int32_t>(*split_point) : 0;
+  auto split__ = split ? _fbb.CreateVector<int64_t>(*split) : 0;
+  auto shape__ = shape ? _fbb.CreateVector<int64_t>(*shape) : 0;
+  return ppl::nn::llm::cuda::opmx::i8i8::CreateOnlineDequantizeReshapeSplitParam(
+      _fbb,
+      axis,
+      split_point__,
+      split__,
+      shape__,
+      bias_term);
+}
+
 struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef OpParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -124,6 +237,9 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam *value_as_OnlineDequantizeParam() const {
     return value_type() == ppl::nn::llm::cuda::opmx::i8i8::OpParamType_OnlineDequantizeParam ? static_cast<const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam *>(value()) : nullptr;
   }
+  const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam *value_as_OnlineDequantizeReshapeSplitParam() const {
+    return value_type() == ppl::nn::llm::cuda::opmx::i8i8::OpParamType_OnlineDequantizeReshapeSplitParam ? static_cast<const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam *>(value()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_VALUE_TYPE, 1) &&
@@ -135,6 +251,10 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 
 template<> inline const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam *OpParam::value_as<ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam>() const {
   return value_as_OnlineDequantizeParam();
+}
+
+template<> inline const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam *OpParam::value_as<ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam>() const {
+  return value_as_OnlineDequantizeReshapeSplitParam();
 }
 
 struct OpParamBuilder {
@@ -175,6 +295,10 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case OpParamType_OnlineDequantizeParam: {
       auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeParam *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParamType_OnlineDequantizeReshapeSplitParam: {
+      auto ptr = reinterpret_cast<const ppl::nn::llm::cuda::opmx::i8i8::OnlineDequantizeReshapeSplitParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

@@ -4,8 +4,17 @@ table OnlineDequantizeParam {
     bias_term: bool;
 }
 
+table OnlineDequantizeReshapeSplitParam {
+    axis: int32;
+    split_point: [int32];
+    split: [int64];
+    shape: [int64];
+    bias_term: bool;
+}
+
 union OpParamType {
     OnlineDequantizeParam,
+    OnlineDequantizeReshapeSplitParam,
 }
 
 table OpParam {
