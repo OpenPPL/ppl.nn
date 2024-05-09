@@ -111,7 +111,6 @@ table SwishParam {
 
 table VisionEmbeddingParam {
     hidden_dim: int32;
-    image_size: int32;
     patch_size: int32;
 }
 

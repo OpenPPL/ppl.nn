@@ -33,11 +33,6 @@ RetCode ParseVisionEmbeddingParam(const ::onnx::NodeProto& pb_node, const onnx::
         return RC_INVALID_VALUE;
     }
 
-    if (!onnx::utils::GetNodeAttr(pb_node, "image_size", &param->image_size, -1)) {
-        LOG(ERROR) << node->GetName() << ": missing image_size";
-        return RC_INVALID_VALUE;
-    }
-
     if (!onnx::utils::GetNodeAttr(pb_node, "patch_size", &param->patch_size, -1)) {
         LOG(ERROR) << node->GetName() << ": missing patch_size";
         return RC_INVALID_VALUE;
