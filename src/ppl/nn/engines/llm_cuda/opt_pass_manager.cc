@@ -17,6 +17,9 @@
 
 #include "passes/i8i8/quantization_pass.h"
 #include "passes/i8i8/fuse_rms_norm_pass.h"
+#include "passes/i8i8/fuse_split_pass.h"
+#include "passes/i8i8/fuse_silu_pass.h"
+#include "passes/i8i8/fuse_swiglu_pass.h"
 
 #include "opt_pass_manager.h"
 
@@ -78,6 +81,9 @@ OptPassManager::~OptPassManager() {
 OptPassManager::OptPassManager() {
     Register("", "I8I8Quantization", i8i8::QuantizationPass);
     Register("i8i8.fuse", "FuseRMSNorm", i8i8::FuseRMSNormPass);
+    Register("i8i8.fuse", "FuseSplit", i8i8::FuseSplitPass);
+    Register("i8i8.fuse", "FuseSiLU", i8i8::FuseSiLUPass);
+    Register("i8i8.fuse", "FuseSwiGLU", i8i8::FuseSwiGLUPass);
 }
 
 
