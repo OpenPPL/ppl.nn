@@ -117,8 +117,15 @@ RetCode OptGraph::Optimize(
     }
 
     if (engine_options.quant_method == QUANT_METHOD_ONLINE_I4F16) {
-        LOG(INFO) << "I4F16Quantization has not been implemented";
-        return ppl::common::RC_UNSUPPORTED;
+        LOG(INFO) << "Processing I4F16Quantization...";
+        auto prc = OptPassManager::GetInstance()->Apply("", "I4F16Quantization", options);
+        if (prc.retcode != RC_SUCCESS) {
+            LOG(ERROR) << "I4F16Quantization failed: " << GetRetCodeStr(prc.retcode);
+            return prc.retcode;
+        }
+        if (!prc.graph_modified) {
+            LOG(INFO) << "I4F16Quantization: nothing has been changed.";
+        }
     }
 
     rc = utils::LoadConstants(*graph_, device, &partition_info_->constants);

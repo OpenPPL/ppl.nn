@@ -81,6 +81,12 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_cublas, NcclParam* tensor_p
             return RC_INTERNAL_ERROR;
         }
 
+        i4f16_gemm_handle_ = ppl::kernel::llm::cuda::pmx::i4f16::create_gemm_handle();
+        if (i4f16_gemm_handle_ == nullptr) {
+            LOG(ERROR) << "pmx::i4f16::create_gemm_handle failed.";
+            return RC_INTERNAL_ERROR;
+        }
+
         /* refer to https://developer.nvidia.com/blog/new-cublas-12-0-features-and-matrix-multiplication-performance-on-nvidia-hopper-gpus/
          NV said:
             NVIDIA Hopper architecture workspace requirements

@@ -21,6 +21,8 @@
 #include "passes/i8i8/fuse_silu_pass.h"
 #include "passes/i8i8/fuse_swiglu_pass.h"
 
+#include "passes/i4f16/quantization_pass.h"
+
 #include "opt_pass_manager.h"
 
 #include "ppl/common/log.h"
@@ -84,6 +86,8 @@ OptPassManager::OptPassManager() {
     Register("i8i8.fuse", "FuseSplit", i8i8::FuseSplitPass);
     Register("i8i8.fuse", "FuseSiLU", i8i8::FuseSiLUPass);
     Register("i8i8.fuse", "FuseSwiGLU", i8i8::FuseSwiGLUPass);
+
+    Register("", "I4F16Quantization", i4f16::QuantizationPass);
 }
 
 
