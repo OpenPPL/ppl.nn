@@ -27,7 +27,7 @@ class BufferedCpuAllocator final : public ppl::common::CompactAddrManager::VMAll
 public:
     BufferedCpuAllocator() {}
     ~BufferedCpuAllocator();
-    ppl::common::RetCode Init();
+    ppl::common::RetCode Init(uint64_t max_mem_bytes = UINT64_MAX);
     uint64_t Extend(uint64_t bytes) override;
     uintptr_t GetReservedBase() const override {
         return (uintptr_t)base_;

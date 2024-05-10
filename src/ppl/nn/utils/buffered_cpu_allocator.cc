@@ -49,40 +49,51 @@ BufferedCpuAllocator::~BufferedCpuAllocator() {
 #endif
 }
 
-RetCode BufferedCpuAllocator::Init() {
+RetCode BufferedCpuAllocator::Init(uint64_t max_mem_bytes) {
 #ifdef _MSC_VER
-    MEMORYSTATUSEX status;
-    status.dwLength = sizeof(status);
-    if (!GlobalMemoryStatusEx(&status)) {
-        char errmsg[g_max_msg_buf_size];
-        FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, errmsg,
-                      g_max_msg_buf_size, nullptr);
-        LOG(ERROR) << "get physical memory info failed: " << errmsg;
-        return RC_OTHER_ERROR;
+    {
+        MEMORYSTATUSEX status;
+        status.dwLength = sizeof(status);
+        if (!GlobalMemoryStatusEx(&status)) {
+            char errmsg[g_max_msg_buf_size];
+            FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0,
+                          errmsg, g_max_msg_buf_size, nullptr);
+            LOG(ERROR) << "get physical memory info failed: " << errmsg;
+            return RC_OTHER_ERROR;
+        }
+
+        if (max_mem_bytes > status.ullTotalPhys) {
+            max_mem_bytes = status.ullTotalPhys;
+        }
     }
 
-    base_ = VirtualAlloc(nullptr, status.ullTotalPhys, MEM_RESERVE, PAGE_READWRITE);
+    base_ = VirtualAlloc(nullptr, max_mem_bytes, MEM_RESERVE, PAGE_READWRITE);
     if (!base_) {
         char errmsg[g_max_msg_buf_size];
         FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, errmsg,
                       g_max_msg_buf_size, nullptr);
-        LOG(ERROR) << "VirtualAlloc reserve [" << status.ullTotalPhys << "] bytes failed: " << errmsg;
+        LOG(ERROR) << "VirtualAlloc reserve [" << max_mem_bytes << "] bytes failed: " << errmsg;
         return RC_OTHER_ERROR;
     }
 
-    addr_len_ = status.ullTotalPhys;
-    LOG(DEBUG) << "reserved [" << status.ullTotalPhys << "] bytes of virtual address from [" << base_ << "].";
+    addr_len_ = max_mem_bytes;
+    LOG(DEBUG) << "reserved [" << max_mem_bytes << "] bytes of virtual address from [" << base_ << "].";
 #else
-    auto totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
+    {
+        auto totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
+        if (max_mem_bytes > totalram) {
+            max_mem_bytes = totalram;
+        }
+    }
 
-    base_ = mmap(nullptr, totalram, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    base_ = mmap(nullptr, max_mem_bytes, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (base_ == MAP_FAILED) {
-        LOG(ERROR) << "mmap reserve [" << totalram << "] bytes failed: " << strerror(errno);
+        LOG(ERROR) << "mmap reserve [" << max_mem_bytes << "] bytes failed: " << strerror(errno);
         return RC_OTHER_ERROR;
     }
 
-    addr_len_ = totalram;
-    LOG(DEBUG) << "reserved [" << totalram << "] bytes of virtual address from [" << base_ << "].";
+    addr_len_ = max_mem_bytes;
+    LOG(DEBUG) << "reserved [" << max_mem_bytes << "] bytes of virtual address from [" << base_ << "].";
 #endif
 
     cursor_ = base_;
