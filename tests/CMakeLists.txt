@@ -1,3 +1,10 @@
+if(NOT CUDNN_INCLUDE_DIR)
+    message(FATAL_ERROR "`CUDNN_INCLUDE_DIR` is not set.")
+endif()
+if(NOT CUDNN_LIBRARY)
+    message(FATAL_ERROR "`CUDNN_LIBRARY` is not set.")
+endif()
+
 if(PPLNN_ENABLE_ONNX_MODEL)
     file(GLOB_RECURSE PPLNN_MODEL_ONNX_TEST_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
@@ -36,10 +43,12 @@ if(PPLNN_ENABLE_ONNX_MODEL)
 endif()
 
 hpcc_populate_dep(googletest)
-target_link_libraries(pplnn_unittest PRIVATE pplnn_static gtest_main)
+target_link_libraries(pplnn_unittest PRIVATE pplnn_static gtest_main cudnn)
+target_link_directories(pplnn_unittest PRIVATE ${CUDNN_LIBRARY})
 
 target_include_directories(pplnn_unittest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CUDNN_INCLUDE_DIR}
     ${googletest_SOURCE_DIR}/include)
 
 if(PPLNN_ENABLE_PMX_MODEL)
