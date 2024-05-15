@@ -26,7 +26,8 @@ namespace ppl { namespace nn { namespace opmx {
 
 ppl::common::RetCode ReshapeLinear(
     InputOutputInfo* info, const ir::Attr* arg, 
-    int64_t in_features_pack_size, int64_t out_features_pack_size) {
+    int64_t in_features_pack_size, int64_t out_features_pack_size,
+    bool check_weight_shape) {
     
     auto param = static_cast<const LinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
@@ -41,7 +42,7 @@ ppl::common::RetCode ReshapeLinear(
         return RC_INVALID_VALUE;
     }
 
-    if (weight_shape.GetDim(0) * out_features_pack_size != param->out_features) {
+    if (check_weight_shape && weight_shape.GetDim(0) * out_features_pack_size != param->out_features) {
         LOG(ERROR) << info->GetNode()->GetName() <<
                 " out_features(" << param->out_features <<
                 ") not equal to weight's out feature dim(" <<
