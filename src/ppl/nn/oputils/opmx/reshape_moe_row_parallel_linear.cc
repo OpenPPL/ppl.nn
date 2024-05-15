@@ -23,7 +23,8 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace opmx {
 
 RetCode ReshapeMoeRowParallelLinear(InputOutputInfo* info, const ir::Attr* arg, int64_t world_size,
-                                       int64_t in_features_pack_size, int64_t out_features_pack_size) {
+                                       int64_t in_features_pack_size, int64_t out_features_pack_size,
+                                       bool check_weight_shape) {
     auto param = static_cast<const MoeRowParallelLinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
     const TensorShape& offset_shape = *info->GetInput<TensorImpl>(1)->GetShape();
@@ -57,7 +58,7 @@ RetCode ReshapeMoeRowParallelLinear(InputOutputInfo* info, const ir::Attr* arg, 
         }
     }
 
-    if(weight_shape.GetDim(weight_dim_count - 1) * in_features_pack_size != in_features_per_part) {
+    if(check_weight_shape && weight_shape.GetDim(weight_dim_count - 1) * in_features_pack_size != in_features_per_part) {
         LOG(ERROR) << info->GetNode()->GetName() <<
                 " in_features_per_part(" << in_features_per_part <<
                 ") not equal to weight's in feature dim(" <<
@@ -66,7 +67,7 @@ RetCode ReshapeMoeRowParallelLinear(InputOutputInfo* info, const ir::Attr* arg, 
         return RC_INVALID_VALUE;
     }
 
-    if (offset_shape.GetDim(0) != weight_shape.GetDim(0) + 1) {
+    if (check_weight_shape && offset_shape.GetDim(0) != weight_shape.GetDim(0) + 1) {
         LOG(ERROR) << info->GetNode()->GetName() << " export_offset_shape(" << offset_shape.GetDim(0)
                    << ") not equal to weight's first dim + 1(" << weight_shape.GetDim(0) + 1 << ")";
         return RC_INVALID_VALUE;

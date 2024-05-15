@@ -27,7 +27,8 @@ namespace ppl { namespace nn { namespace opmx {
 
 ppl::common::RetCode ReshapeLinear(
     InputOutputInfo*, const ir::Attr*,
-    int64_t in_features_pack_size = 1, int64_t out_features_pack_size = 1);
+    int64_t in_features_pack_size = 1, int64_t out_features_pack_size = 1,
+    bool check_weight_shape = true);
 
 }}} // namespace ppl::nn::opmx
 

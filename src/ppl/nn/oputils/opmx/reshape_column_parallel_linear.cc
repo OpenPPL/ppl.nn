@@ -24,7 +24,8 @@ namespace ppl { namespace nn { namespace opmx {
 
 RetCode ReshapeColumnParallelLinear(
     InputOutputInfo* info, const ir::Attr* arg, int64_t world_size,
-    int64_t in_features_pack_size, int64_t out_features_pack_size) {
+    int64_t in_features_pack_size, int64_t out_features_pack_size,
+    bool check_weight_shape) {
     auto param = static_cast<const ColumnParallelLinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
     const TensorShape& weight_shape = *info->GetInput<TensorImpl>(1)->GetShape();
@@ -44,7 +45,7 @@ RetCode ReshapeColumnParallelLinear(
     }
 
     auto out_features_per_part = param->out_features / world_size;
-    if(weight_shape.GetDim(0) * out_features_pack_size != out_features_per_part) {
+    if(check_weight_shape && weight_shape.GetDim(0) * out_features_pack_size != out_features_per_part) {
         LOG(ERROR) << info->GetNode()->GetName() <<
                 " out_features_per_part(" << out_features_per_part <<
                 ") not equal to weight's out feature dim(" <<
