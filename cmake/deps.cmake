@@ -157,8 +157,10 @@ if(MSVC)
     endif()
 endif()
 
-if(NOT PPLNN_DEP_PROTOBUF_VERSION)
-    set(PPLNN_DEP_PROTOBUF_VERSION v3.1.0)
+if(PPLNN_DEP_PROTOBUF_VERSION)
+    set(__PROTOBUF_TAG__ ${PPLNN_DEP_PROTOBUF_VERSION})
+else()
+    set(__PROTOBUF_TAG__ v3.1.0)
 endif()
 
 if(PPLNN_DEP_PROTOBUF_PKG)
@@ -170,8 +172,10 @@ else()
     endif()
     hpcc_declare_git_dep_depth1(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
-        ${PPLNN_DEP_PROTOBUF_VERSION})
+        ${__PROTOBUF_TAG__})
 endif()
+
+unset(__PROTOBUF_TAG__)
 
 # --------------------------------------------------------------------------- #
 
