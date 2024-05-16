@@ -51,7 +51,9 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ master)
+if(NOT PPLNN_DEP_HPCC_VERSION)
+    set(PPLNN_DEP_HPCC_VERSION master)
+endif()
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -65,14 +67,11 @@ else()
     endif()
     FetchContent_Declare(hpcc
         GIT_REPOSITORY ${PPLNN_DEP_HPCC_GIT}
-        GIT_TAG ${__HPCC_COMMIT__}
-        GIT_SHALLOW TRUE
+        GIT_TAG ${PPLNN_DEP_HPCC_VERSION}
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
 endif()
-
-unset(__HPCC_COMMIT__)
 
 FetchContent_GetProperties(hpcc)
 if(NOT hpcc_POPULATED)
@@ -105,7 +104,9 @@ if(PPLNN_CUDA_ENABLE_NCCL)
     set(PPLCOMMON_ENABLE_NCCL ON)
 endif()
 
-set(__PPLCOMMON_COMMIT__ master)
+if(NOT PPLNN_DEP_PPLCOMMON_VERSION)
+    set(PPLNN_DEP_PPLCOMMON_VERSION master)
+endif()
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -116,10 +117,8 @@ else()
     endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLNN_DEP_PPLCOMMON_GIT}
-        ${__PPLCOMMON_COMMIT__})
+        ${PPLNN_DEP_PPLCOMMON_VERSION})
 endif()
-
-unset(__PPLCOMMON_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
@@ -158,10 +157,8 @@ if(MSVC)
     endif()
 endif()
 
-if(PPLNN_PROTOBUF_VERSION)
-    set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
-else()
-    set(__PROTOBUF_TAG__ v3.1.0)
+if(NOT PPLNN_DEP_PROTOBUF_VERSION)
+    set(PPLNN_DEP_PROTOBUF_VERSION v3.1.0)
 endif()
 
 if(PPLNN_DEP_PROTOBUF_PKG)
@@ -171,15 +168,10 @@ else()
     if(NOT PPLNN_DEP_PROTOBUF_GIT)
         set(PPLNN_DEP_PROTOBUF_GIT "https://github.com/protocolbuffers/protobuf.git")
     endif()
-    if(PPLNN_PROTOBUF_VERSION)
-        set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
-    endif()
     hpcc_declare_git_dep_depth1(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
-        ${__PROTOBUF_TAG__})
+        ${PPLNN_DEP_PROTOBUF_VERSION})
 endif()
-
-unset(__PROTOBUF_TAG__)
 
 # --------------------------------------------------------------------------- #
 
@@ -252,6 +244,10 @@ unset(__GOOGLETEST_TAG__)
 # --------------------------------------------------------------------------- #
 
 if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64)
+    if(NOT PPLNN_DEP_PPLCPUKERNEL_VERSION)
+        set(PPLNN_DEP_PPLCPUKERNEL_VERSION master)
+    endif()
+
     if(PPLNN_DEP_PPLCPUKERNEL_PKG)
         hpcc_declare_pkg_dep(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_PKG})
@@ -261,13 +257,17 @@ if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64
         endif()
         hpcc_declare_git_dep_depth1(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_GIT}
-            master)
+            ${PPLNN_DEP_PPLCPUKERNEL_VERSION})
     endif()
 endif()
 
 # --------------------------------------------------------------------------- #
 
 if(PPLNN_USE_CUDA)
+    if(NOT PPLNN_DEP_PPLCUDAKERNEL_VERSION)
+        set(PPLNN_DEP_PPLCUDAKERNEL_VERSION master)
+    endif()
+
     if(PPLNN_DEP_PPLCUDAKERNEL_PKG)
         hpcc_declare_pkg_dep(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_PKG})
@@ -277,13 +277,15 @@ if(PPLNN_USE_CUDA)
         endif()
         hpcc_declare_git_dep_depth1(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
-            master)
+            ${PPLNN_DEP_PPLCUDAKERNEL_VERSION})
     endif()
 endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__LLM_KERNEL_CUDA_COMMIT__ master)
+if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION)
+    set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION master)
+endif()
 
 if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
     hpcc_declare_pkg_dep(ppl.llm.kernel.cuda
@@ -294,7 +296,5 @@ else()
     endif()
     hpcc_declare_git_dep_depth1(ppl.llm.kernel.cuda
         ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT}
-        ${__LLM_KERNEL_CUDA_COMMIT__})
+        ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION})
 endif()
-
-unset(__LLM_KERNEL_CUDA_COMMIT__)

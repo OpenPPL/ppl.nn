@@ -6,9 +6,9 @@ if(NOT TARGET libprotobuf)
 endif()
 
 if(NOT PPLNN_ONNX_GENERATED_LIBS)
-    if(PPLNN_PROTOBUF_VERSION)
+    if(PPLNN_DEP_PROTOBUF_VERSION)
         if(CMAKE_CROSSCOMPILING)
-            message(FATAL_ERROR "`PPLNN_PROTOBUF_VERSION` is set to be [${PPLNN_PROTOBUF_VERSION}], but `PPLNN_ONNX_GENERATED_LIBS` is not set.")
+            message(FATAL_ERROR "`PPLNN_DEP_PROTOBUF_VERSION` is set to be [${PPLNN_DEP_PROTOBUF_VERSION}], but `PPLNN_ONNX_GENERATED_LIBS` is not set.")
         else() # use protoc to generate *.pb.*
             if(NOT PPLNN_PROTOC_EXECUTABLE)
                 set(PPLNN_PROTOC_EXECUTABLE ${protobuf_BINARY_DIR}/protoc)
