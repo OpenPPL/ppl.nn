@@ -172,8 +172,10 @@ else()
     endif()
     hpcc_declare_git_dep_depth1(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
-        ${PPLNN_DEP_PROTOBUF_VERSION})
+        ${__PROTOBUF_TAG__})
 endif()
+
+unset(__PROTOBUF_TAG__)
 
 # --------------------------------------------------------------------------- #
 
