@@ -28,6 +28,7 @@
 #include <cublasLt.h>
 
 #include <functional>
+#include <map>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
@@ -115,6 +116,8 @@ public:
         return i4f16_gemm_handle_;
     }
 
+    std::pair<ppl::common::RetCode, float*> GetAlibiSlopes(int32_t num_heads);
+
     ppl::kernel::llm::cuda::cublas::AlgoCache* GetCublasAlgoCache() {
         return &cublas_algo_cache_;
     }
@@ -181,6 +184,9 @@ protected:
     ppl::kernel::llm::cuda::cublas::AlgoCache cublas_algo_cache_;
 
     void* i4f16_gemm_handle_ = nullptr;
+
+    // num_heads -> cuda raw ptr(alloc by cuda malloc async)
+    std::map<int32_t, float*> alibi_slopes_map_; 
 };
 
 }}}} // namespace ppl::nn::llm::cuda

@@ -19,6 +19,7 @@
 #include "ppl/common/cuda/cuda_env.h"
 #include <stdarg.h>
 #include <cuda.h>
+#include <cmath>
 
 #include "ppl/kernel/llm/cuda/pmx/i4f16/gemm.h"
 
@@ -37,6 +38,10 @@ LlmCudaDevice::LlmCudaDevice() {
 
 LlmCudaDevice::~LlmCudaDevice() {
     DoDestroy();
+
+    for (auto alibi_slopes_pair : alibi_slopes_map_) {
+        cudaFree(alibi_slopes_pair.second);
+    }
 
     if (own_stream_ && stream_) {
         cudaStreamSynchronize(stream_);
@@ -292,6 +297,52 @@ RetCode LlmCudaDevice::Synchronize() {
         return RC_DEVICE_RUNTIME_ERROR;
     }
     return RC_SUCCESS;
+}
+
+std::pair<RetCode, float*> LlmCudaDevice::GetAlibiSlopes(int32_t num_heads) {
+    auto iter = alibi_slopes_map_.find(num_heads);
+    if (iter != alibi_slopes_map_.end())
+        return {RC_SUCCESS, iter->second};
+
+    std::vector<float> alibi_slopes;
+    alibi_slopes.reserve(num_heads);
+
+    int32_t closest_power_of_2 = 1 << (int32_t)floor(log2(num_heads));
+    for (int32_t i = 1; i < closest_power_of_2 + 1; ++i) {
+        alibi_slopes.push_back(exp2f(-8.0f * i / closest_power_of_2));
+        LOG(INFO) << "alibi_slope of head(" << alibi_slopes.size() - 1 << ") = " << alibi_slopes.back(); 
+    }
+    if (closest_power_of_2 < num_heads) {
+        for (int32_t i = 1; i < 2 * (num_heads - closest_power_of_2) + 1; i += 2) {
+            alibi_slopes.push_back(exp2f(-4.0f * i / closest_power_of_2));
+            LOG(INFO) << "alibi_slope of head(" << alibi_slopes.size() - 1 << ") = " << alibi_slopes.back(); 
+        }
+    }
+
+    float* cu_alibi_slopes = nullptr;
+    auto cu_ret = cudaMallocAsync(&cu_alibi_slopes, num_heads * sizeof(float), GetStream());
+    if (cu_ret != cudaSuccess) {
+        LOG(ERROR) << "cudaMallocAsync failed: " << (int)cu_ret << ", " << cudaGetErrorString(cu_ret);
+        return {RC_DEVICE_RUNTIME_ERROR, nullptr};
+    }
+
+    cu_ret = cudaMemcpyAsync(
+        cu_alibi_slopes, alibi_slopes.data(),
+        num_heads * sizeof(float),
+        cudaMemcpyHostToDevice, GetStream());
+    if (cu_ret != cudaSuccess) {
+        LOG(ERROR) << "cudaMemcpyAsync H2D failed: " << (int)cu_ret << ", " << cudaGetErrorString(cu_ret);
+        return {RC_DEVICE_RUNTIME_ERROR, nullptr};
+    }
+
+    cu_ret = cudaStreamSynchronize(GetStream());
+    if (cu_ret != cudaSuccess) {
+        LOG(ERROR) << "cudaStreamSynchronize failed: " << (int)cu_ret << ", " << cudaGetErrorString(cu_ret);
+        return {RC_DEVICE_RUNTIME_ERROR, nullptr};
+    }
+
+    alibi_slopes_map_.insert(std::make_pair(num_heads, cu_alibi_slopes));
+    return {RC_SUCCESS, cu_alibi_slopes};
 }
 
 /* ------------------------------------------------------------------------- */
