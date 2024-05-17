@@ -21,6 +21,8 @@
 #include "ppl/nn/engines/llm_cuda/kernel.h"
 #include "ppl/nn/params/opmx/multi_head_cache_attention_param.h"
 
+#include "ppl/kernel/llm/cuda/pmx/multi_head_cache_attention.h"
+
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
 class DynamicBatchingMultiHeadCacheAttentionKernel : public LlmCudaKernel {
@@ -36,6 +38,7 @@ private:
 
 private:
     const ppl::nn::opmx::MultiHeadCacheAttentionParam* param_ = nullptr;
+    ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention attn_kernel_;
 };
 
 }}}}} // namespace ppl::nn::llm::cuda::opmx
