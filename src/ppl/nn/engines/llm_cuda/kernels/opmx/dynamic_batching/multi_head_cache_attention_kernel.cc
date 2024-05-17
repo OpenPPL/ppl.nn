@@ -16,10 +16,7 @@
 // under the License.
 
 #include "multi_head_cache_attention_kernel.h"
-
 #include "ppl/common/destructor.h"
-
-#include "ppl/kernel/llm/cuda/pmx/multi_head_cache_attention.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
@@ -170,7 +167,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         cachestart_stride_b = cachestarts->GetShape()->GetDim(1);
     }
 
-    auto p_ret = ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention_prepare(
+    auto ret = attn_kernel_.prepare(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
         query->GetShape(),
@@ -209,28 +206,23 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         attn_output->GetBufferPtr()
     );
 
-    if (p_ret.first != ppl::common::RC_SUCCESS) {
-        return p_ret.first;
+    if (ret != ppl::common::RC_SUCCESS) {
+        return ret;
     }
 
-    auto &cfg = p_ret.second;
-
     BufferDesc tmpbuffer_desc;
-    auto status = GetCudaDevice()->AllocTmpBuffer(cfg.temp_buffer_size, &tmpbuffer_desc);
+    auto status = GetCudaDevice()->AllocTmpBuffer(attn_kernel_.cfg.temp_buffer_size, &tmpbuffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << cfg.temp_buffer_size << "] for kernel[" << GetName()
+        LOG(ERROR) << "alloc tmp buffer size[" << attn_kernel_.cfg.temp_buffer_size << "] for kernel[" << GetName()
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
     ppl::common::Destructor multi_block_tmpbuffer_guard([this, &tmpbuffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmpbuffer_desc);
     });
-    cfg.temp_buffer = tmpbuffer_desc.addr;
+    attn_kernel_.cfg.temp_buffer = tmpbuffer_desc.addr;
 
-    return ppl::kernel::llm::cuda::pmx::dynamic_batching_multi_head_cache_attention(
-        GetStream(),
-        cfg
-    );
+    return attn_kernel_.forward(GetStream());
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::opmx
