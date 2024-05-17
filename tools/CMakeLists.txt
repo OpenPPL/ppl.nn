@@ -1,16 +1,8 @@
-if(NOT CUDNN_INCLUDE_DIR)
-    message(FATAL_ERROR "`CUDNN_INCLUDE_DIR` is not set.")
-endif()
-if(NOT CUDNN_LIBRARY)
-    message(FATAL_ERROR "`CUDNN_LIBRARY` is not set.")
-endif()
-
 file(GLOB __SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/pplnn.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
 add_executable(pplnn ${__SRC__})
-target_link_libraries(pplnn PRIVATE pplnn_static cudnn)
-target_link_directories(pplnn PRIVATE ${CUDNN_LIBRARY})
+target_link_libraries(pplnn PRIVATE pplnn_static)
 
 # -------------------------------------------------------------------------- #
 
@@ -18,8 +10,7 @@ file(GLOB __SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/pplnn_llm.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
 add_executable(pplnn_llm ${__SRC__})
-target_link_libraries(pplnn_llm PRIVATE pplnn_static cudnn)
-target_link_directories(pplnn_llm PRIVATE ${CUDNN_LIBRARY})
+target_link_libraries(pplnn_llm PRIVATE pplnn_static)
 
 if(PPLNN_CUDA_ENABLE_NCCL)
     set(PPLNN_ENABLE_MPI_TOOLS ON)
@@ -42,8 +33,7 @@ if(PPLNN_USE_LLM_CUDA)
     add_executable(benchmark_llama
         ${BENCHMARK_LLAMA_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
-    target_link_libraries(benchmark_llama pplnn_static cudnn)
-    target_link_directories(benchmark_llama PRIVATE ${CUDNN_LIBRARY})
+    target_link_libraries(benchmark_llama pplnn_static)
     target_include_directories(benchmark_llama PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
 
     if(PPLNN_CUDA_ENABLE_NCCL)
