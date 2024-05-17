@@ -309,11 +309,15 @@ ppl::common::RetCode TextGenerator::Generate(
         do {
             RuntimePoolRun([&](uint32_t nthr, uint32_t tid) {
                 auto arg = &runtime_thread_args_[tid];
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
                 if (tid == 0 && profiler && profiler->collect_statistics && (state_.current_step == 0 || state_.current_step == 1)) {
                     auto rc = arg->runtime->Configure(ppl::nn::RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
                     if (rc != ppl::common::RC_SUCCESS)
                         LOG(WARNING) << "enable kernel profiling failed: " << ppl::common::GetRetCodeStr(rc);
                 }
+#endif
+
                 bool ret = ThreadSetInputTensors(tid);
                 if (!ret) {
                     LOG(ERROR) << "SetInputTensor failed";
@@ -326,6 +330,7 @@ ppl::common::RetCode TextGenerator::Generate(
                     return ppl::common::RC_OTHER_ERROR;
                 }
 
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
                 if (tid == 0 && profiler && profiler->collect_statistics && (state_.current_step == 0 || state_.current_step == state_.max_steps - 1)) {
                     if (state_.current_step == 0) {
                         auto rc = arg->runtime->GetProfilingStatistics(&profiler->prefill_statistics);
@@ -340,7 +345,8 @@ ppl::common::RetCode TextGenerator::Generate(
                     if (rc != ppl::common::RC_SUCCESS)
                         LOG(WARNING) << "enable profiling failed: " << ppl::common::GetRetCodeStr(rc);
                 }
-                    
+#endif
+
                 auto logits = arg->logits;
                 rc = ThreadSampleArgMax(
                     tid,

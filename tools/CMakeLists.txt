@@ -36,6 +36,15 @@ if(PPLNN_USE_LLM_CUDA)
     target_link_libraries(benchmark_llama pplnn_static)
     target_include_directories(benchmark_llama PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
 
+    # keep it for compare
+    file(GLOB_RECURSE BENCHMARK_LLAMA_DEPRECATED_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/benchmark_llama_deprecated/*.cc)
+    add_executable(benchmark_llama_deprecated
+        ${BENCHMARK_LLAMA_DEPRECATED_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
+        target_link_libraries(benchmark_llama_deprecated pplnn_static)
+    target_include_directories(benchmark_llama_deprecated PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
+
     if(PPLNN_CUDA_ENABLE_NCCL)
         find_package(OpenMP REQUIRED)
         add_executable(test_nccl ${CMAKE_CURRENT_SOURCE_DIR}/test_nccl.cc)
