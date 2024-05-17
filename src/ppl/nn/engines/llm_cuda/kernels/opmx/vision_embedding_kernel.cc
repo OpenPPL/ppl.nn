@@ -68,6 +68,10 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     config.batch_size    = image_shape->GetDim(0);
     config.image_channel = image_shape->GetDim(1);
     config.image_size    = image_shape->GetDim(2);
+    if (image_shape->GetDim(2) != image_shape->GetDim(3)) {
+        LOG(ERROR) << "an image with unequal height and width isn't supported.";
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
     ppl::kernel::llm::cuda::pmx::vision_embedding_preprocessing(config);
 
