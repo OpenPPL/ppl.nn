@@ -167,8 +167,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         cachestart_stride_b = cachestarts->GetShape()->GetDim(1);
     }
 
-    auto ret = attn_kernel_.prepare(
-        GetStream(),
+    auto ret = attn_kernel_.heuristic_prepare(
         GetCudaDevice()->GetDeviceProp(),
         query->GetShape(),
         query->GetBufferPtr(),
@@ -211,16 +210,16 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     }
 
     BufferDesc tmpbuffer_desc;
-    auto status = GetCudaDevice()->AllocTmpBuffer(attn_kernel_.cfg.temp_buffer_size, &tmpbuffer_desc);
+    auto status = GetCudaDevice()->AllocTmpBuffer(attn_kernel_.cfg.workspace_size, &tmpbuffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << attn_kernel_.cfg.temp_buffer_size << "] for kernel[" << GetName()
+        LOG(ERROR) << "alloc tmp buffer size[" << attn_kernel_.cfg.workspace_size << "] for kernel[" << GetName()
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
     ppl::common::Destructor multi_block_tmpbuffer_guard([this, &tmpbuffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmpbuffer_desc);
     });
-    attn_kernel_.cfg.temp_buffer = tmpbuffer_desc.addr;
+    attn_kernel_.cfg.workspace = tmpbuffer_desc.addr;
 
     return attn_kernel_.forward(GetStream());
 }
