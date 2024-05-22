@@ -11,6 +11,7 @@ option(PPLNN_BUILD_SAMPLES "build samples" ON)
 option(PPLNN_INSTALL "install ppl headers and libs" ON)
 
 option(PPLNN_ENABLE_KERNEL_PROFILING "enable profiling for each kernel" OFF)
+option(PPLNN_ENABLE_KERNEL_TRACE "enable trace log kernels" OFF)
 
 option(PPLNN_ENABLE_ONNX_MODEL "enable onnx format support" ON)
 option(PPLNN_ENABLE_PMX_MODEL "enable pmx format support. pmx format is under heavily developing and should not be used in production environment." OFF)
@@ -190,6 +191,9 @@ target_compile_definitions(pplnn_basic_static PUBLIC
 
 if(PPLNN_ENABLE_KERNEL_PROFILING)
     target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_KERNEL_PROFILING)
+endif()
+if(PPLNN_ENABLE_KERNEL_TRACE)
+    target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_KERNEL_TRACE)
 endif()
 
 target_link_libraries(pplnn_static INTERFACE pplnn_basic_static)
