@@ -17,16 +17,13 @@
 
 #include "kernel.h"
 
-#ifdef PPLNN_LLM_CUDA_DUMP_OUTPUT_TENSORS
 #include <fstream>
-#endif
 
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
-#ifdef PPLNN_LLM_CUDA_DUMP_OUTPUT_TENSORS
 static RetCode LlmCudaDumpOutputTensors(KernelExecContext* ctx, const std::string &debug_data_dir) {
     auto get_dim_str = [](const TensorShape* shape) {
         if (shape->IsScalar()) {
@@ -91,7 +88,6 @@ static RetCode LlmCudaDumpOutputTensors(KernelExecContext* ctx, const std::strin
 
     return RC_SUCCESS;
 }
-#endif
 
 RetCode LlmCudaKernel::Init() {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -180,14 +176,21 @@ RetCode LlmCudaKernel::Execute(KernelExecContext* ctx) {
     }
 #endif
 
-#ifdef PPLNN_LLM_CUDA_DUMP_OUTPUT_TENSORS
-    std::string dump_dir = "./rank_" + std::to_string(GetCudaDevice()->GetTensorParallelNcclParam()->rank);
-    rc = LlmCudaDumpOutputTensors(ctx, dump_dir);
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "LlmCudaDumpOutputTensors() of kernel[" << GetName() << "] failed: " << GetRetCodeStr(rc);
-        return rc;
+    {
+        auto err = cudaGetLastError();
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaGetLastError: " << cudaGetErrorString(err);
+            return ppl::common::RC_DEVICE_RUNTIME_ERROR;
+        }
     }
-#endif
+
+    if (GetEngineConfig().enable_tensor_debug) {
+        rc = LlmCudaDumpOutputTensors(ctx, GetEngineConfig().debug_data_dir);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "LlmCudaDumpOutputTensors() of kernel[" << GetName() << "] failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
+    }
 
     return RC_SUCCESS;
 }

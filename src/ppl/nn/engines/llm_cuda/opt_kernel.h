@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_KERNEL_H_
 
 #include "llm_cuda_device.h"
+#include "engine_config.h"
 
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
@@ -34,6 +35,7 @@ struct OptKernelOptions final {
     LlmCudaDevice* device = nullptr;
     RuntimePartitionInfo* partition_info = nullptr;
     const EngineOptions* engine_options = nullptr;
+    const EngineConfig* engine_config = nullptr;
 };
 
 class LlmCudaOptKernel : public OptKernel {
