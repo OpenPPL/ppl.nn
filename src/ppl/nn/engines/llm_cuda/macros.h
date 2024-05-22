@@ -22,7 +22,7 @@
 #include "ppl/common/stripfilename.h"
 
 #ifndef PPLNN_LLM_CUDA_DEBUG_TRACE
-#if defined(DEBUG) || !defined(NDEBUG)
+#if (defined(DEBUG) || !defined(NDEBUG)) && defined(PPLNN_ENABLE_KERNEL_TRACE)
 #include <stdio.h>
 #define PPLNN_LLM_CUDA_DEBUG_TRACE(fmt, ...) \
     do { \
