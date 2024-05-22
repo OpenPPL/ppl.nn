@@ -288,7 +288,7 @@ endif()
 # --------------------------------------------------------------------------- #
 
 if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION)
-    set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION internal_dev)
+    set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION internal-master)
 endif()
 
 if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
