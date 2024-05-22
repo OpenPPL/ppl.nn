@@ -247,6 +247,10 @@ Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
                         "\"default\", \"ampere\". "
                         "default: \"default\"");
 
+Define_bool_opt("--disable-graph-fusion", g_flag_disable_graph_fusion, false, "disable graph kernel fusion rules");
+Define_bool_opt("--enable-tensor-debug", g_flag_enable_tensor_debug, false, "dump tensors' data");
+Define_string_opt("--debug-data-dir", g_flag_debug_data_dir, ".", "directory to save dumped tensors' data");
+
 #include <cuda_runtime.h>
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
@@ -353,11 +357,27 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
     if (g_nccl_comm != nullptr) {
         auto status = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_SET_TP_NCCL_COMM, g_nccl_comm);
         if (RC_SUCCESS != status) {
-            LOG(ERROR) << "configure SET_TP_NCCL_COMM failed: " << ppl::common::GetRetCodeStr(status);
+            LOG(ERROR) << "configure ENGINE_CONF_SET_TP_NCCL_COMM failed: " << ppl::common::GetRetCodeStr(status);
             return false;
         }
     }
 #endif
+
+    auto rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_GRAPH_FUSION, g_flag_disable_graph_fusion ? 0 : 1);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_GRAPH_FUSION failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_TENSOR_DEBUG, g_flag_enable_tensor_debug ? 1 : 0);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_TENSOR_DEBUG failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DEBUG_DATA_DIR, g_flag_debug_data_dir.c_str());
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DEBUG_DATA_DIR failed: " << GetRetCodeStr(rc);
+        return false;
+    }
 
     engines->emplace_back(unique_ptr<Engine>(llm_cuda_engine));
     LOG(INFO) << "***** register LlmCudaEngine *****";

@@ -20,6 +20,7 @@
 
 #include "llm_cuda_device.h"
 #include "llm_host_device.h"
+#include "engine_config.h"
 
 #include "ppl/nn/engines/llm_cuda/engine_options.h"
 #include "ppl/nn/engines/engine_context.h"
@@ -30,7 +31,10 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 class LlmCudaEngineContext final : public EngineContext {
 public:
     LlmCudaEngineContext() {}
-    ppl::common::RetCode Init(const EngineOptions& options, ppl::common::NcclParam* tensor_parallel_nccl_param);
+    ppl::common::RetCode Init(
+        const EngineOptions& options,
+        const EngineConfig *config,
+        ppl::common::NcclParam* tensor_parallel_nccl_param);
 
     Device* GetDevice() const override {
         return device_.get();
@@ -47,11 +51,15 @@ public:
     const EngineOptions& GetEngineOptions() const {
         return engine_options_;
     }
+    const EngineConfig& GetEngineConfig() const {
+        return *engine_config_;
+    }
 
 private:
     std::shared_ptr<LlmCudaDevice> device_;
     std::shared_ptr<LlmHostDevice> host_device_;
     EngineOptions engine_options_;
+    const EngineConfig *engine_config_;
 
 private:
     LlmCudaEngineContext(const LlmCudaEngineContext&) = delete;

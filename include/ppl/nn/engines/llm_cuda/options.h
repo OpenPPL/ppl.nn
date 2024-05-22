@@ -30,7 +30,37 @@ enum {
        cuda_engine->Configure(ENGINE_CONF_SET_TP_NCCL_COMM, tensor_parallel_nccl_comm);
        @endcode
     */
-    ENGINE_CONF_SET_TP_NCCL_COMM,
+    ENGINE_CONF_SET_TP_NCCL_COMM = 0,
+
+    /**
+       @brief uint32_t, set graph kernel fusion on(1)/off(0), default is on
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_GRAPH_FUSION, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_GRAPH_FUSION = 1,
+
+    /**
+       @brief uint32_t, set dump tensors' data on(1)/off(0), default is off
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_TENSOR_DEBUG, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_TENSOR_DEBUG = 2,
+
+    /**
+       @brief const char*, directory to save dumped tensors' data, default is "."
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DEBUG_DATA_DIR, const char*);
+       @endcode
+    */
+    ENGINE_CONF_DEBUG_DATA_DIR = 3,
 
     ENGINE_CONF_MAX,
 };
