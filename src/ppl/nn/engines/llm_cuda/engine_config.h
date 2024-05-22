@@ -15,35 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_ENGINE_CONFIG_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_ENGINE_CONFIG_H_
 
-#include "llm_cuda_device.h"
-
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
-#include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/engines/llm_cuda/engine_options.h"
+#include <string>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
-class OptGraph final {
-public:
-    ppl::common::RetCode Init(
-        const utils::SharedResource&,
-        ir::Graph*,
-        RuntimePartitionInfo*);
-    ppl::common::RetCode Optimize(
-        const utils::SharedResource&,
-        const EngineOptions&,
-        const EngineConfig&,
-        LlmCudaDevice*);
-
-private:
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* partition_info_ = nullptr;
+struct EngineConfig final {
+    bool enable_graph_fusion = true;
+    bool enable_tensor_debug = false;
+    std::string debug_data_dir = ".";
 };
 
-}}}}
+}}}} // namespace ppl::nn::llm::cuda
 
 #endif

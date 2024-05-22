@@ -20,6 +20,7 @@
 
 #include "llm_cuda_device.h"
 #include "engine_context.h"
+#include "engine_config.h"
 
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/tensor_impl.h"
@@ -87,6 +88,10 @@ public:
 
     const EngineOptions& GetEngineOptions() const {
         return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetEngineOptions();
+    }
+
+    const EngineConfig& GetEngineConfig() const {
+        return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetEngineConfig();
     }
 
 protected:

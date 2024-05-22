@@ -27,8 +27,13 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 static void DummyDeleter(LlmCudaDevice*) {}
 
-RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
+RetCode LlmCudaEngineContext::Init(
+    const EngineOptions& options,
+    const EngineConfig *config,
+    ppl::common::NcclParam* tensor_parallel_nccl_param)
+{
     engine_options_ = options;
+    engine_config_ = config;
 
     auto host_device = new LlmHostDevice();
     auto rc = host_device->Init(options.mm_policy);

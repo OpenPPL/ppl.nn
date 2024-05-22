@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_ENGINE_H_
 
 #include "llm_cuda_device.h"
+#include "engine_config.h"
 
 #include "ppl/nn/engines/llm_cuda/engine_options.h"
 #include "ppl/nn/engines/engine_impl.h"
@@ -48,15 +49,21 @@ public:
 #endif
 
 private:
-    static ppl::common::RetCode SetTensorParellelNcclComm(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfSetTensorParellelNcclComm(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfGraphFusion(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfTenosrDebug(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfDebugDataDir(LlmCudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(LlmCudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 
 private:
     EngineOptions options_;
-    ppl::common::NcclParam tensor_parallel_nccl_param_;
+    EngineConfig config_;
+
     std::unique_ptr<LlmCudaDevice> device_;
+
+    ppl::common::NcclParam tensor_parallel_nccl_param_;
 };
 
 }}}} // namespace ppl::nn::llm::cuda

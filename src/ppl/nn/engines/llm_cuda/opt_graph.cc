@@ -82,6 +82,7 @@ static RetCode InitOps(std::map<nodeid_t, std::unique_ptr<OptKernel>>& kernels, 
 RetCode OptGraph::Optimize(
     const utils::SharedResource& resource,
     const EngineOptions& engine_options,
+    const EngineConfig& engine_config,
     LlmCudaDevice* device)
 {
     OptKernelOptions options;
@@ -90,6 +91,7 @@ RetCode OptGraph::Optimize(
     options.device = device;
     options.partition_info = partition_info_;
     options.engine_options = &engine_options;
+    options.engine_config = &engine_config;
 
     RetCode rc;
 
@@ -109,10 +111,12 @@ RetCode OptGraph::Optimize(
         if (!prc.graph_modified) {
             LOG(INFO) << "I8I8Quantization: nothing has been changed.";
         }
-        rc = OptPassManager::GetInstance()->ApplyByDomain("i8i8.fuse", options);
-        if (rc != RC_SUCCESS) {
-            LOG(ERROR) << "I8I8Fuse failed: " << GetRetCodeStr(rc);
-            return rc;
+        if (engine_config.enable_graph_fusion) {
+            rc = OptPassManager::GetInstance()->ApplyByDomain("i8i8.fuse", options);
+            if (rc != RC_SUCCESS) {
+                LOG(ERROR) << "I8I8Fuse failed: " << GetRetCodeStr(rc);
+                return rc;
+            }
         }
     }
 

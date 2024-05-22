@@ -50,7 +50,7 @@ RetCode LlmCudaEngine::Init(const EngineOptions& options) {
 EngineContext* LlmCudaEngine::CreateEngineContext() {
     auto ctx = unique_ptr<LlmCudaEngineContext>(new LlmCudaEngineContext());
     if (ctx) {
-        auto rc = ctx->Init(options_, &tensor_parallel_nccl_param_);
+        auto rc = ctx->Init(options_, &config_, &tensor_parallel_nccl_param_);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init engine context failed: " << GetRetCodeStr(rc);
             return nullptr;
@@ -69,7 +69,7 @@ RetCode LlmCudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::G
         return status;
     }
 
-    status = opt_graph.Optimize(resource, options_, device_.get());
+    status = opt_graph.Optimize(resource, options_, config_, device_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph Optimize failed: " << GetRetCodeStr(status);
         return status;
@@ -89,18 +89,37 @@ bool LlmCudaEngine::Supports(const ir::Node* node) const {
 
 /* ------------------------------------------------------------------------- */
 
-RetCode LlmCudaEngine::SetTensorParellelNcclComm(LlmCudaEngine* engine, va_list args) {
+RetCode LlmCudaEngine::ConfSetTensorParellelNcclComm(LlmCudaEngine* engine, va_list args) {
 #ifdef PPLNN_CUDA_ENABLE_NCCL
     auto nccl_comm = va_arg(args, ncclComm_t);
     engine->tensor_parallel_nccl_param_.comm = nccl_comm;
     NCCL_CHECK(ncclCommCount(nccl_comm, &engine->tensor_parallel_nccl_param_.size), "ncclCommCount");
     NCCL_CHECK(ncclCommUserRank(nccl_comm, &engine->tensor_parallel_nccl_param_.rank), "ncclCommUserRank");
-    LOG(INFO) << "TP NCCL world size: " << engine->tensor_parallel_nccl_param_.size;
+    LOG(INFO) << "Engine Conf tp nccl comm world size: " 
+        << engine->tensor_parallel_nccl_param_.size;
     return RC_SUCCESS;
 #else
-    LOG(ERROR) << "Please recompile with NCCL support.";
+    LOG(ERROR) << "Please recompile with nccl support.";
     return RC_INVALID_VALUE;
 #endif
+}
+
+RetCode LlmCudaEngine::ConfGraphFusion(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_graph_fusion = va_arg(args, uint32_t) ? true : false;
+    LOG(INFO) << "Engine Conf graph fusion: " << engine->config_.enable_graph_fusion;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfTenosrDebug(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_tensor_debug = va_arg(args, uint32_t) ? true : false;
+    LOG(INFO) << "Engine Conf tensor debug: " << engine->config_.enable_tensor_debug;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfDebugDataDir(LlmCudaEngine* engine, va_list args) {
+    engine->config_.debug_data_dir.assign(va_arg(args, const char*));
+    LOG(INFO) << "Engine Conf debug data dir: " << engine->config_.debug_data_dir;
+    return RC_SUCCESS;
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -153,7 +172,10 @@ ppl::common::RetCode LlmCudaEngine::DeserializeData(const void* base, uint64_t s
 #endif
 
 LlmCudaEngine::ConfHandlerFunc LlmCudaEngine::conf_handlers_[] = {
-    SetTensorParellelNcclComm,
+    ConfSetTensorParellelNcclComm,
+    ConfGraphFusion,
+    ConfTenosrDebug,
+    ConfDebugDataDir,
 };
 
 RetCode LlmCudaEngine::Configure(uint32_t option, ...) {
