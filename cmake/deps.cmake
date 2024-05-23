@@ -188,13 +188,13 @@ set(__RAPIDJSON_COMMIT__ 06d58b9e848c650114556a23294d0b6440078c61)
 if(PPLNN_DEP_RAPIDJSON_PKG)
     hpcc_declare_pkg_dep(rapidjson
         ${PPLNN_DEP_RAPIDJSON_PKG})
-elseif(PPLNN_DEP_RAPIDJSON_GIT)
+else()
+    if(NOT PPLNN_DEP_RAPIDJSON_GIT)
+        set(PPLNN_DEP_RAPIDJSON_GIT "https://github.com/Tencent/rapidjson.git")
+    endif()
     hpcc_declare_git_dep(rapidjson
         ${PPLNN_DEP_RAPIDJSON_GIT}
         ${__RAPIDJSON_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(rapidjson
-        "https://github.com/Tencent/rapidjson/archive/${__RAPIDJSON_COMMIT__}.zip")
 endif()
 
 unset(__RAPIDJSON_COMMIT__)
@@ -211,13 +211,13 @@ set(__PYBIND11_TAG__ v2.9.2)
 if(PPLNN_DEP_PYBIND11_PKG)
     hpcc_declare_pkg_dep(pybind11
         ${PPLNN_DEP_PYBIND11_PKG})
-elseif(PPLNN_DEP_PYBIND11_GIT)
+else()
+    if(NOT PPLNN_DEP_PYBIND11_GIT)
+        set(PPLNN_DEP_PYBIND11_GIT "https://github.com/pybind/pybind11.git")
+    endif()
     hpcc_declare_git_dep_depth1(pybind11
         ${PPLNN_DEP_PYBIND11_GIT}
         ${__PYBIND11_TAG__})
-else()
-    hpcc_declare_pkg_dep(pybind11
-        "https://github.com/pybind/pybind11/archive/refs/tags/${__PYBIND11_TAG__}.zip")
 endif()
 
 unset(__PYBIND11_TAG__)
@@ -234,13 +234,13 @@ set(__GOOGLETEST_TAG__ release-1.10.0)
 if(PPLNN_DEP_GOOGLETEST_PKG)
     hpcc_declare_pkg_dep(googletest
         ${PPLNN_DEP_GOOGLETEST_PKG})
-elseif(PPLNN_DEP_GOOGLETEST_GIT)
+else()
+    if(NOT PPLNN_DEP_GOOGLETEST_GIT)
+        set(PPLNN_DEP_GOOGLETEST_GIT "https://github.com/google/googletest.git")
+    endif()
     hpcc_declare_git_dep_depth1(googletest
         ${PPLNN_DEP_GOOGLETEST_GIT}
         ${__GOOGLETEST_TAG__})
-else()
-    hpcc_declare_pkg_dep(googletest
-        "https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip")
 endif()
 
 unset(__GOOGLETEST_TAG__)
