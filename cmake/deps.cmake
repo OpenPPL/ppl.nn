@@ -133,13 +133,13 @@ set(__FLATBUFFERS_TAG__ v2.0.8)
 if(PPLNN_DEP_FLATBUFFERS_PKG)
     hpcc_declare_pkg_dep(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_PKG})
-elseif(PPLNN_DEP_FLATBUFFERS_GIT)
+else()
+    if(NOT PPLNN_DEP_FLATBUFFERS_GIT)
+        set(PPLNN_DEP_FLATBUFFERS_GIT "https://github.com/google/flatbuffers.git")
+    endif()
     hpcc_declare_git_dep_depth1(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_GIT}
         ${__FLATBUFFERS_TAG__})
-else()
-    hpcc_declare_pkg_dep(flatbuffers
-        "https://github.com/google/flatbuffers/archive/refs/tags/${__FLATBUFFERS_TAG__}.zip")
 endif()
 
 unset(__FLATBUFFERS_TAG__)
