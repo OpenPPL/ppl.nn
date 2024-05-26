@@ -37,8 +37,6 @@ protected:
         return ar_.Init(device_id_);
     }
 
-    void DoDestroy() override {}
-
 private:
     ppl::common::CudaBufferedAllocator ar_;
     ppl::common::CompactAddrManager mgr_;
