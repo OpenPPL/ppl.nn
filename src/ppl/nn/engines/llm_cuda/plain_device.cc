@@ -35,7 +35,7 @@ RetCode PlainDevice::DoInit() {
     return RC_SUCCESS;
 }
 
-void PlainDevice::DoDestroy() {
+PlainDevice::~PlainDevice() {
     delete allocator_;
 }
 

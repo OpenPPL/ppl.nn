@@ -36,8 +36,6 @@ LlmCudaDevice::LlmCudaDevice() {
 }
 
 LlmCudaDevice::~LlmCudaDevice() {
-    DoDestroy();
-
     if (own_stream_ && stream_) {
         cudaStreamSynchronize(stream_);
         cudaStreamDestroy(stream_);

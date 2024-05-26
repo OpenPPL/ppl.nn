@@ -43,8 +43,6 @@ protected:
         return ppl::common::RC_SUCCESS;
     }
 
-    void DoDestroy() override {}
-
 private:
     ppl::common::CudaPlainAsyncAllocator ar_;
     ppl::nn::utils::StackBufferManager mgr_;
