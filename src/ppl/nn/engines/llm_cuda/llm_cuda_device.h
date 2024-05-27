@@ -166,8 +166,6 @@ private:
 protected:
     /** last call in Init() */
     virtual ppl::common::RetCode DoInit() = 0;
-    /** first call in destructor */
-    virtual void DoDestroy() {}
 
 protected:
     Type type_;

@@ -37,8 +37,6 @@ LlmCudaDevice::LlmCudaDevice() {
 }
 
 LlmCudaDevice::~LlmCudaDevice() {
-    DoDestroy();
-
     for (auto alibi_slopes_pair : alibi_slopes_map_) {
         cudaFree(alibi_slopes_pair.second);
     }

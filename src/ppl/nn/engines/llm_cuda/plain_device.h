@@ -27,13 +27,13 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 class PlainDevice final : public LlmCudaDevice {
 public:
     PlainDevice(bool async) : async_(async) {}
+    ~PlainDevice();
     using LlmCudaDevice::Realloc;
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;
 
 protected:
     ppl::common::RetCode DoInit() override;
-    void DoDestroy() override;
 
 private:
     bool async_;
