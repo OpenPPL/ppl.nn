@@ -105,7 +105,7 @@ if(PPLNN_CUDA_ENABLE_NCCL)
     set(PPLCOMMON_ENABLE_NCCL ON)
 endif()
 
-set(__PPLCOMMON_COMMIT__ a0fe67edeb814fdefb2c39a7857fb080c18fbe51)
+set(__PPLCOMMON_COMMIT__ ad3166e0a22d884964ae3d3118160a4ba3a44796)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
