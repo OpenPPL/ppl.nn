@@ -131,12 +131,12 @@ ppl::nn::Engine* CudaTextGenerator::ThreadCreateEngine(const int32_t tid) {
         return nullptr;
     }
 
-    if (cublas_layout_hint_ == "default") {
+    if (construct_options_.cublas_layout_hint == "default") {
         options.cublas_layout_hint = ppl::nn::llm::cuda::CUBLAS_LAYOUT_DEFAULT;
-    } else if (cublas_layout_hint_ == "ampere") {
+    } else if (construct_options_.cublas_layout_hint == "ampere") {
         options.cublas_layout_hint = ppl::nn::llm::cuda::CUBLAS_LAYOUT_AMPERE;
     } else {
-        LOG(ERROR) << "unknown/unsupported --cublas-layout-hint option: " << cublas_layout_hint_;
+        LOG(ERROR) << "unknown/unsupported --cublas-layout-hint option: " << construct_options_.cublas_layout_hint;
         return nullptr;
     }
 
@@ -146,10 +146,43 @@ ppl::nn::Engine* CudaTextGenerator::ThreadCreateEngine(const int32_t tid) {
         return nullptr;
     }
 
+    ppl::common::RetCode rc;
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_SHM_MHA, construct_options_.disable_decoding_shm_mha ? 0 : 1);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_SHM_MHA failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_INF_MHA, construct_options_.disable_decoding_inf_mha ? 0 : 1);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_INF_MHA failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_INF_GQA, construct_options_.disable_decoding_inf_gqa ? 0 : 1);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_INF_GQA failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_ATTN_SPLIT_K, construct_options_.configure_decoding_attn_split_k);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_ATTN_SPLIT_K failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_ATTN_TPB, construct_options_.specify_decoding_attn_tpb);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_ATTN_TPB failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_GRAPH_FUSION, construct_options_.disable_graph_fusion ? 0 : 1);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_GRAPH_FUSION failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+
 #ifdef PPLNN_CUDA_ENABLE_NCCL
-    auto rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_SET_TP_NCCL_COMM, nccl_comm_list_[tid]);
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_SET_TP_NCCL_COMM, nccl_comm_list_[tid]);
     if (rc != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "engine configure failed";
+        LOG(ERROR) << "engine configure failed: " << ppl::common::GetRetCodeStr(rc);
         return nullptr;
     }
 #endif

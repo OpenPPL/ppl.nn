@@ -36,6 +36,23 @@ Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
 
 Define_bool_opt("--kernel-profiling", g_flag_kernel_profiling, true, "enable kernel profiling and print profiling info");
 
+Define_bool_opt("--disable-decoding-shm-mha", g_flag_disable_decoding_shm_mha,
+                        false, "disable shared memory decoding attention algorithm");
+Define_bool_opt("--disable-decoding-inf-mha", g_flag_disable_decoding_inf_mha,
+                        false, "disable infinity decoding attention algorithm");
+Define_bool_opt("--disable-decoding-inf-gqa", g_flag_disable_decoding_inf_gqa,
+                        false, "disable infinity grouped query decoding attention algorithm");
+Define_int32_opt("--configure-decoding-attn-split-k", g_flag_configure_decoding_attn_split_k, 1,
+                        "configuring split-k decoding attention algorithm, "
+                        "accepted values: always-on(2)/heuristic(1)/off(0),"
+                        "default is heuristic(1)");
+Define_int32_opt("--specify-decoding-attn-tpb", g_flag_specify_decoding_attn_tpb, 0,
+                        "specify decoding attention kernel threads per block, "
+                        "accepted values: 512/256/heuristic(0),"
+                        "default is heuristic(0)");
+
+Define_bool_opt("--disable-graph-fusion", g_flag_disable_graph_fusion, false, "disable graph kernel fusion rules");
+
 
 static bool WriteOutputToFile(const std::string& output_file, std::queue<Response> &responses) {
     std::ofstream fout(output_file, std::ios::out);
@@ -103,7 +120,15 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "================== Init TextGenerator ==================";
     // TODO: Move new CudaTextGenerator into #ifdef USE_LLM_CUDA
     std::unique_ptr<TextGenerator> generator(new CudaTextGenerator(
-        {g_cublas_layout_hint}
+        {
+            g_cublas_layout_hint,
+            g_flag_disable_graph_fusion,
+            g_flag_disable_decoding_shm_mha,
+            g_flag_disable_decoding_inf_mha,
+            g_flag_disable_decoding_inf_gqa,
+            g_flag_configure_decoding_attn_split_k,
+            g_flag_specify_decoding_attn_tpb,
+        }
     ));
     auto rc = generator->InitModel(
         "decoder_only",

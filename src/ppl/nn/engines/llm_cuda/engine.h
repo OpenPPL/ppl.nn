@@ -54,8 +54,15 @@ private:
     static ppl::common::RetCode ConfTenosrDebug(LlmCudaEngine*, va_list);
     static ppl::common::RetCode ConfDebugDataDir(LlmCudaEngine*, va_list);
 
+    static ppl::common::RetCode ConfDecodingShmMha(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfDecodingInfMha(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfDecodingInfGqa(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfDecodingAttnSplitK(LlmCudaEngine*, va_list);
+    static ppl::common::RetCode ConfDecodingAttnTpb(LlmCudaEngine*, va_list);
+
     typedef ppl::common::RetCode (*ConfHandlerFunc)(LlmCudaEngine*, va_list);
-    static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[
+        ENGINE_CONF_MAX + (ENGINE_CONF_INTERNAL_MAX - ENGINE_CONF_INTERNAL_BEGIN)];
 
 private:
     EngineOptions options_;

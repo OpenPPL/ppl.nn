@@ -122,6 +122,46 @@ RetCode LlmCudaEngine::ConfDebugDataDir(LlmCudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode LlmCudaEngine::ConfDecodingShmMha(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_decoding_sharemem_mhca = va_arg(args, uint32_t) ? true : false;
+    LOG(INFO) << "Engine Conf decoding shared memory mhca: " << engine->config_.enable_decoding_sharemem_mhca;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfDecodingInfMha(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_decoding_infinity_mhca = va_arg(args, uint32_t) ? true : false;
+    LOG(INFO) << "Engine Conf decoding infinity mhca: " << engine->config_.enable_decoding_infinity_mhca;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfDecodingInfGqa(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_decoding_infinity_gqca = va_arg(args, uint32_t) ? true : false;
+    LOG(INFO) << "Engine Conf decoding infinity gqca: " << engine->config_.enable_decoding_infinity_gqca;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfDecodingAttnSplitK(LlmCudaEngine* engine, va_list args) {
+    uint32_t split_k = va_arg(args, uint32_t);
+    if (split_k != 0 && split_k != 1 && split_k != 2) {
+        LOG(ERROR) << "ENGINE_CONF_DECODING_ATTN_SPLIT_K only accept 0/1/2 but get " << split_k;
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    engine->config_.specify_decoding_attn_split_k = split_k;
+    LOG(INFO) << "Engine Conf decoding attention split k: " << engine->config_.specify_decoding_attn_split_k;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfDecodingAttnTpb(LlmCudaEngine* engine, va_list args) {
+    uint32_t tpb = va_arg(args, uint32_t);
+    if (tpb != 0 && tpb != 256 && tpb != 512) {
+        LOG(ERROR) << "ENGINE_CONF_DECODING_ATTN_TPB only accept 0/256/512 but get " << tpb;
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    engine->config_.specify_decoding_attn_tpb = tpb;
+    LOG(INFO) << "Engine Conf decoding attention tpb: " << engine->config_.specify_decoding_attn_tpb;
+    return RC_SUCCESS;
+}
+
 #ifdef PPLNN_ENABLE_PMX_MODEL
 RetCode LlmCudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     return utils::LoadConstants(visitor, device_.get(), eid2info);
@@ -176,16 +216,26 @@ LlmCudaEngine::ConfHandlerFunc LlmCudaEngine::conf_handlers_[] = {
     ConfGraphFusion,
     ConfTenosrDebug,
     ConfDebugDataDir,
+
+    ConfDecodingShmMha,
+    ConfDecodingInfMha,
+    ConfDecodingInfGqa,
+    ConfDecodingAttnSplitK,
+    ConfDecodingAttnTpb,
 };
 
 RetCode LlmCudaEngine::Configure(uint32_t option, ...) {
-    if (option >= ENGINE_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)ENGINE_CONF_MAX << "]";
+    auto conf_length = sizeof(conf_handlers_) / sizeof(ConfHandlerFunc);
+    auto uniform_option = option >= ENGINE_CONF_INTERNAL_BEGIN ? 
+        option + ENGINE_CONF_MAX - ENGINE_CONF_INTERNAL_BEGIN :
+        option;
+    if (uniform_option >= conf_length) {
+        LOG(ERROR) << "invalid option[" << option << "]";
         return RC_INVALID_VALUE;
     }
     va_list args;
     va_start(args, option);
-    auto status = conf_handlers_[option](this, args);
+    auto status = conf_handlers_[uniform_option](this, args);
     va_end(args);
 
     return status;
