@@ -247,6 +247,21 @@ Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
                         "\"default\", \"ampere\". "
                         "default: \"default\"");
 
+Define_bool_opt("--disable-decoding-shm-mha", g_flag_disable_decoding_shm_mha,
+                        false, "disable shared memory decoding attention algorithm");
+Define_bool_opt("--disable-decoding-inf-mha", g_flag_disable_decoding_inf_mha,
+                        false, "disable infinity decoding attention algorithm");
+Define_bool_opt("--disable-decoding-inf-gqa", g_flag_disable_decoding_inf_gqa,
+                        false, "disable infinity grouped query decoding attention algorithm");
+Define_int32_opt("--configure-decoding-attn-split-k", g_flag_configure_decoding_attn_split_k, 1,
+                        "configuring split-k decoding attention algorithm, "
+                        "accepted values: always-on(2)/heuristic(1)/off(0),"
+                        "default is heuristic(1)");
+Define_int32_opt("--specify-decoding-attn-tpb", g_flag_specify_decoding_attn_tpb, 0,
+                        "specify decoding attention kernel threads per block, "
+                        "accepted values: 512/256/heuristic(0),"
+                        "default is heuristic(0)");
+
 Define_bool_opt("--disable-graph-fusion", g_flag_disable_graph_fusion, false, "disable graph kernel fusion rules");
 Define_bool_opt("--enable-tensor-debug", g_flag_enable_tensor_debug, false, "dump tensors' data");
 Define_string_opt("--debug-data-dir", g_flag_debug_data_dir, ".", "directory to save dumped tensors' data");
@@ -363,7 +378,33 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 #endif
 
-    auto rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_GRAPH_FUSION, g_flag_disable_graph_fusion ? 0 : 1);
+    auto rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_SHM_MHA, g_flag_disable_decoding_shm_mha ? 0 : 1);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_SHM_MHA failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_INF_MHA, g_flag_disable_decoding_inf_mha ? 0 : 1);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_INF_MHA failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_INF_GQA, g_flag_disable_decoding_inf_gqa ? 0 : 1);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_INF_GQA failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_ATTN_SPLIT_K, g_flag_configure_decoding_attn_split_k);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_ATTN_SPLIT_K failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_ATTN_TPB, g_flag_specify_decoding_attn_tpb);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_DECODING_ATTN_TPB failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_GRAPH_FUSION, g_flag_disable_graph_fusion ? 0 : 1);
     if (RC_SUCCESS != rc) {
         LOG(ERROR) << "configure ENGINE_CONF_GRAPH_FUSION failed: " << GetRetCodeStr(rc);
         return false;

@@ -12,11 +12,17 @@ typedef void* ncclComm_t;
 class CudaTextGenerator final : public TextGenerator {
 public:
     struct ConstructOptions {
-        std::string cublas_layout_hint;
+        std::string cublas_layout_hint = "default";
+        bool disable_graph_fusion = false;
+        bool disable_decoding_shm_mha = false;
+        bool disable_decoding_inf_mha = false;
+        bool disable_decoding_inf_gqa = false;
+        uint32_t configure_decoding_attn_split_k = 1;
+        uint32_t specify_decoding_attn_tpb = 0;
     };
 
     CudaTextGenerator(const ConstructOptions& options) {
-        cublas_layout_hint_ = options.cublas_layout_hint;
+        construct_options_ = options;
     }
 
     virtual bool CheckParameters() override;
@@ -42,8 +48,9 @@ public:
 private:
     std::vector<ncclComm_t> nccl_comm_list_;
     std::vector<std::unique_ptr<ppl::nn::DeviceContext>> host_device_list_;
-    std::string cublas_layout_hint_;
     std::unique_ptr<CudaSampler> sampler_;
+
+    ConstructOptions construct_options_;
 
     void InitCudaThread();
     void FinalizeCudaThread();

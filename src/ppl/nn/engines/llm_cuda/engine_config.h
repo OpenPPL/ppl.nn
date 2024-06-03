@@ -26,6 +26,12 @@ struct EngineConfig final {
     bool enable_graph_fusion = true;
     bool enable_tensor_debug = false;
     std::string debug_data_dir = ".";
+
+    bool enable_decoding_sharemem_mhca = true;
+    bool enable_decoding_infinity_mhca = true;
+    bool enable_decoding_infinity_gqca = true;
+    int32_t specify_decoding_attn_split_k = 1;
+    int32_t specify_decoding_attn_tpb = 0;
 };
 
 }}}} // namespace ppl::nn::llm::cuda
