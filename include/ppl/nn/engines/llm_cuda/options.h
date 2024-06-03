@@ -63,6 +63,81 @@ enum {
     ENGINE_CONF_DEBUG_DATA_DIR = 3,
 
     ENGINE_CONF_MAX,
+
+    ENGINE_CONF_INTERNAL_BEGIN = 1000,
+
+    /**
+       @brief uint32_t, set shared memory decoding attention algorithm heuristic(1)/off(0), default is heuristic
+       This algorithm use sharemem to store softmax logits. And is the fastest algorithm
+       on decode phase attention, but context length is limited by the size of shared memory
+
+       We must set one of `ENGINE_CONF_DECODING_SHM_MHA`, `ENGINE_CONF_DECODING_INF_MHA` and `ENGINE_CONF_DECODING_INF_GQA` on.
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DECODING_SHM_MHA, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_DECODING_SHM_MHA = 1000,
+
+    /**
+       @brief uint32_t, set infinity decoding attention algorithm heuristic(1)/off(0), default is heuristic
+       This algorithm rescale softmax logits on register. A bit slower than shared memory decoding attention,
+       but context length has no limit.
+
+       We must set one of `ENGINE_CONF_DECODING_SHM_MHA`, `ENGINE_CONF_DECODING_INF_MHA` and `ENGINE_CONF_DECODING_INF_GQA` on.
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DECODING_INF_MHA, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_DECODING_INF_MHA = 1001,
+
+    /**
+       @brief uint32_t, set infinity grouped query decoding attention algorithm heuristic(1)/off(0), default is heuristic
+       This algorithm rescale softmax logits on shared memory, and optimized by tensor core for grouped query attention. 
+       It could be very fast when decoding batch size is large(usually more than 64). And context length has no limit.
+
+       We must set one of `ENGINE_CONF_DECODING_SHM_MHA`, `ENGINE_CONF_DECODING_INF_MHA` and `ENGINE_CONF_DECODING_INF_GQA` on.
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DECODING_INF_GQA, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_DECODING_INF_GQA = 1002,
+
+    /**
+       @brief uint32_t, set split-k decoding attention algorithm always-on(2)/heuristic(1)/off(0), default is heuristic
+       Apply split-k decoding on all decoding algorithm, accelerating long context decoding.
+       Recommanded for context length >= 1024, but may slow down when batch size is too large.
+       And suggest to alway turn it on for context length >= 16k
+       
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DECODING_SPLIT_K, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_DECODING_ATTN_SPLIT_K = 1003,
+
+    /**
+       @brief uint32_t, specify decoding attention kernel threads per block to 512/256/heuristic(0), default is heuristic
+       Apply split-k decoding on all decoding algorithm, accelerating long context decoding.
+       Recommanded for context length >= 1024, but may slow down when batch size is too large.
+       And suggest to alway turn it on for context length >= 16k
+       
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_DECODING_SPLIT_K, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_DECODING_ATTN_TPB = 1004,
+
+    ENGINE_CONF_INTERNAL_MAX,
+
 };
 
 /** @brief memory management policies */
