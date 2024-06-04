@@ -259,7 +259,7 @@ if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64
         if(NOT PPLNN_DEP_PPLCPUKERNEL_GIT)
             set(PPLNN_DEP_PPLCPUKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cpu.git")
         endif()
-        hpcc_declare_git_dep_depth1(ppl.kernel.cpu
+        hpcc_declare_git_dep(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_GIT}
             ${PPLNN_DEP_PPLCPUKERNEL_VERSION})
     endif()
@@ -279,7 +279,7 @@ if(PPLNN_USE_CUDA)
         if(NOT PPLNN_DEP_PPLCUDAKERNEL_GIT)
             set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cuda.git")
         endif()
-        hpcc_declare_git_dep_depth1(ppl.kernel.cuda
+        hpcc_declare_git_dep(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
             ${PPLNN_DEP_PPLCUDAKERNEL_VERSION})
     endif()
@@ -298,7 +298,7 @@ else()
     if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT)
         set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT "https://github.com/openppl-public/ppl.llm.kernel.cuda.git")
     endif()
-    hpcc_declare_git_dep_depth1(ppl.llm.kernel.cuda
+    hpcc_declare_git_dep(ppl.llm.kernel.cuda
         ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT}
         ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION})
 endif()
