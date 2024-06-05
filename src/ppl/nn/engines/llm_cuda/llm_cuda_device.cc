@@ -49,9 +49,11 @@ LlmCudaDevice::~LlmCudaDevice() {
         cudaFree(cublas_workspace_);
     }
 
+#ifdef PPLNN_CUDA_ENABLE_CUDNN
     if (cudnn_handle_) {
         cudnnDestroy(cudnn_handle_);
     }
+#endif
 
     if (i4f16_gemm_handle_) {
         ppl::kernel::llm::cuda::pmx::i4f16::destory_gemm_handle(i4f16_gemm_handle_);
@@ -98,6 +100,7 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_cublas_cudnn, NcclParam* te
         cublas_workspace_size_ = 32 * 1024 * 1024;
     }
 
+#ifdef PPLNN_CUDA_ENABLE_CUDNN
     if (!cudnn_handle_ && init_cublas_cudnn) {
         auto cu_status = cudnnCreate(&cudnn_handle_);
         if (cu_status != CUDNN_STATUS_SUCCESS) {
@@ -105,6 +108,7 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_cublas_cudnn, NcclParam* te
             return RC_INTERNAL_ERROR;
         }
     }
+#endif
 
     if (!stream_) {
         if (flag == NEW) {

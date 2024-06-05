@@ -17,18 +17,20 @@
 
 #include "vision_embedding_kernel.h"
 
-#include "ppl/common/cuda/nccl_utils.h"
 #include "ppl/common/destructor.h"
 
 #include "ppl/kernel/llm/cuda/pmx/vision_embedding.h"
 
+#ifdef PPLNN_CUDA_ENABLE_CUDNN
 #include <cudnn.h>
+#endif
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace opmx {
 
 ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
+#ifdef PPLNN_CUDA_ENABLE_CUDNN
     PPLNN_LLM_CUDA_REQUIRED_INPUT(pixel_values, 0);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(cls_emb_weight, 1);
     PPLNN_LLM_CUDA_OPTIONAL_INPUT(patch_emb_weight, 2);
@@ -100,6 +102,10 @@ ppl::common::RetCode VisionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     ppl::kernel::llm::cuda::pmx::vision_embedding_postprocessing(config);
 
     return ppl::common::RC_SUCCESS;
+#else
+    LOG(ERROR) << "VisionEmbedding need cudnn, please recompile with PPLNN_CUDA_ENABLE_CUDNN=ON";
+    return ppl::common::RC_UNSUPPORTED;
+#endif
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::opmx
