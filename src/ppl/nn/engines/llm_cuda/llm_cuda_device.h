@@ -26,7 +26,12 @@
 
 #include <cuda_runtime.h>
 #include <cublasLt.h>
+
+#ifdef PPLNN_CUDA_ENABLE_CUDNN
 #include <cudnn.h>
+#else
+typedef void* cudnnHandle_t;
+#endif
 
 #include <functional>
 #include <map>
