@@ -38,7 +38,7 @@ RetCode SwiGLUOp::CommonInit() {
 }
 
 RetCode SwiGLUOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::opmx::SwishParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::pmx::SwishParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
@@ -55,7 +55,7 @@ KernelImpl* SwiGLUOp::CreateKernelImpl() const {
 ppl::common::RetCode SwiGLUOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
     flatbuffers::FlatBufferBuilder builder;
     auto fb_param = opmx::CreateSwishParam(builder, param_.get()->beta);
-    auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_SwishParam, fb_param.Union());
+    auto fb_op_param = opmx::CreateOpParam(builder, pmx::OpParamType_SwishParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
 }
@@ -63,7 +63,7 @@ ppl::common::RetCode SwiGLUOp::SerializeData(const ppl::nn::pmx::SerializationCo
 ppl::common::RetCode SwiGLUOp::DeserializeData(const ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
     auto fb_op_param = opmx::GetOpParam(base);
     auto fb_param = fb_op_param->value_as_SwishParam();
-    param_ = make_shared<ppl::nn::opmx::SwishParam>();
+    param_ = make_shared<ppl::nn::pmx::SwishParam>();
     param_.get()->beta = fb_param->beta();
 
     return CommonInit();
