@@ -54,7 +54,7 @@ KernelImpl* SwishOp::CreateKernelImpl() const {
 ppl::common::RetCode SwishOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
     flatbuffers::FlatBufferBuilder builder;
     auto fb_param = opmx::CreateSwishParam(builder, param_.get()->beta);
-    auto fb_op_param = opmx::CreateOpParam(builder, pmx::OpParamType_SwishParam, fb_param.Union());
+    auto fb_op_param = opmx::CreateOpParam(builder, opmx::OpParamType_SwishParam, fb_param.Union());
     opmx::FinishOpParamBuffer(builder, fb_op_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
 }
