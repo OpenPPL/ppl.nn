@@ -52,7 +52,7 @@
 
 ![alt data-structures](../images/data-structures.png)
 
-## EngineImpl
+## EngineImpl/Engine
 
 提供算子实现的后端。一个 `EngineImpl` 实例和一个 `onnx::GraphProto` 实例一一对应。这里要提一下 `ir::Graph` 并不一定对应一个完整的 `onnx::GraphProto`，这个在后面介绍的时候会有说明。如果一个模型里面有 `Loop` 或 `If` 这样包含 `onnx::GraphProto` 的算子，那么在这些算子的实现中也有一个 `EngineImpl` 实例，这个实例是通过 `EngineImpl::Create()` 生成的。上面图中的 `X86Engine`/`CudaEngine`/`NpuEngine` 都是 `EngineImpl` 的派生类。
 
@@ -68,13 +68,13 @@
 
 ## ppl::nn::onnx::RuntimeBuilderImpl
 
-用于创建 `RuntimeImpl` 的数据结构。`builder->CreateRuntime()` 可以在不同的线程并行执行，创建出来的多个 `RuntimeImpl` 可以在不同的线程并行执行，这些 `RuntimeImpl` 共享同一份模型数据。
+用于创建 `RuntimeImpl` 的数据结构。`builder->CreateRuntime()` 是线程安全的，可以在不同的线程并行执行，创建出来的多个 `RuntimeImpl` 可以在不同的线程并行执行，这些 `RuntimeImpl` 共享同一份模型数据。
 
 builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（主要是 `ir::Graph::data`）。
 
 其它模型格式的 builder 类似。
 
-## RuntimeImpl
+## RuntimeImpl/Runtime
 
 用于推理的核心数据结构，非线程安全。如果需要执行多个推理实例，可以通过 `builder->CreateRuntime()` 创建多个实例来执行。多个 `RuntimeImpl` 实例共享模型权重（或后端自己的其它数据）。
 
@@ -88,11 +88,11 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 
 `KernelImpl::Execute()` 是算子执行的入口函数。
 
-## TensorImpl
+## TensorImpl/Tensor
 
 可以通过 `TensorImpl::SetBufferPtr()` 和  `TensorImpl::GetBufferPtr()` 来设置和获取数据指针。当使用外部设置指针，在内部调用 `TensorImpl::ReallocBuffer()` 时不会对 buffer 做任何操作，默认外部设置的指针可以满足数据大小。通过 `SetBufferPtr()` 设置指针时，必须保证所设置的指针能够被该 tensor 所使用的 device（`TensorImpl::GetDevice()` 返回的结果）操作。例如，cuda 后端 set ptr 的时候要注意所在的 device id。
 
-## Device
+## Device/DeviceContext
 
 算子所用的设备抽象，主要是数据拷贝接口和数据类型转换操作的抽象。在框架的视角，一个 `EngineImpl` 实例只有一个 `Device` 实例，一个 kernel 只跑在一个 device 上。这里要注意的是 `Device` 是框架层面的抽象，并不要求和实际中的设备一一对应，例如，一个 `Device` 可以由多个 cuda 卡组成（自己管理 device id），或者是一个集群，等等。
 
@@ -106,11 +106,13 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 
 入口函数是 src/ppl/nn/optimizers/utils.cc 中的 `ppl::nn::utils::ProcessGraph()`。
 
-首先是调用通用的优化函数（`GenericOptimizerManager`），主要是一些简单的处理函数如 `Constant` 算子转成 tensor，去掉 `Dropout` 算子等等。框架会提供一些通用的优化函数如 fuse bn 等等，但是框架不会主动调用这些函数，由各个后端实现的 `EngineImpl::ProcessGraph()` 自己按需调用。
+首先会调用通用的优化函数（`GenericOptimizerManager`），主要是一些简单的处理函数如 `Constant` 算子转成 tensor，去掉 `Dropout` 算子等等。
 
-然后是使用 `EngineGraphPartitioner` 来对整个模型做拆分。目前是按照 engine list 的顺序来分配算子，主要逻辑是，如果某个算子类型，第一个 engine 能够支持（`EngineImpl::Supports()` 返回 true），那么该算子就分给第一个 engine；否则检查第二个 engine 是否支持，如果支持则分给第二个 engine，以此类推。分配算子的时候还要注意不要形成循环依赖（`EngineGraphPartitioner` 有注释说明）。可以通过派生 `GraphPartitioner` 来实现不同的拆分策略，在 `EngineOptions` 提供拆分策略配置参数（TODO）。
+另外框架还提供了一些通用的优化函数，封装在 `NNOptimizerManager` 中。这些优化不是必须的，框架不会统一调用，由各个后端实现的 `EngineImpl::ProcessGraph()` 自己按需调用。
 
-拆分得到的一部分称为 partition，会交由各个后端实现的 `EngineImpl::ProcessGraph()` 做进一步的优化，优化之后的结果，拓扑关系直接修改 `ir::Graph::topo`，转换后的数据存放在 `GraphPartitionInfo::constants`，每个节点的优化结果（例如算法选择）存放在 `GraphPartitionInfo::kernels`。然后框架把各个后端返回的 `GraphPartitionInfo` 合并成 `GraphRuntimeInfo`。
+然后是使用 `EngineGraphPartitioner` 来对整个模型做拆分。目前默认的实现是按照 engine list 的顺序来分配算子，主要逻辑是，如果某个算子类型，第一个 engine 能够支持（`EngineImpl::Supports()` 返回 true），那么该算子就分给第一个 engine；否则检查第二个 engine 是否支持，如果支持则分给第二个 engine，依此类推。分配算子的时候还要注意不要形成循环依赖（`EngineGraphPartitioner` 有注释说明）。可以通过派生 `GraphPartitioner` 来实现不同的拆分策略，在 `EngineOptions` 提供拆分策略配置参数（TODO）。
+
+拆分得到的一部分图称为 partition，会交由各个后端实现的 `EngineImpl::ProcessGraph()` 做进一步的优化。各个后端在优化的时候，拓扑关系直接修改 `ir::Graph::topo`，转换后的数据存放在 `EngineImpl::ProcessGraph()` 的参数 `GraphPartitionInfo::constants`，每个节点的优化结果（例如算法选择）存放在 `GraphPartitionInfo::kernels`。最后框架会把各个后端返回的 `GraphPartitionInfo` 合并成 `GraphRuntimeInfo`。
 
 得到最终的 `GraphRuntimeInfo` 后，会生成用于运行时的一些辅助信息 `RuntimeAuxInfo`。
 
