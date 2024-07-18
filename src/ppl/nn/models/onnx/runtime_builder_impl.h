@@ -34,6 +34,11 @@ public:
     ppl::common::RetCode LoadModel(const char* model_file) override;
     ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len,
                                    const char* model_file_dir = nullptr) override;
+    ppl::common::RetCode LoadModel(const char* model_file, const char** inputs, uint32_t nr_input, const char** outputs,
+                                   uint32_t nr_output) override;
+    ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const char** inputs, uint32_t nr_input,
+                                   const char** outputs, uint32_t nr_output,
+                                   const char* model_file_dir = nullptr) override;
     ppl::common::RetCode SetResources(const Resources&) override;
     ppl::common::RetCode ReserveTensor(const char* tensor_name) override;
     ppl::common::RetCode Preprocess() override;
