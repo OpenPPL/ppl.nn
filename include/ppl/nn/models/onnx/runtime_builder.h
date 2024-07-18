@@ -46,6 +46,18 @@ public:
     virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len,
                                            const char* model_file_dir = nullptr) = 0;
 
+    /** @brief load partial model from a file */
+    virtual ppl::common::RetCode LoadModel(const char* model_file, const char** inputs, uint32_t nr_input,
+                                           const char** outputs, uint32_t nr_output) = 0;
+
+    /**
+       @brief load partial model from a buffer
+       @param model_file_dir used to parse external data. can be nullptr if no external data.
+    */
+    virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const char** inputs,
+                                           uint32_t nr_input, const char** outputs, uint32_t nr_output,
+                                           const char* model_file_dir = nullptr) = 0;
+
     /**
        @brief set resources for preprocessing and creating `Runtime`.
        MUST be called before `Preprocess()` and `CreateRuntime()`.

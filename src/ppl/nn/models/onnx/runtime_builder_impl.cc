@@ -71,6 +71,37 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
     return LoadModel(fm.GetData(), fm.GetSize(), parent_dir.c_str());
 }
 
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const char** inputs, uint32_t nr_input,
+                                      const char** outputs, uint32_t nr_output, const char* model_file_dir) {
+    auto status = ModelParser::Parse(model_buf, buf_len, model_file_dir, inputs, nr_input, outputs, nr_output, &model_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const char** inputs, uint32_t nr_input,
+                                      const char** outputs, uint32_t nr_output) {
+    Mmap fm;
+    auto status = fm.Init(model_file, Mmap::READ);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "mapping file [" << model_file << "] faild.";
+        return status;
+    }
+
+    string parent_dir;
+    auto pos = string(model_file).find_last_of("/\\");
+    if (pos == string::npos) {
+        parent_dir = ".";
+    } else {
+        parent_dir.assign(model_file, pos);
+    }
+
+    return LoadModel(fm.GetData(), fm.GetSize(), inputs, nr_input, outputs, nr_output, parent_dir.c_str());
+}
+
 RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {
     resource_.engines.resize(resource.engine_num);
     for (uint32_t i = 0; i < resource.engine_num; ++i) {
