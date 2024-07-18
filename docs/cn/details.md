@@ -54,7 +54,7 @@
 
 ## EngineImpl/Engine
 
-提供算子实现的后端。一个 `EngineImpl` 实例和一个 `onnx::GraphProto` 实例一一对应。这里要提一下 `ir::Graph` 并不一定对应一个完整的 `onnx::GraphProto`，这个在后面介绍的时候会有说明。如果一个模型里面有 `Loop` 或 `If` 这样包含 `onnx::GraphProto` 的算子，那么在这些算子的实现中也有一个 `EngineImpl` 实例，这个实例是通过 `EngineImpl::Create()` 生成的。上面图中的 `X86Engine`/`CudaEngine`/`NpuEngine` 都是 `EngineImpl` 的派生类。
+提供算子实现的后端。如果一个模型里面有 `Loop` 或 `If` 这样包含 `onnx::GraphProto` 的算子，那么在这些算子的实现中也有一个新的 `EngineImpl` 实例，这个实例是通过外部传进来的 `EngineImpl` 的 `Create()` 生成的。上面图中的 `X86Engine`/`CudaEngine`/`NpuEngine` 都是 `EngineImpl` 的派生类。
 
 也负责保存在多个 `RuntimeImpl` 中需要被共享的数据，例如权重及其它。
 
@@ -133,6 +133,9 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
 例如，下面这个简单的 graph ABC：
 
 ```
+                in_0
+                 |
+                 v
                +---+
                | A |
                +---+
@@ -142,12 +145,17 @@ builder 实例在创建完 `RuntimeImpl` 之后可以被释放以节约资源（
            +---+   +===+
            | B |   | C |
            +---+   +===+
+             |       |
+             v       v
+           out_0   out_1
 ```
 
 分成了两个 partition：AB 和 C。对于 AB 来说，边 ac 是 output，只有 producer 没有 consumer；对于 C 来说，ac 是 input，只有 consumer 没有 producer；对于整个 graph ABC 来说，ac 是内部边，既有 producer 也有 consumer；边 ab 的属性没有变化。
 为了区分这种情况，`ir::GraphTopo` 有两个派生类实现：`FullGraphTopo` 和 `PartialGraphTopo`。其中 ABC 是完整的模型，对应的是 `FullGraphTopo`，AB 和 C 对应的都是 `PartialGraphTopo`。从上面的例子可以看到，不同 partition 的 node 不会重合（因此 `ir::Node` 是个 final class，node 都是一样的），但是 edge 会有重合（`ir::Edge` 是个 virtual class），从不同的 partition 看来属性（producer/consumer）也不一样。因此 `PartialGraphTopo::node_ptrs_` 中的指针指向的都是 `FullGraphTopo` 的 node；而对于有变化的边，则会在 `PartialGraphTopo` 中生成新的实例 `PartialEdge`（是 `ir::Edge` 的派生类），保存在 `PartialGraphTopo::override_edges_` 中。`PartialGraphTopo::edge_ptrs_` 数组里面的指针可能指向 `FullGraphTopo` 里面的 edge（例子里的 ab），或者是新生成的 edge（例子里的 ac，存放在 `PartialGraphTopo::override_edges_` 中 ），和 `FullGraphTopo` 中的边拥有同样的 edge id 和 name，但是 producer 和 consumer 不一样。
 
-这样从不同的 engine 看来，它们各自拿到的都是完整的图（`ir::Graph::topo` 是一个指针，可能指向 `FullGraphTopo` 或 `PartialGraphTopo`，`ir::Graph::data` 都是同一个，通过 `topo` 获取 node/edge id 来索引数据，避免不同 partition 之间拷贝），并且操作都会反映到原始模型中（例如在 AB 中把两个节点融合了，那么在 ABC 中看来，AB 也被融合了，并且边 ab 也被删掉了），对整个模型来说，拓扑关系都是正确的。
+这样从不同的 engine 看来，它们各自拿到的都是完整的图（`ir::Graph::topo` 是一个指针，可能指向 `FullGraphTopo` 或 `PartialGraphTopo`，`ir::Graph::data` 都是同一个，通过 `topo` 获取 node/edge id 来索引数据，避免不同 partition 之间拷贝），并且操作都会反映到原始模型中（例如在 AB 中把两个节点融合了，那么在 ABC 中看来，AB 也被融合了，并且边 ab 也被删掉了），对整个模型来说，拓扑关系都是正确的。如下图所示：
+
+![alt topo](../images/topo.png)
 
 # 内存管理
 
