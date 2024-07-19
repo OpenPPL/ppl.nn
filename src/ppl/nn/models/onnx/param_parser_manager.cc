@@ -88,6 +88,7 @@
 #include "ppl/nn/models/onnx/parsers/opmx/parse_multi_head_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_multi_head_cache_attention_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_parallel_embedding_param.h"
+#include "ppl/nn/models/onnx/parsers/opmx/parse_pixel_unshuffle_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_reshape_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_rotary_position_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_row_parallel_linear_param.h"
@@ -319,6 +320,8 @@ ParamParserManager::ParamParserManager() {
     // P
     PPL_REGISTER_OP_WITH_PARAM("opmx", "ParallelEmbedding", 1, 1, ppl::nn::opmx::ParallelEmbeddingParam,
                                ppl::nn::opmx::ParseParallelEmbeddingParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("opmx", "PixelUnshuffle", 1, 1, ppl::nn::opmx::PixelUnshuffleParam,
+                               ppl::nn::opmx::ParsePixelUnshuffleParam, nullptr);
     // R
     PPL_REGISTER_OP_WITH_PARAM("opmx", "Reshape", 1, 1, ppl::nn::onnx::ReshapeParam, ppl::nn::opmx::ParseReshapeParam,
                                nullptr);
