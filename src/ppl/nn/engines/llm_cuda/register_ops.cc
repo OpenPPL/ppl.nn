@@ -40,6 +40,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/opmx/moe_select_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/multi_head_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/parallel_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/pixel_unshuffle_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/rms_norm_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/rotary_position_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/row_parallel_linear_op.h"
@@ -162,6 +163,7 @@ void RegisterBuiltinOpImpls() {
     // O
     // P
     RegisterOptKernelCreator<opmx::ParallelEmbeddingOp>("opmx", "ParallelEmbedding", 1, 1);
+    RegisterOptKernelCreator<opmx::PixelUnshuffleOp>("opmx", "PixelUnshuffle", 1, 1);
     // Q
     // R
     RegisterOptKernelCreator<opmx::RMSNormOp>("opmx", "RMSNorm", 1, 1);
