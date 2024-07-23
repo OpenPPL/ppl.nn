@@ -38,7 +38,8 @@ table NodeInfo {
 }
 
 enum ConstantFlag : uint32 {
-    EXTERNAL_MULTI_FILES = 1,
+    EXTERNAL_MULTI_FILES = 0x1,
+    EXTERNAL_ONE_FILE = 0x10,
 }
 
 table Constant {

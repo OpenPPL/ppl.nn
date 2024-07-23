@@ -63,6 +63,7 @@ Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
 #ifdef PPLNN_ENABLE_PMX_MODEL
 Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
 Define_string_opt("--pmx-external-data-dir", g_flag_pmx_external_data_dir, "", "dir that contains external data");
+Define_string_opt("--pmx-external-data-file", g_flag_pmx_external_data_file, "", "data file that contains all external data");
 Define_string_opt("--export-pmx-model", g_flag_export_pmx_model, "", "dump model to <filename> in pmx format");
 Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "deprecated. use `--export-pmx-model` instead.");
 #endif
@@ -1244,8 +1245,14 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
             pmx::SaveModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty() && !g_flag_pmx_external_data_file.empty()) {
+                LOG(ERROR) << "only one of `--pmx-external-data-dir` and `pmx-external-data-file` can be set.";
+                return -1;
+            }
             if (!g_flag_pmx_external_data_dir.empty()) {
                 opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            } else if (!g_flag_pmx_external_data_file.empty()) {
+                opt.external_data_file = g_flag_pmx_external_data_file.c_str();
             }
             status = builder->Serialize("pmx", &opt, &fds);
             if (status != RC_SUCCESS) {
@@ -1275,9 +1282,22 @@ int main(int argc, char* argv[]) {
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();
 
+        Mmap constant_file_buf;
         pmx::LoadModelOptions opt;
+        if (!g_flag_pmx_external_data_dir.empty() && !g_flag_pmx_external_data_file.empty()) {
+            LOG(ERROR) << "only one of `--pmx-external-data-dir` and `pmx-external-data-file` can be set.";
+            return -1;
+        }
         if (!g_flag_pmx_external_data_dir.empty()) {
             opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+        } else if (!g_flag_pmx_external_data_file.empty()) {
+            auto rc = constant_file_buf.Init(g_flag_pmx_external_data_file.c_str(), Mmap::READ);
+            if (rc != RC_SUCCESS) {
+                LOG(ERROR) << "mmap weight file [" << g_flag_pmx_external_data_file << "] failed.";
+                return -1;
+            }
+            opt.external_buffer = constant_file_buf.GetData();
+            opt.external_buffer_size = constant_file_buf.GetSize();
         }
 
         auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources, opt);
@@ -1301,8 +1321,14 @@ int main(int argc, char* argv[]) {
             }
 
             pmx::SaveModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty() && !g_flag_pmx_external_data_file.empty()) {
+                LOG(ERROR) << "only one of `--pmx-external-data-dir` and `pmx-external-data-file` can be set.";
+                return -1;
+            }
             if (!g_flag_pmx_external_data_dir.empty()) {
                 opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            } else if (!g_flag_pmx_external_data_file.empty()) {
+                opt.external_data_file = g_flag_pmx_external_data_file.c_str();
             }
 
             status = builder->Serialize("pmx", &opt, &fds);

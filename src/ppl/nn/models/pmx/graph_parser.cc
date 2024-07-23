@@ -146,12 +146,12 @@ class PmxConstantVisitor final : public ConstantVisitor {
 public:
     PmxConstantVisitor(const ir::GraphTopo* topo, const uint8_t* shared_data, const RuntimeGraphInfo* info,
                        const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants,
-                       const string& external_data_dir)
+                       const LoadModelOptions& opt)
         : topo_(topo)
         , shared_data_(shared_data)
         , info_(info)
         , fb_constants_(fb_constants)
-        , external_data_dir_(external_data_dir) {}
+        , opt_(opt) {}
 
     RetCode ForEach(const function<RetCode(edgeid_t, uint64_t)>& f) const override {
         for (auto fb_constant = fb_constants_->begin(); fb_constant != fb_constants_->end(); ++fb_constant) {
@@ -164,7 +164,7 @@ public:
                     }
                 } else {
                     uint64_t fsize = 0;
-                    const string path = external_data_dir_ + "/" +
+                    const string path = opt_.external_data_dir + string("/") +
                         string((const char*)shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
                     auto rc = ppl::nn::utils::GetFileSize(path.c_str(), &fsize);
                     if (rc != RC_SUCCESS) {
@@ -200,10 +200,10 @@ public:
             if (flags & ConstantFlag_EXTERNAL_MULTI_FILES) {
                 string path;
                 if (fb_constant->data_offset() == UINT64_MAX) {
-                    path = external_data_dir_ + "/" +
+                    path = opt_.external_data_dir + string("/") +
                         utils::GenOutputFileName(topo_->GetEdge(fb_constant->edge_id())->GetName());
                 } else {
-                    path = external_data_dir_ + "/" +
+                    path = opt_.external_data_dir + string("/") +
                         string((const char*)shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
                 }
 
@@ -219,8 +219,14 @@ public:
                     return rc;
                 }
             } else {
+                const uint8_t* shared_data =
+                    (flags & ConstantFlag_EXTERNAL_ONE_FILE) ? (const uint8_t*)opt_.external_buffer : shared_data_;
+                if (!shared_data_) {
+                    LOG(ERROR) << "constant data buffer is null.";
+                    return RC_INVALID_VALUE;
+                }
                 auto rc =
-                    f(edge, shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes(), shape_ref->second);
+                    f(edge, shared_data + fb_constant->data_offset(), fb_constant->data_bytes(), shape_ref->second);
                 if (rc != RC_SUCCESS) {
                     LOG(ERROR) << "exec callback for constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(rc);
                     return rc;
@@ -235,7 +241,7 @@ private:
     const uint8_t* shared_data_;
     const RuntimeGraphInfo* info_;
     const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants_;
-    const string& external_data_dir_;
+    const LoadModelOptions& opt_;
 };
 
 static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::GraphTopo* topo,
@@ -247,8 +253,11 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
     DeserializationContext deser_ctx;
     deser_ctx.shapes = &info->shapes;
 
-    const string external_data_dir =
+    LoadModelOptions internal_opt;
+    internal_opt.external_data_dir =
         (opt.external_data_dir && opt.external_data_dir[0] != '\0') ? opt.external_data_dir : ".";
+    internal_opt.external_buffer = opt.external_buffer;
+    internal_opt.external_buffer_size = opt.external_buffer_size;
 
     for (auto fb_partition = fb_partitions->begin(); fb_partition != fb_partitions->end(); ++fb_partition) {
         auto engine = seq2engine[fb_partition->engine_id()];
@@ -257,7 +266,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
         partition.engine = engine;
 
         PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants(),
-                                   external_data_dir);
+                                   internal_opt);
         auto status = engine->LoadConstants(visitor, &partition.constants);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "LoadConstants of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
