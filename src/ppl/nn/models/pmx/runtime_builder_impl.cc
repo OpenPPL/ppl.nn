@@ -82,6 +82,13 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
                                       const LoadModelOptions& opt) {
     RetCode status;
 
+    if (opt.external_data_dir && opt.external_data_dir[0] != '\0') {
+        if (opt.external_buffer) {
+            LOG(ERROR) << "only one of `external_data_dir` and `external_buffer` can be set.";
+            return RC_INVALID_VALUE;
+        }
+    }
+
     auto fb_model = pmx::GetModel(model_buf);
     if (!fb_model) {
         LOG(ERROR) << "parse ppl model failed.";
@@ -110,6 +117,13 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
 }
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources, const LoadModelOptions& opt) {
+    if (opt.external_data_dir && opt.external_data_dir[0] != '\0') {
+        if (opt.external_buffer && opt.external_buffer_size > 0) {
+            LOG(ERROR) << "only one of `external_data_dir` and `external_buffer` can be set.";
+            return RC_INVALID_VALUE;
+        }
+    }
+
     Mmap fm;
     auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
@@ -122,6 +136,8 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& r
 
     const LoadModelOptions* opt_ptr;
     if (opt.external_data_dir && opt.external_data_dir[0] != '\0') {
+        opt_ptr = &opt;
+    } else if (opt.external_buffer) {
         opt_ptr = &opt;
     } else {
         new_opt = opt;
@@ -171,6 +187,11 @@ RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, util
         const pmx::SaveModelOptions* opt;
         if (options) {
             opt = (const pmx::SaveModelOptions*)options;
+            if ((opt->external_data_dir && opt->external_data_dir[0] != '\0') &&
+                (opt->external_data_file && opt->external_data_file[0] != '\0')) {
+                LOG(ERROR) << "only one of `external_data_dir` and `external_data_file` can be set.";
+                return RC_INVALID_VALUE;
+            }
         } else {
             opt = &default_opt;
         }

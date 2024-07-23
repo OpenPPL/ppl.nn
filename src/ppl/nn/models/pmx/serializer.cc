@@ -291,6 +291,9 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const SaveModelOpti
                 return rc;
             }
         } else {
+            if (options.external_data_file && options.external_data_file[0] != '\0') {
+                flags |= ConstantFlag_EXTERNAL_ONE_FILE;
+            }
             offset = FindOrInsertData(data, shared_data, shared_data_items);
         }
 
@@ -420,13 +423,23 @@ static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const SaveModelOpti
         return status;
     }
 
-    if (shared_data.size() > INT32_MAX) {
-        LOG(ERROR) << "not supported: size of constant data is larger than 2 GB.";
-        return RC_UNSUPPORTED;
-    }
+    if (options.external_data_file && options.external_data_file[0] != '\0') {
+        status = SaveData(shared_data, options.external_data_file);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "save data to file [" << options.external_data_file << "] failed.";
+            return status;
+        }
 
-    auto fb_shared_data = builder->CreateVector(shared_data);
-    *fb_data = CreateGraphData(*builder, fb_shapes, fb_partitions, fb_shared_data);
+        *fb_data = CreateGraphData(*builder, fb_shapes, fb_partitions, 0);
+    } else {
+        if (shared_data.size() > INT32_MAX) {
+            LOG(ERROR) << "not supported: size of constant data is larger than 2 GB.";
+            return RC_UNSUPPORTED;
+        }
+
+        auto fb_shared_data = builder->CreateVector(shared_data);
+        *fb_data = CreateGraphData(*builder, fb_shapes, fb_partitions, fb_shared_data);
+    }
     return RC_SUCCESS;
 }
 

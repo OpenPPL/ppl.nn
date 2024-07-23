@@ -25,6 +25,9 @@ namespace ppl { namespace nn { namespace pmx {
 struct PPLNN_PUBLIC SaveModelOptions final {
     /** save constants to external files if not null. one file per constant. */
     const char* external_data_dir = nullptr;
+
+    /** save constants to one external file if not null. */
+    const char* external_data_file = nullptr;
 };
 
 }}} // namespace ppl::nn::pmx

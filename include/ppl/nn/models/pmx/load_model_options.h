@@ -25,6 +25,11 @@ namespace ppl { namespace nn { namespace pmx {
 struct PPLNN_PUBLIC LoadModelOptions final {
     /** load constant from external data files in `external_data_dir` if `EXTERNAL_MULTI_FILES` is enabled. */
     const char* external_data_dir = nullptr;
+
+    struct {
+        const char* external_buffer = nullptr;
+        uint64_t external_buffer_size = 0;
+    };
 };
 
 }}} // namespace ppl::nn::pmx
