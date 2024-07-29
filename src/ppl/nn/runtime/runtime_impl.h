@@ -28,6 +28,8 @@
 #include "ppl/nn/runtime/profiler.h"
 #include "ppl/nn/runtime/options.h"
 
+#include <cstdarg>
+
 namespace ppl { namespace nn {
 
 class RuntimeImpl final : public Runtime {
