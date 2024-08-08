@@ -37,6 +37,14 @@ namespace ppl { namespace nn { namespace utils {
 static constexpr uint32_t g_max_msg_buf_size = 1024;
 #endif
 
+BufferedCpuAllocator::BufferedCpuAllocator() {
+#ifdef _MSC_VER
+    base_ = nullptr;
+#else
+    base_ = MAP_FAILED;
+#endif
+}
+
 BufferedCpuAllocator::~BufferedCpuAllocator() {
 #ifdef _MSC_VER
     if (base_) {
@@ -44,7 +52,7 @@ BufferedCpuAllocator::~BufferedCpuAllocator() {
     }
 #else
     if (base_ != MAP_FAILED) {
-        munmap(base_, (char*)cursor_ - (char*)base_);
+        munmap(base_, addr_len_);
     }
 #endif
 }
@@ -75,12 +83,9 @@ RetCode BufferedCpuAllocator::Init(uint64_t max_mem_bytes) {
         LOG(ERROR) << "VirtualAlloc reserve [" << max_mem_bytes << "] bytes failed: " << errmsg;
         return RC_OTHER_ERROR;
     }
-
-    addr_len_ = max_mem_bytes;
-    LOG(DEBUG) << "reserved [" << max_mem_bytes << "] bytes of virtual address from [" << base_ << "].";
 #else
     {
-        auto totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
+        uint64_t totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
         if (max_mem_bytes > totalram) {
             max_mem_bytes = totalram;
         }
@@ -91,12 +96,12 @@ RetCode BufferedCpuAllocator::Init(uint64_t max_mem_bytes) {
         LOG(ERROR) << "mmap reserve [" << max_mem_bytes << "] bytes failed: " << strerror(errno);
         return RC_OTHER_ERROR;
     }
-
-    addr_len_ = max_mem_bytes;
-    LOG(DEBUG) << "reserved [" << max_mem_bytes << "] bytes of virtual address from [" << base_ << "].";
 #endif
 
     cursor_ = base_;
+    addr_len_ = max_mem_bytes;
+    LOG(DEBUG) << "reserved [" << max_mem_bytes << "] bytes of virtual address from [" << base_ << "].";
+
     return RC_SUCCESS;
 }
 

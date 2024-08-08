@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace utils {
 
 class BufferedCpuAllocator final : public ppl::common::CompactAddrManager::VMAllocator {
 public:
-    BufferedCpuAllocator() {}
+    BufferedCpuAllocator();
     ~BufferedCpuAllocator();
     ppl::common::RetCode Init(uint64_t max_mem_bytes = UINT64_MAX);
     uint64_t Extend(uint64_t bytes) override;
