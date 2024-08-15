@@ -84,11 +84,12 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, Devi
 /* -------------------------------------------------------------------------- */
 
 RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& shape, Device* device,
-                            RuntimeConstantInfo* info, bool omit_data) {
-    info->Reshape(shape);
+                            RuntimeConstantInfo* info) {
+    info->SetDevice(device);
 
-    if (!omit_data) {
-        info->SetDevice(device);
+    if (size > 0) {
+        info->Reshape(shape);
+
         auto status = info->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
@@ -108,6 +109,7 @@ RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& 
 RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& shape, Device* device,
                             BufferInfo* info) {
     info->SetDevice(device);
+
     auto status = info->ReallocBuffer(shape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
@@ -123,8 +125,7 @@ RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& 
     return RC_SUCCESS;
 }
 
-RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants,
-                      const std::set<edgeid_t>* data_omitted_constants) {
+RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants) {
     auto topo = graph.topo.get();
     auto graph_data = graph.data.get();
 
@@ -156,25 +157,15 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
             return RC_NOT_FOUND;
         }
 
-        bool omit_data = false;
-        if (data_omitted_constants != nullptr) {
-            omit_data = (data_omitted_constants->find(eid) != data_omitted_constants->end());
-        }
-
-        if (!omit_data) {
-            if (constant_ref->second.data.GetSize() == 0) {
-                if (tensor_shape.CalcBytesIncludingPadding() == 0) {
-                    omit_data = true;
-                } else {
-                    LOG(ERROR) << "constant [" << edge->GetName() << "] data size is 0 but shape size is not 0.";
-                    return RC_INVALID_VALUE;
-                }
-            }
+        if (constant_ref->second.data.GetSize() != tensor_shape.CalcBytesIncludingPadding()) {
+            LOG(ERROR) << "constant [" << edge->GetName() << "] data size [" << constant_ref->second.data.GetSize() <<
+                "] != shape size [" << tensor_shape.CalcBytesIncludingPadding() << "]";
+            return RC_INVALID_VALUE;
         }
 
         RuntimeConstantInfo& constant_info = ret_pair.first->second;
         auto status = GenericLoadConstant(constant_ref->second.data.GetData(), constant_ref->second.data.GetSize(),
-                                          tensor_shape, device, &constant_info, omit_data);
+                                          tensor_shape, device, &constant_info);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
