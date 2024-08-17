@@ -9,6 +9,6 @@ import onnx
 from onnx import version_converter
 
 model = onnx.load("<your_path_to_onnx_model>")
-converted_model = version_converter.convert_version(onnx_model, 11)
+converted_model = version_converter.convert_version(model, 11)
 onnx.save(converted_model, "<your_save_path>")
 ```
