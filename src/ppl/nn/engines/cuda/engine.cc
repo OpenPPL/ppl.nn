@@ -153,6 +153,7 @@ static void ExportAlgorithmsInfo(const map<string, CudaArgs::AlgoSelects>& algos
     for (auto s = algos.begin(); s != algos.end(); ++s) {
         auto& item = s->second;
         rapidjson::Value object(rapidjson::kObjectType);
+        object.AddMember("ktype", rapidjson::StringRef(item.ktype.data(), item.ktype.size()), allocator);
         object.AddMember("kname", rapidjson::StringRef(item.kname.data(), item.kname.size()), allocator);
         object.AddMember("kid", item.kid, allocator);
         object.AddMember("splitk", item.splitk, allocator);
@@ -491,6 +492,10 @@ static RetCode ImportAlgorithmsImpl(const char* json_buffer, uint64_t buffer_siz
         ref = it->value.FindMember("splitf");
         if (ref != it->value.MemberEnd()) {
             algo_info.splitf = ref->value.GetInt();
+        }
+        ref = it->value.FindMember("ktype");
+        if (ref != it->value.MemberEnd()) {
+            algo_info.ktype.assign(ref->value.GetString(), ref->value.GetStringLength());
         }
         ref = it->value.FindMember("kname");
         if (ref != it->value.MemberEnd()) {

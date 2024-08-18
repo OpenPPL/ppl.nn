@@ -41,6 +41,7 @@ typedef std::set<nodeid_t> CompileInfo;
 
 struct CudaArgs {
     struct AlgoSelects {
+        std::string ktype;
         std::string kname;
         int kid = 0;
         int splitk = 1;
