@@ -47,6 +47,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/opmx/silu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/swiglu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/swish_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/opmx/tensor_parallel_rms_norm_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/opmx/vision_embedding_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/opmx/dynamic_batching/key_value_cache_op.h"
@@ -174,6 +175,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<opmx::SwiGLUOp>("opmx", "SwiGLU", 1, 1);
     RegisterOptKernelCreator<opmx::SwishOp>("opmx", "Swish", 1, 1);
     // T
+    RegisterOptKernelCreator<opmx::TensorParallelRMSNormOp>("opmx", "TensorParallelRMSNorm", 1, 1);
     // U
     // V
     RegisterOptKernelCreator<opmx::VisionEmbeddingOp>("opmx", "VisionEmbedding", 1, 1);
