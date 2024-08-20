@@ -92,6 +92,7 @@
 #include "ppl/nn/models/onnx/parsers/opmx/parse_reshape_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_rotary_position_embedding_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_row_parallel_linear_param.h"
+#include "ppl/nn/models/onnx/parsers/opmx/parse_tensor_parallel_rms_norm_param.h"
 #include "ppl/nn/models/onnx/parsers/opmx/parse_vision_embedding_param.h"
 
 using namespace std;
@@ -337,6 +338,10 @@ ParamParserManager::ParamParserManager() {
                                ppl::nn::pmx::ParseSwishParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("opmx", "Swish", 1, 1, ppl::nn::pmx::SwishParam,
                                ppl::nn::pmx::ParseSwishParam, nullptr);
+
+    // T
+    PPL_REGISTER_OP_WITH_PARAM("opmx", "TensorParallelRMSNorm", 1, 1, ppl::nn::opmx::TensorParallelRMSNormParam, ppl::nn::opmx::ParseTensorParallelRMSNormParam,
+                               nullptr);
 
     // V
     PPL_REGISTER_OP_WITH_PARAM("opmx", "VisionEmbedding", 1, 1, ppl::nn::opmx::VisionEmbeddingParam,
