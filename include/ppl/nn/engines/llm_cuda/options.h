@@ -162,6 +162,9 @@ enum {
 
     /** online quantization, fp16 tensor and int4 weight */
     QUANT_METHOD_ONLINE_I4F16,
+
+    /** online quantization, fp8 tensor and fp8 weight */
+    QUANT_METHOD_ONLINE_F8F8,
 };
 
 /** @brief cublas layout hint, currently for selecting matrix layout for int8 gemm */

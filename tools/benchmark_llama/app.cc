@@ -27,7 +27,7 @@ Define_uint32_opt("--benchmark-loops", g_flag_benchmark_loops, 4, "benchmark loo
 
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
-                        "\"none\", \"online_i8i8\" and \"online_i4f16\", "
+                        "\"none\", \"online_i8i8\" , \"online_f8f8\" and \"online_i4f16\", "
                         "default: \"none\"");
 Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
                         "matrix layout hint for cublas(currently only effect int8 gemm), only accept "
