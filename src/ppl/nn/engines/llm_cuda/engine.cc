@@ -95,7 +95,7 @@ RetCode LlmCudaEngine::ConfSetTensorParellelNcclComm(LlmCudaEngine* engine, va_l
     engine->tensor_parallel_nccl_param_.comm = nccl_comm;
     NCCL_CHECK(ncclCommCount(nccl_comm, &engine->tensor_parallel_nccl_param_.size), "ncclCommCount");
     NCCL_CHECK(ncclCommUserRank(nccl_comm, &engine->tensor_parallel_nccl_param_.rank), "ncclCommUserRank");
-    LOG(INFO) << "Engine Conf tp nccl comm world size: " 
+    LOG(INFO) << "Engine Conf tp nccl comm world size: "
         << engine->tensor_parallel_nccl_param_.size;
     return RC_SUCCESS;
 #else
@@ -119,6 +119,12 @@ RetCode LlmCudaEngine::ConfTenosrDebug(LlmCudaEngine* engine, va_list args) {
 RetCode LlmCudaEngine::ConfDebugDataDir(LlmCudaEngine* engine, va_list args) {
     engine->config_.debug_data_dir.assign(va_arg(args, const char*));
     LOG(INFO) << "Engine Conf debug data dir: " << engine->config_.debug_data_dir;
+    return RC_SUCCESS;
+}
+
+RetCode LlmCudaEngine::ConfCachePrefill(LlmCudaEngine* engine, va_list args) {
+    engine->config_.enable_cache_prefill = va_arg(args, uint32_t) ? false : true;
+    LOG(INFO) << "Engine Conf cache prefill: " << engine->config_.enable_cache_prefill;
     return RC_SUCCESS;
 }
 
@@ -196,13 +202,13 @@ ppl::common::RetCode LlmCudaEngine::SerializeData(const pmx::SerializationContex
 ppl::common::RetCode LlmCudaEngine::DeserializeData(const void* base, uint64_t size) {
     auto fb_engine_param = GetEngineParam(base);
     auto fb_param = fb_engine_param->value_as_EngineOptionsParam();
-    
+
     uint32_t cublas_layout_hint = fb_param->cublas_layout_hint();
     if (cublas_layout_hint != options_.cublas_layout_hint) {
         LOG(WARNING) << "deserialize cublas_layout_hint[" << cublas_layout_hint << "] diff from user input[" <<  options_.cublas_layout_hint << "]";
     }
     options_.cublas_layout_hint = cublas_layout_hint;
-    
+
     if (fb_param->version() != GetVersion()) {
         LOG(WARNING) << "engine version[" << GetVersion() << "] diff from pmx version[" <<  fb_param->version() << "]";
     }
@@ -222,11 +228,13 @@ LlmCudaEngine::ConfHandlerFunc LlmCudaEngine::conf_handlers_[] = {
     ConfDecodingInfGqa,
     ConfDecodingAttnSplitK,
     ConfDecodingAttnTpb,
+
+    ConfCachePrefill,
 };
 
 RetCode LlmCudaEngine::Configure(uint32_t option, ...) {
     auto conf_length = sizeof(conf_handlers_) / sizeof(ConfHandlerFunc);
-    auto uniform_option = option >= ENGINE_CONF_INTERNAL_BEGIN ? 
+    auto uniform_option = option >= ENGINE_CONF_INTERNAL_BEGIN ?
         option + ENGINE_CONF_MAX - ENGINE_CONF_INTERNAL_BEGIN :
         option;
     if (uniform_option >= conf_length) {

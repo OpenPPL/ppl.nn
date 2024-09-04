@@ -27,6 +27,7 @@ struct EngineConfig final {
     bool enable_tensor_debug = false;
     std::string debug_data_dir = ".";
 
+    bool enable_cache_prefill = false;
     bool enable_decoding_sharemem_mhca = true;
     bool enable_decoding_infinity_mhca = true;
     bool enable_decoding_infinity_gqca = true;

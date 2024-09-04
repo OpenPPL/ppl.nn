@@ -36,6 +36,9 @@ Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
 
 Define_bool_opt("--kernel-profiling", g_flag_kernel_profiling, true, "enable kernel profiling and print profiling info");
 
+Define_bool_opt("--enable-cache-prefill", g_flag_enable_cache_prefill,
+                        false, "enable cache prefill flash attention");
+
 Define_bool_opt("--disable-decoding-shm-mha", g_flag_disable_decoding_shm_mha,
                         false, "disable shared memory decoding attention algorithm");
 Define_bool_opt("--disable-decoding-inf-mha", g_flag_disable_decoding_inf_mha,
@@ -123,6 +126,7 @@ int main(int argc, char* argv[]) {
         {
             g_cublas_layout_hint,
             g_flag_disable_graph_fusion,
+            g_flag_enable_cache_prefill,
             g_flag_disable_decoding_shm_mha,
             g_flag_disable_decoding_inf_mha,
             g_flag_disable_decoding_inf_gqa,

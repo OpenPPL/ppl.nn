@@ -96,7 +96,7 @@ enum {
 
     /**
        @brief uint32_t, set infinity grouped query decoding attention algorithm heuristic(1)/off(0), default is heuristic
-       This algorithm rescale softmax logits on shared memory, and optimized by tensor core for grouped query attention. 
+       This algorithm rescale softmax logits on shared memory, and optimized by tensor core for grouped query attention.
        It could be very fast when decoding batch size is large(usually more than 64). And context length has no limit.
 
        We must set one of `ENGINE_CONF_DECODING_SHM_MHA`, `ENGINE_CONF_DECODING_INF_MHA` and `ENGINE_CONF_DECODING_INF_GQA` on.
@@ -113,7 +113,7 @@ enum {
        Apply split-k decoding on all decoding algorithm, accelerating long context decoding.
        Recommanded for context length >= 1024, but may slow down when batch size is too large.
        And suggest to alway turn it on for context length >= 16k
-       
+
 
        @note example:
        @code{.cpp}
@@ -127,7 +127,7 @@ enum {
        Apply split-k decoding on all decoding algorithm, accelerating long context decoding.
        Recommanded for context length >= 1024, but may slow down when batch size is too large.
        And suggest to alway turn it on for context length >= 16k
-       
+
 
        @note example:
        @code{.cpp}
@@ -135,6 +135,18 @@ enum {
        @endcode
     */
     ENGINE_CONF_DECODING_ATTN_TPB = 1004,
+
+   /**
+       @brief uint32_t, set prefill flash attention key and value tensor to use int8 kv cache, default is fp16 unquantized
+       tensor. It is used to support chunked prefill and prompt cache.
+
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_CACHE_PREFILL, uint32_t);
+       @endcode
+    */
+    ENGINE_CONF_CACHE_PREFILL = 1005,
 
     ENGINE_CONF_INTERNAL_MAX,
 
@@ -202,6 +214,8 @@ enum {
 
     DEV_CONF_MAX,
 };
+
+
 
 }}}} // namespace ppl::nn::llm::cuda
 

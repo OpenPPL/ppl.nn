@@ -247,6 +247,9 @@ Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
                         "\"default\", \"ampere\". "
                         "default: \"default\"");
 
+Define_bool_opt("--enable-cache-prefill", g_flag_enable_cache_prefill,
+                        false, "enable cache prefill flash attention");
+
 Define_bool_opt("--disable-decoding-shm-mha", g_flag_disable_decoding_shm_mha,
                         false, "disable shared memory decoding attention algorithm");
 Define_bool_opt("--disable-decoding-inf-mha", g_flag_disable_decoding_inf_mha,
@@ -380,7 +383,13 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 #endif
 
-    auto rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_SHM_MHA, g_flag_disable_decoding_shm_mha ? 0 : 1);
+    auto rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_CACHE_PREFILL, g_flag_enable_cache_prefill ? 1 : 0);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_CACHE_PREFILL failed: " << GetRetCodeStr(rc);
+        return false;
+    }
+
+    rc = llm_cuda_engine->Configure(llm::cuda::ENGINE_CONF_DECODING_SHM_MHA, g_flag_disable_decoding_shm_mha ? 0 : 1);
     if (RC_SUCCESS != rc) {
         LOG(ERROR) << "configure ENGINE_CONF_DECODING_SHM_MHA failed: " << GetRetCodeStr(rc);
         return false;
@@ -1194,13 +1203,13 @@ int main(int argc, char* argv[]) {
         if (!g_flag_pmx_external_data_dir.empty()) {
             opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
         }
-        
+
         auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources, opt);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
             return -1;
         }
-        
+
         status = builder->Preprocess();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "pmx preprocess failed: " << GetRetCodeStr(status);

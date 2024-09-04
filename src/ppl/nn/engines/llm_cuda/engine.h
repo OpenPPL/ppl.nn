@@ -60,6 +60,8 @@ private:
     static ppl::common::RetCode ConfDecodingAttnSplitK(LlmCudaEngine*, va_list);
     static ppl::common::RetCode ConfDecodingAttnTpb(LlmCudaEngine*, va_list);
 
+    static ppl::common::RetCode ConfCachePrefill(LlmCudaEngine*, va_list);
+
     typedef ppl::common::RetCode (*ConfHandlerFunc)(LlmCudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[
         ENGINE_CONF_MAX + (ENGINE_CONF_INTERNAL_MAX - ENGINE_CONF_INTERNAL_BEGIN)];
