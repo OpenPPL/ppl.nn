@@ -149,6 +149,12 @@ ppl::nn::Engine* CudaTextGenerator::ThreadCreateEngine(const int32_t tid) {
     }
 
     ppl::common::RetCode rc;
+    rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_CACHE_PREFILL, construct_options_.enable_cache_prefill ? 1 : 0);
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "configure ENGINE_CONF_CACHE_PREFILL failed: " << ppl::common::GetRetCodeStr(rc);
+        return nullptr;
+    }
+
     rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_DECODING_SHM_MHA, construct_options_.disable_decoding_shm_mha ? 0 : 1);
     if (ppl::common::RC_SUCCESS != rc) {
         LOG(ERROR) << "configure ENGINE_CONF_DECODING_SHM_MHA failed: " << ppl::common::GetRetCodeStr(rc);

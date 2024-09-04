@@ -199,6 +199,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         cache_stride_h,
         cache_stride_kv,
         cachestart_stride_b,
+        GetEngineConfig().enable_cache_prefill,
         GetEngineConfig().enable_decoding_sharemem_mhca,
         GetEngineConfig().enable_decoding_infinity_mhca,
         GetEngineConfig().enable_decoding_infinity_gqca,

@@ -14,6 +14,7 @@ public:
     struct ConstructOptions {
         std::string cublas_layout_hint = "default";
         bool disable_graph_fusion = false;
+        bool enable_cache_prefill = false;
         bool disable_decoding_shm_mha = false;
         bool disable_decoding_inf_mha = false;
         bool disable_decoding_inf_gqa = false;
