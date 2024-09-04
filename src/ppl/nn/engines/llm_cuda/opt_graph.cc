@@ -120,6 +120,25 @@ RetCode OptGraph::Optimize(
         }
     }
 
+        if (engine_options.quant_method == QUANT_METHOD_ONLINE_F8F8) {
+
+#ifndef PPLNN_ENABLE_FP8
+        LOG(ERROR) << "FP8 requires CUDA version 12 or higher, and the PPLNN_ENABLE_FP8 compile option must be enabled.";
+        return RC_UNSUPPORTED;
+#endif
+
+        LOG(INFO) << "Processing F8F8Cast...";
+        auto prc = OptPassManager::GetInstance()->Apply("", "F8F8Cast", options);
+        if (prc.retcode != RC_SUCCESS) {
+            LOG(ERROR) << "F8F8Cast failed: " << GetRetCodeStr(prc.retcode);
+            return prc.retcode;
+        }
+        if (!prc.graph_modified) {
+            LOG(INFO) << "F8F8Cast: nothing has been changed.";
+        }
+    }
+
+
     if (engine_options.quant_method == QUANT_METHOD_ONLINE_I4F16) {
         LOG(INFO) << "Processing I4F16Quantization...";
         auto prc = OptPassManager::GetInstance()->Apply("", "I4F16Quantization", options);

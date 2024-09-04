@@ -124,6 +124,8 @@ ppl::nn::Engine* CudaTextGenerator::ThreadCreateEngine(const int32_t tid) {
         options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_NONE;
     } else if (model_config_.quant_method == "online_i8i8") {
         options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+    } else if (model_config_.quant_method == "online_f8f8") {
+        options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_ONLINE_F8F8;
     } else if (model_config_.quant_method == "online_i4f16") {
         options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_ONLINE_I4F16;
     } else {

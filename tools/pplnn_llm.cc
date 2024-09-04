@@ -239,7 +239,7 @@ Define_string_opt("--in-devices", g_flag_in_devices, "",
 
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
-                        "\"none\", \"online_i8i8\" and \"online_i4f16\", "
+                        "\"none\", \"online_i8i8\", \"online_f8f8\"  and \"online_i4f16\", "
                         "default: \"none\"");
 
 Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
@@ -346,6 +346,8 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
         options.quant_method = llm::cuda::QUANT_METHOD_NONE;
     } else if (g_flag_quant_method == "online_i8i8") {
         options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+    } else if (g_flag_quant_method == "online_f8f8") {
+        options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_F8F8;
     } else if (g_flag_quant_method == "online_i4f16") {
         options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I4F16;
     } else  {

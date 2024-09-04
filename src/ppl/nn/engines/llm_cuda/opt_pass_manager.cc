@@ -23,6 +23,8 @@
 
 #include "passes/i4f16/quantization_pass.h"
 
+#include "passes/f8f8/cast_pass.h"
+
 #include "opt_pass_manager.h"
 
 #include "ppl/common/log.h"
@@ -88,6 +90,10 @@ OptPassManager::OptPassManager() {
     Register("i8i8.fuse", "FuseSwiGLU", i8i8::FuseSwiGLUPass);
 
     Register("", "I4F16Quantization", i4f16::QuantizationPass);
+
+#ifdef PPLNN_ENABLE_FP8
+    Register("", "F8F8Cast", f8f8::CastPass);
+#endif
 }
 
 
