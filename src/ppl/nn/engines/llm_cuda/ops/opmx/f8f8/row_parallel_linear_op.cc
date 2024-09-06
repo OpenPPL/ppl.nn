@@ -19,7 +19,24 @@ RetCode F8F8RowParallelLinearOp::CommonInit() {
         return RC_SUCCESS;
     };
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return nn::opmx::ReshapeRowParallelLinear(info, param_.get(), nccl_param_->size);
+        auto status = nn::opmx::ReshapeRowParallelLinear(info, param_.get(), nccl_param_->size);
+        if (status != RC_SUCCESS) {
+            return status;
+        }
+
+        auto input_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+
+        int64_t first_dim = input_shape->GetDim(0);
+
+        if (first_dim % 16 != 0) {
+            int64_t aligned_dim = ((first_dim + 15) / 16) * 16;
+            uint16_t padding = aligned_dim - first_dim;
+            input_shape->SetPadding1(0, padding);
+            output_shape->SetPadding1(0, padding);
+        }
+        
+        return RC_SUCCESS;
     };
     return RC_SUCCESS;
 }

@@ -95,8 +95,7 @@ ppl::common::RetCode F8F8RowParallelLinearKernel::DoExecute(KernelExecContext* c
     }
 
     if (input_shape->GetPadding1(0) > 0) {
-        int64_t original_dim = input_shape->GetDim(0) - input_shape->GetPadding1(0);
-        output_shape->SetDim(0, original_dim);
+        output_shape->SetPadding1(0, 0);
     }
 
     return ppl::common::RC_SUCCESS;
