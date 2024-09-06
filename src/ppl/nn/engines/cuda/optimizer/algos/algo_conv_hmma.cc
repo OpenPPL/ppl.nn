@@ -62,6 +62,89 @@ bool TuringHMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions
     return true;
 }
 
+// copy from pplnn/src/ppl/nn/engines/cuda/params/conv_extra_param.cc
+int GetRelueType_(const std::string& name) {
+    if (name == "Relu" || name == "ReLU" || name == "ReLU3d")
+        return 0;
+    if (name == "Clip")
+        return 1;
+    if (name == "PRelu")
+        return 2;
+    if (name == "LeakyRelu")
+        return 3;
+    if (name == "Sigmoid")
+        return 4;
+    return -1;
+}
+
+// modify from pplnn/src/ppl/nn/engines/cuda/params/conv_extra_param.cc
+// just use for conv algo select, not stand for the true fusion param
+RetCode ConvertToForwardFuseParam_(const ConvFusionInfo& fuse_info, fuse_param_t& fuse_param) {
+    const std::set<std::string> relu_set{"Relu", "ReLU", "ReLU3d", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
+    int fuse_index = 0;
+    int fuse_size = fuse_info.types.size();
+
+    if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
+        int type = GetRelueType_(fuse_info.types[fuse_index]);
+        switch (type) {
+            case 0: // Relu
+                fuse_param.has_activation = 1;
+                break;
+            case 1: // Clip
+                fuse_param.has_clip = true;
+                break;
+            case 2: // PRelu
+                if (fuse_index == 0) fuse_param.has_prelu = 1;
+                else fuse_param.has_elt_prelu = 1;
+                break;
+            case 3: // LeakyRelu
+                if (fuse_index == 0) fuse_param.has_prelu = 1;
+                else fuse_param.has_elt_prelu = 1;
+                break;
+            case 4: // Sigmoid
+                fuse_param.has_activation = 2;
+                break;
+            default:
+                return RC_UNSUPPORTED;
+        }
+        fuse_index++;
+    }
+
+    if (fuse_index < fuse_size && (fuse_info.types[fuse_index] == "Add" || fuse_info.types[fuse_index] == "Eltwise")) {
+        fuse_param.has_elt = true;
+        fuse_index++;
+    }
+
+    if (fuse_index < fuse_size && fuse_param.has_elt && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
+        int type = GetRelueType_(fuse_info.types[fuse_index]);
+        switch (type) {
+            case 0: // Relu
+                fuse_param.has_elt_activation = 1;
+                break;
+            case 1: // Clip
+                fuse_param.has_elt_clip = true;
+                break;
+            case 2: // PRelu
+                if (fuse_index == 0) fuse_param.has_prelu = 1;
+                else fuse_param.has_elt_prelu = 1;
+                break;
+            case 3: // LeakyRelu
+                if (fuse_index == 0) fuse_param.has_prelu = 1;
+                else fuse_param.has_elt_prelu = 1;
+                break;
+            case 4: // Sigmoid
+                fuse_param.has_elt_activation = 2;
+                break;
+            default:
+                return RC_UNSUPPORTED;
+        }
+    }
+
+    fuse_param.has_concat = fuse_info.channel_offset >= 0;
+
+    return RC_SUCCESS;
+}
+
 double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "TuringHMMAImpgemm";
@@ -73,6 +156,7 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
+        attr_param_.extra_param.algo_info.algo_type = algo_info->second.ktype;
         attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
         if (algo_info->second.splitk > 1)
             attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
@@ -99,6 +183,7 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
+    ConvertToForwardFuseParam_(attr_param_.extra_param.fuse_info, temp_fuse_param);     // will reset to default during kernel selection
 
     // input shape is invalid
     if (shape_in0.GetDimCount() != 4 || shape_in1.GetDimCount() != 4) {
@@ -149,9 +234,10 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     auto timer = PPLCUDAConvolutionSelectKernel(
         options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
         (int4*)weight_buffer.addr, (int4*)output_buffer.addr, (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-        attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
+        attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param, size);
 #endif
     CudaArgs::AlgoSelects algo_select;
+    algo_select.ktype = attr_param_.extra_param.algo_info.algo_type;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
     algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
