@@ -25,15 +25,6 @@ RetCode F8F8OnlineCastOp::CommonInit() {
 
         output_shape->Reshape(input_shape->GetDims(), input_shape->GetDimCount());
 
-        int64_t first_dim = output_shape->GetDim(0);
-
-        if (first_dim % 16 != 0) {
-            int64_t aligned_dim = ((first_dim + 15) / 16) * 16;
-            uint16_t padding = aligned_dim - first_dim;
-            output_shape->SetDim(0, aligned_dim);
-            output_shape->SetPadding1(0, padding);
-        }
-
         return RC_SUCCESS;
     };
     return RC_SUCCESS;
