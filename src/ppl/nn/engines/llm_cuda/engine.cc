@@ -123,7 +123,7 @@ RetCode LlmCudaEngine::ConfDebugDataDir(LlmCudaEngine* engine, va_list args) {
 }
 
 RetCode LlmCudaEngine::ConfCachePrefill(LlmCudaEngine* engine, va_list args) {
-    engine->config_.enable_cache_prefill = va_arg(args, uint32_t) ? false : true;
+    engine->config_.enable_cache_prefill = va_arg(args, uint32_t) ? true : false;
     LOG(INFO) << "Engine Conf cache prefill: " << engine->config_.enable_cache_prefill;
     return RC_SUCCESS;
 }
