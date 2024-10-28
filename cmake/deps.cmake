@@ -288,7 +288,7 @@ endif()
 # --------------------------------------------------------------------------- #
 
 if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION)
-    set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION internal-master)
+    set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_VERSION llm_v2)
 endif()
 
 if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
@@ -296,7 +296,7 @@ if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
         ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG})
 else()
     if(NOT PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT)
-        set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT "git@gitlab.sz.sensetime.com:HPC/llm/ppl.llm.kernel.cuda.git")
+        set(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT "https://github.com/OpenPPL/ppl.llm.kernel.cuda.git")
     endif()
     hpcc_declare_git_dep(ppl.llm.kernel.cuda
         ${PPLNN_DEP_PPL_LLM_KERNEL_CUDA_GIT}
