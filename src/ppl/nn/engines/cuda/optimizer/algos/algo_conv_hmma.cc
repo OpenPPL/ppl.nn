@@ -80,8 +80,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         return 0.0f;
     } else { // Give the default kernel
 #ifdef PPLNN_CUDA_ENABLE_KERNEL_CUT
-        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Fp16Conv_hmma1688_nhwc_fn_b32x256_w32x64_k8_buf2";
-        attr_param_.extra_param.algo_info.kid = 685;
+        attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_fn_b64x128_w64x32_k8_s8_buf1";
+        attr_param_.extra_param.algo_info.kid = 210;
 #else
         attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Fp16Conv_hmma1688_nhwc_fn_b128x64_w64x32_k64_buf2";
         attr_param_.extra_param.algo_info.kid = 5197;
