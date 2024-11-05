@@ -63,7 +63,7 @@ if(PPLNN_DEP_HPCC_PKG)
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
 else()
     if(NOT PPLNN_DEP_HPCC_GIT)
-        set(PPLNN_DEP_HPCC_GIT "https://github.com/openppl-public/hpcc.git")
+        set(PPLNN_DEP_HPCC_GIT "https://github.com/OpenPPL/hpcc.git")
     endif()
     FetchContent_Declare(hpcc
         GIT_REPOSITORY ${PPLNN_DEP_HPCC_GIT}
@@ -113,7 +113,7 @@ if(PPLNN_DEP_PPLCOMMON_PKG)
         ${PPLNN_DEP_PPLCOMMON_PKG})
 else()
     if(NOT PPLNN_DEP_PPLCOMMON_GIT)
-        set(PPLNN_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+        set(PPLNN_DEP_PPLCOMMON_GIT "https://github.com/OpenPPL/ppl.common.git")
     endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLNN_DEP_PPLCOMMON_GIT}
@@ -257,7 +257,7 @@ if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64
             ${PPLNN_DEP_PPLCPUKERNEL_PKG})
     else()
         if(NOT PPLNN_DEP_PPLCPUKERNEL_GIT)
-            set(PPLNN_DEP_PPLCPUKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cpu.git")
+            set(PPLNN_DEP_PPLCPUKERNEL_GIT "https://github.com/OpenPPL/ppl.kernel.cpu.git")
         endif()
         hpcc_declare_git_dep(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_GIT}
@@ -277,7 +277,7 @@ if(PPLNN_USE_CUDA)
             ${PPLNN_DEP_PPLCUDAKERNEL_PKG})
     else()
         if(NOT PPLNN_DEP_PPLCUDAKERNEL_GIT)
-            set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cuda.git")
+            set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/OpenPPL/ppl.kernel.cuda.git")
         endif()
         hpcc_declare_git_dep(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
